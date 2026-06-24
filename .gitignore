@@ -1,0 +1,85 @@
+# ─── Dependencies ───────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─── Electron build output ───────────────────────────────────────────────────
+dist/
+dist-electron/
+out/
+# Note: build/ is NOT ignored — it contains source scripts (installer.nsh,
+# make-file-icon.js) that electron-builder requires at package time.
+# Compiled artefacts inside it are caught by the extension rules below.
+release/
+
+# electron-builder artefacts
+*.dmg
+*.exe
+*.msi
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.pkg
+*.zip
+*.tar.gz
+*.nsis
+*.blockmap
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ─── Environment / secrets ───────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# ─── AI model config (contains API keys — never commit) ──────────────────────
+ai-config.json
+
+# ─── Claude Code local config ────────────────────────────────────────────────
+.claude/
+
+# ─── Editor & IDE ────────────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── OS artefacts ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ─── Testing & coverage ──────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ─── TypeScript ──────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── Vite / bundler caches ───────────────────────────────────────────────────
+.vite/
+.cache/
+.parcel-cache/
+
+# ─── Electron Forge / Builder specifics ──────────────────────────────────────
+.webpack/
+.rollup.cache/
+
+# ─── Miscellaneous ───────────────────────────────────────────────────────────
+*.local

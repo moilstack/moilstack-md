@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http: local-file:" />
+  <title>MoilStack .md</title>
+  <link rel="icon" type="image/png" href="../assets/icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ── App Header ───────────────────────────────────────────────── -->
+  <header id="app-header">
+
+    <!-- Left: hamburger menu + app icon + name -->
+    <div class="app-header__left">
+
+      <!-- Hamburger menu trigger + dropdown -->
+      <div class="hamburger-wrapper" id="hamburger-wrapper">
+        <button id="btn-hamburger" class="hamburger-btn" title="File menu"
+                aria-haspopup="menu" aria-expanded="false">
+          <svg width="16" height="14" viewBox="0 0 16 14" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path class="hb-line hb-top" d="M1 1h14"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="hb-line hb-mid" d="M1 7h14"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path class="hb-line hb-bot" d="M1 13h14"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <div id="hamburger-menu" class="hamburger-menu hidden" role="menu">
+          <button class="hamburger-item" id="hmenu-new" role="menuitem">
+            <span class="hamburger-item__label">New</span>
+            <kbd class="hamburger-item__kbd">Ctrl+N</kbd>
+          </button>
+          <div class="hamburger-divider"></div>
+          <button class="hamburger-item" id="hmenu-open-file" role="menuitem">
+            <span class="hamburger-item__label">Open File</span>
+            <kbd class="hamburger-item__kbd">Ctrl+O</kbd>
+          </button>
+          <button class="hamburger-item" id="hmenu-open-folder" role="menuitem">
+            <span class="hamburger-item__label">Open Folder</span>
+          </button>
+          <button class="hamburger-item" id="hmenu-recents" role="menuitem">
+            <span class="hamburger-item__label">Recents</span>
+          </button>
+          <div class="hamburger-divider"></div>
+          <button class="hamburger-item" id="hmenu-save" role="menuitem">
+            <span class="hamburger-item__label">Save</span>
+            <kbd class="hamburger-item__kbd">Ctrl+S</kbd>
+          </button>
+          <button class="hamburger-item" id="hmenu-export" role="menuitem">
+            <span class="hamburger-item__label">Export</span>
+          </button>
+          <div class="hamburger-divider"></div>
+          <button class="hamburger-item" id="hmenu-toggle" role="menuitem">
+            <span class="hamburger-item__label">Toggle Preview</span>
+            <kbd class="hamburger-item__kbd">Ctrl+`</kbd>
+          </button>
+          <div class="hamburger-divider"></div>
+          <button class="hamburger-item" id="hmenu-find" role="menuitem">
+            <span class="hamburger-item__label">Find</span>
+            <kbd class="hamburger-item__kbd">Ctrl+F</kbd>
+          </button>
+          <button class="hamburger-item" id="hmenu-replace" role="menuitem">
+            <span class="hamburger-item__label">Find &amp; Replace</span>
+            <kbd class="hamburger-item__kbd">Ctrl+H</kbd>
+          </button>
+          <div class="hamburger-divider"></div>
+          <button class="hamburger-item" id="hmenu-new-instance" role="menuitem">
+            <span class="hamburger-item__label">New Instance</span>
+          </button>
+          <div class="hamburger-divider"></div>
+          <button class="hamburger-item" id="hmenu-settings" role="menuitem">
+            <span class="hamburger-item__label">Settings</span>
+          </button>
+        </div>
+      </div>
+
+      <svg class="app-header__icon" width="20" height="20" viewBox="0 0 32 32"
+           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 1 L20 1 L29 10 L29 31 L3 31 Z" fill="#6366f1" stroke="#4f46e5" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M20 1 L20 10 L29 10 Z" fill="white" opacity="0.9"/>
+        <path d="M20 1 L20 10 L29 10" fill="none" stroke="#4f46e5" stroke-width="1" stroke-linejoin="round"/>
+        <rect x="8" y="13" width="2" height="10" rx="1" fill="white"/>
+        <rect x="22" y="13" width="2" height="10" rx="1" fill="white"/>
+        <line x1="9" y1="13" x2="16" y2="20" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="23" y1="13" x2="16" y2="20" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <polyline points="13,21 16,25 19,21" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span class="app-header__app-name">MoilStack .md</span>
+      <span class="app-header__name-sep" aria-hidden="true">|</span>
+      <div class="app-header__folder-wrap">
+        <button class="app-header__folder-path" id="header-folder-path"
+                title="Recent folders" aria-haspopup="true" aria-expanded="false">
+          <svg width="12" height="12" viewBox="0 0 15 15" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+                  stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
+          <span id="header-folder-name">No folder opened</span>
+          <svg class="folder-chevron" width="8" height="8" viewBox="0 0 10 10" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="folder-recent-dropdown hidden" id="folder-recent-dropdown" role="menu"></div>
+      </div>
+    </div>
+
+    <!-- Center: global search -->
+    <div class="app-header__center">
+      <div class="header-search-wrap">
+        <label class="header-search" for="header-search-input">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input id="header-search-input" class="header-search__input"
+                 type="search" placeholder="Search files…" autocomplete="off" spellcheck="false"/>
+          <kbd class="header-search__kbd">Ctrl+Shift+F</kbd>
+        </label>
+        <!-- Results dropdown -->
+        <div id="search-results-dropdown" class="search-dropdown hidden" role="listbox"></div>
+      </div>
+    </div>
+
+    <!-- Right: theme toggle + settings (rightmost) -->
+    <div class="app-header__right">
+
+      <!-- Sidebar toggle buttons -->
+      <div class="sidebar-toggles">
+        <button id="btn-toggle-explorer" class="sidebar-toggle-btn" title="Toggle Explorer">
+          <!-- Left-panel layout icon -->
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="1" y="1" width="13" height="13" rx="2"
+                  stroke="currentColor" stroke-width="1.3"/>
+            <line x1="5" y1="1" x2="5" y2="14"
+                  stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </button>
+        <button id="btn-toggle-ai" class="sidebar-toggle-btn" title="Toggle AI Assistant">
+          <!-- Right-panel layout icon -->
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="1" y="1" width="13" height="13" rx="2"
+                  stroke="currentColor" stroke-width="1.3"/>
+            <line x1="10" y1="1" x2="10" y2="14"
+                  stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </button>
+      </div>
+
+      <button id="theme-toggle" title="Toggle light/dark theme">
+        <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="theme-label">Dark</span>
+      </button>
+      <button id="btnSettings" title="Settings" class="header-settings-btn header-settings-btn--icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+  </header><!-- /app-header -->
+
+  <div id="app">
+
+    <!-- ── Explorer Sidebar ───────────────────────────────────────── -->
+    <aside class="left-sidebar">
+
+      <!-- 1. Section header row -->
+      <div class="sidebar-section">
+        <span class="sidebar-section__label">Explorer</span>
+        <div class="sidebar-section__actions">
+
+          <!-- Open Folder button -->
+          <button class="icon-btn" title="Open Folder (Ctrl+O)" id="btn-open-folder">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+                    stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <!-- New File button -->
+          <button class="icon-btn" title="New File" id="btn-new-file">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M3.5 1.5H9L11.5 4V13a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V2a.5.5 0 0 1 .5-.5Z"
+                    stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              <path d="M9 1.5V4h2.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              <path d="M7.5 7v3M6 8.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </button>
+
+          <!-- New Folder button -->
+          <button class="icon-btn" title="New Folder" id="btn-new-folder">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+                    stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              <path d="M8.5 7.5v3M7 9h3"
+                    stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </button>
+
+          <!-- Collapse All button -->
+          <button class="icon-btn" title="Collapse All" id="btn-collapse-all">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M2 5h11M2 8h7M2 11h4"
+                    stroke="currentColor" stroke-width="1.4"
+                    stroke-linecap="round"/>
+            </svg>
+          </button>
+
+        </div>
+      </div><!-- /sidebar-section -->
+
+      <!-- Inline new-file input (shown when New is clicked with a folder active) -->
+      <div class="new-file-row hidden" id="new-file-row" role="group" aria-label="New file name">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="new-file-row__icon">
+          <path d="M2 1.5h5.5L10 4v6.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9A.5.5 0 0 1 2 1.5Z"
+                stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+          <path d="M7.5 1.5V4H10" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+        </svg>
+        <input type="text" id="new-file-input" class="new-file-input"
+               placeholder="filename.md" autocomplete="off" spellcheck="false" maxlength="120">
+      </div>
+
+      <!-- File list -->
+      <div class="file-list" id="file-list">
+        <span class="file-list__empty">Open a folder to see files</span>
+      </div>
+
+    </aside><!-- /left-sidebar -->
+
+    <!-- ── Middle Section: Editor + Preview ────────────────────────── -->
+    <main class="main-content">
+
+      <!-- ── Welcome / Recent Screen ───────────────────────────────── -->
+      <!-- Shown on startup when no file is open; hidden once a file/folder loads -->
+      <div id="welcome-screen" class="welcome-screen hidden">
+        <!-- Close button — only visible when opened over existing content (Recents menu) -->
+        <button id="welcome-close-btn" class="welcome-close-btn hidden" title="Close (Esc)" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round"/>
+          </svg>
+        </button>
+        <div class="welcome-body">
+
+          <!-- Logo + App name -->
+          <div class="welcome-logo-row">
+            <svg class="welcome-logo-icon" width="48" height="48" viewBox="0 0 32 32"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M3 1 L20 1 L29 10 L29 31 L3 31 Z" fill="#6366f1" stroke="#4f46e5" stroke-width="1" stroke-linejoin="round"/>
+              <path d="M20 1 L20 10 L29 10 Z" fill="white" opacity="0.9"/>
+              <path d="M20 1 L20 10 L29 10" fill="none" stroke="#4f46e5" stroke-width="1" stroke-linejoin="round"/>
+              <rect x="8" y="13" width="2" height="10" rx="1" fill="white"/>
+              <rect x="22" y="13" width="2" height="10" rx="1" fill="white"/>
+              <line x1="9" y1="13" x2="16" y2="20" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="23" y1="13" x2="16" y2="20" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              <polyline points="13,21 16,25 19,21" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            <div>
+              <h1 class="welcome-app-name">MoilStack .md</h1>
+              <p class="welcome-tagline">Markdown editor with AI assistance</p>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div class="welcome-actions">
+            <button class="welcome-action-btn" id="welcome-btn-open-folder">
+              <svg width="16" height="16" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+                      stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              </svg>
+              Open Folder
+            </button>
+            <button class="welcome-action-btn" id="welcome-btn-open-file">
+              <svg width="16" height="16" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2 1.5h5.5L10 4v6.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9A.5.5 0 0 1 2 1.5Z"
+                      stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                <path d="M7.5 1.5V4H10" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+              </svg>
+              Open File
+            </button>
+          </div>
+
+          <!-- Recent items list -->
+          <div class="welcome-recent" id="welcome-recent-section">
+            <div class="welcome-recent-header">
+              <h2 class="welcome-recent-title">Recent</h2>
+              <button id="btn-clear-recents" class="welcome-clear-btn" title="Clear recent files">
+                Clear
+              </button>
+            </div>
+            <ul class="welcome-recent-list" id="welcome-recent-list">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+
+        </div>
+      </div><!-- /welcome-screen -->
+
+      <section class="middle-section">
+
+        <!-- ── Editor Toolbar ─────────────────────────────────────── -->
+        <div class="editor-toolbar">
+
+          <!-- Right: Export + Save buttons + Edit/Preview toggle -->
+          <div class="topbar-actions">
+            <button class="btn btn-outline" id="btn-export" title="Export Markdown file">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="7 10 12 15 17 10"
+                          stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="12" y1="15" x2="12" y2="3"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round"/>
+              </svg>
+              <span>Export</span>
+            </button>
+            <button class="btn btn-primary" id="btn-save" title="Save file (Ctrl+S)">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="1" y="1" width="11" height="11" rx="1.5"
+                      stroke="currentColor" stroke-width="1.3"/>
+                <rect x="3.5" y="1" width="4" height="3.5" rx=".5"
+                      fill="currentColor" stroke="none"/>
+                <rect x="2.5" y="7" width="8" height="4" rx=".8"
+                      stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              <span>Save</span>
+            </button>
+          </div>
+
+          <div class="toggle-group">
+            <button id="editBtn" class="active" data-mode="edit" title="Edit mode (Ctrl+`)">
+              <!-- Pencil SVG 12×12 -->
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"
+                      stroke="currentColor" stroke-width="1.2"
+                      stroke-linejoin="round" stroke-linecap="round"/>
+              </svg>
+              Edit
+            </button>
+            <button id="previewBtn" data-mode="preview" title="Preview mode (Ctrl+`)">
+              <!-- Eye SVG 12×12 -->
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M1 6C1 6 3 2.5 6 2.5C9 2.5 11 6 11 6C11 6 9 9.5 6 9.5C3 9.5 1 6 1 6Z"
+                      stroke="currentColor" stroke-width="1.2"
+                      stroke-linejoin="round"/>
+                <circle cx="6" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              Preview
+            </button>
+          </div>
+
+        </div><!-- /editor-toolbar -->
+
+        <!-- ── Editor Area ─────────────────────────────────────────── -->
+        <div class="editor-area" id="editorArea" data-view="split">
+
+          <div class="editor-pane" id="editorPane">
+            <div id="line-numbers" aria-hidden="true"></div>
+            <div class="editor-wrapper">
+              <!-- Dimmed selection ghost — shown when editor loses focus while lines are selected -->
+              <div id="sel-ghost" aria-hidden="true"></div>
+              <div id="editor-highlight" aria-hidden="true"></div>
+              <textarea id="mdEditor" spellcheck="false"
+                        placeholder="Start writing Markdown…"></textarea>
+            </div>
+
+            <!-- ── Find & Replace Widget ──────────────────────────────
+                 Floats over the top-right corner of the editor pane.
+                 Opened with Ctrl+F (find) or Ctrl+H (find + replace).
+                 ───────────────────────────────────────────────────── -->
+            <div id="find-widget" class="find-widget hidden"
+                 role="search" aria-label="Find in document">
+
+              <!-- Row 1: find input · toggles · prev/next · close -->
+              <div class="find-row">
+                <div class="find-input-wrapper">
+                  <input type="text" id="findInput" class="find-input"
+                         placeholder="Find" autocomplete="off" spellcheck="false">
+                  <span id="findCount" class="find-count" aria-live="polite"></span>
+                </div>
+
+                <!-- Match-case toggle -->
+                <button class="find-icon-btn" id="findCaseSensitive"
+                        title="Match Case (Alt+C)" aria-pressed="false">Aa</button>
+
+                <!-- Whole-word toggle -->
+                <button class="find-icon-btn" id="findWholeWord"
+                        title="Match Whole Word (Alt+W)" aria-pressed="false">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M2 10V4l3 5 3-5v6M10 10V4"
+                          stroke="currentColor" stroke-width="1.3"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M1 12h12" stroke="currentColor" stroke-width="1.3"
+                          stroke-linecap="round"/>
+                  </svg>
+                </button>
+
+                <!-- Previous match -->
+                <button class="find-icon-btn" id="findPrev"
+                        title="Previous Match (Shift+Enter or Shift+F3)">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M2 8l4-4 4 4" stroke="currentColor" stroke-width="1.5"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+
+                <!-- Next match -->
+                <button class="find-icon-btn" id="findNext"
+                        title="Next Match (Enter or F3)">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+
+                <!-- Close -->
+                <button class="find-icon-btn find-icon-btn--close" id="findClose"
+                        title="Close (Escape)">
+                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                    <path d="M1 1l9 9M10 1 1 10" stroke="currentColor" stroke-width="1.6"
+                          stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div><!-- /find-row -->
+
+              <!-- Row 2: replace input + actions (hidden in find-only mode) -->
+              <div class="find-replace-row hidden" id="replaceRow">
+                <input type="text" id="replaceInput" class="find-input find-replace-input"
+                       placeholder="Replace" autocomplete="off" spellcheck="false">
+                <button class="find-btn" id="replaceOne"
+                        title="Replace this match (Enter)">Replace</button>
+                <button class="find-btn" id="replaceAll"
+                        title="Replace all matches">All</button>
+              </div><!-- /replaceRow -->
+
+            </div><!-- /find-widget -->
+
+          </div>
+
+          <div class="preview-pane hidden" id="previewPane">
+            <div class="preview-content" id="previewContent">
+              <p class="preview-empty">Preview will appear here…</p>
+            </div>
+          </div>
+
+        </div><!-- /editor-area -->
+
+      </section>
+
+      <!-- ── Bottom Status Bar ──────────────────────────────────────── -->
+      <div class="statusbar" id="editorStatusbar">
+
+        <!-- Dot + filename -->
+        <div class="statusbar-item">
+          <div class="statusbar-dot"></div>
+          <span id="sbFilename">untitled.md</span>
+        </div>
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- Lines -->
+        <div class="statusbar-item">
+          <!-- Lines icon 11×11 -->
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M1 2.5h9M1 5.5h6M1 8.5h4"
+                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span id="sbLines">0 lines</span>
+        </div>
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- Chars -->
+        <div class="statusbar-item">
+          <!-- Type / T icon 11×11 -->
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 2.5h7M5.5 2.5v6"
+                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span id="sbChars">0 chars</span>
+        </div>
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- Language label — pushed to the right -->
+        <div class="statusbar-item" style="margin-left:auto;">
+          <span style="color:var(--primary);font-weight:500;">Markdown</span>
+        </div>
+
+      </div><!-- /statusbar -->
+
+    </main><!-- /main-content -->
+
+    <!-- ── AI Chat Panel (Right Sidebar) ────────────────────────────── -->
+    <aside class="right-sidebar">
+
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="chat-header-title">
+          <!-- Chat bubble SVG 15×15 -->
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+               style="color:var(--primary);flex-shrink:0;">
+            <path d="M2 2.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5l-3 2.5V3.5a1 1 0 0 1 1-1Z"
+                  stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
+          AI Assistant
+          <!-- Model picker trigger + dropdown -->
+          <div class="model-picker-wrapper">
+            <button id="btnModelPicker" class="ai-badge model-picker-trigger" title="Select model">
+              <span id="activeModelLabel">Loading…</span>
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M1 2.5L4 5.5L7 2.5" stroke="currentColor" stroke-width="1.4"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <!-- Dropdown (shown on click) -->
+            <div id="modelPickerDropdown" class="model-picker-dropdown hidden">
+              <div id="modelPickerList" class="model-picker-list"></div>
+              <div class="model-picker-footer">
+                <button id="btnManageModels" class="model-picker-manage">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                       xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                          stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Manage models…
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="icon-btn" id="btn-clear-chat" title="Clear chat history">
+          <!-- Trash SVG 14×14 -->
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 3.5h10M5 3.5V2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1
+                     M5.5 6v4M8.5 6v4
+                     M3 3.5l.8 7.2a1 1 0 0 0 1 .8h4.4a1 1 0 0 0 1-.8L11 3.5"
+                  stroke="currentColor" stroke-width="1.2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div><!-- /chat-header -->
+
+      <!-- Chat Messages -->
+      <div class="chat-messages" id="chatMessages">
+
+        <!-- ── AI Welcome / No-model state ──────────────────────────────── -->
+        <div class="ai-welcome-screen hidden" id="aiWelcomeScreen" aria-live="polite">
+          <!-- Sparkle / robot icon -->
+          <div class="ai-welcome-icon" aria-hidden="true">
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none"
+                 xmlns="http://www.w3.org/2000/svg">
+              <!-- Outer glow ring -->
+              <circle cx="22" cy="22" r="20" stroke="var(--primary)" stroke-width="1.5"
+                      stroke-dasharray="4 3" opacity="0.35"/>
+              <!-- Brain / circuit body -->
+              <rect x="11" y="14" width="22" height="17" rx="4"
+                    fill="var(--primary)" opacity="0.12" stroke="var(--primary)"
+                    stroke-width="1.5"/>
+              <!-- Eyes -->
+              <circle cx="17.5" cy="22" r="2.2" fill="var(--primary)" opacity="0.85"/>
+              <circle cx="26.5" cy="22" r="2.2" fill="var(--primary)" opacity="0.85"/>
+              <!-- Antenna -->
+              <line x1="22" y1="14" x2="22" y2="10" stroke="var(--primary)"
+                    stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="22" cy="9" r="1.5" fill="var(--primary)" opacity="0.7"/>
+              <!-- Mouth / underline -->
+              <path d="M17 27.5 Q22 30 27 27.5" stroke="var(--primary)"
+                    stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+            </svg>
+          </div>
+
+          <h3 class="ai-welcome-title">AI Assistant</h3>
+          <p class="ai-welcome-desc">
+            No AI model is configured yet.<br>
+            Add a model to start chatting with your documents.
+          </p>
+
+          <button class="ai-welcome-btn" id="btnAiWelcomeAddModel">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M6.5 1v11M1 6.5h11" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            Add a model
+          </button>
+
+          <p class="ai-welcome-hint">
+            Supports&nbsp;<strong>Ollama</strong> (local) and any
+            <strong>OpenAI-compatible</strong> API
+          </p>
+        </div><!-- /aiWelcomeScreen -->
+
+      </div><!-- /chat-messages -->
+
+      <!-- Chat Input -->
+      <div class="chat-input-area">
+        <div class="chat-mode-row">
+          <button class="chat-mode-btn chat-mode-btn--active" id="btn-mode-ask" title="Ask questions without modifying the document">Ask</button>
+          <button class="chat-mode-btn" id="btn-mode-edit" title="Let AI edit or rewrite the document">Edit</button>
+        </div>
+        <div class="chat-input-row">
+          <textarea
+            class="chat-textarea"
+            id="chatInput"
+            placeholder="Ask AI to edit, improve, or explain…"
+            rows="3"
+          ></textarea>
+          <button class="send-btn" id="btn-send" title="Send message">
+            <!-- Send arrow SVG 16×16 -->
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M14 8 2 2l3 6-3 6 12-6Z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+        <div class="chat-hint">Press <strong>Enter</strong> to send · <strong>Alt+Enter</strong> for newline</div>
+      </div><!-- /chat-input-area -->
+
+      <!-- Large-file warning — hidden until a big file is loaded -->
+      <div class="chat-large-file-warn hidden" id="chatLargeFileWarn"></div>
+
+      <!-- Chat Status Bar -->
+      <div class="chat-statusbar">
+        <!-- Left: message count -->
+        <div class="chat-statusbar-item">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M1.5 2h9a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-.75.75H4L1.5 10V2.75A.75.75 0 0 1 2.25 2Z"
+                  stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+          </svg>
+          <span id="chatMsgCount">0</span>
+        </div>
+        <!-- Centre: estimated input tokens for next request -->
+        <div class="chat-statusbar-item">
+          <!-- Lightning bolt icon -->
+          <svg width="10" height="12" viewBox="0 0 10 13" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 1 1 7.5h4L4 12l5-6.5H5L6 1Z"
+                  stroke="currentColor" stroke-width="1.2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span id="chatTokenBadge" class="tok-ok" title="Estimated input tokens for next request">~0 tok</span>
+        </div>
+        <!-- Right: selection chip + active file context -->
+        <div class="chat-statusbar-item chat-statusbar-context">
+          <span class="chat-sel-chip hidden" id="chatSelChip"></span>
+          <span class="chat-context-dot"></span>
+          <span class="chat-context-label">Context: <span id="chatContextFile">untitled.md</span></span>
+        </div>
+      </div><!-- /chat-statusbar -->
+
+    </aside><!-- /right-sidebar -->
+
+  </div><!-- /#app -->
+
+  <!-- ── File-item context menu ────────────────────────────────────── -->
+  <div id="file-ctx-menu" role="menu" aria-label="File options">
+    <button class="file-ctx-item" data-file-action="rename">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M9.5 1.5L12.5 4.5L5 12H2V9L9.5 1.5Z"
+              stroke="currentColor" stroke-width="1.2"
+              stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      Rename
+    </button>
+    <button class="file-ctx-item" data-file-action="open-in-explorer">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+              stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+      Open in Explorer
+    </button>
+    <button class="file-ctx-item" data-file-action="open-in-new-window">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <rect x="1.5" y="3.5" width="9" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M5.5 1.5h8v8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 1.5h5.5V7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Open in New Window
+    </button>
+    <div class="file-ctx-divider"></div>
+    <button class="file-ctx-item" data-file-action="label">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 2h5.5l4.5 4.5-5.5 5.5L2 7.5V2Z"
+              stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        <circle cx="5" cy="5" r="1" fill="currentColor"/>
+      </svg>
+      Label…
+    </button>
+    <div class="file-ctx-divider"></div>
+    <button class="file-ctx-item file-ctx-item--danger" data-file-action="delete">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 3.5h10M5 3.5V2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1M5.5 6v4M8.5 6v4M3 3.5l.8 7.2a1 1 0 0 0 1 .8h4.4a1 1 0 0 0 1-.8L11 3.5"
+              stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Delete
+    </button>
+  </div>
+
+  <!-- ── Folder context menu ───────────────────────────────────────── -->
+  <div id="folder-ctx-menu" role="menu" aria-label="Folder options">
+    <button class="file-ctx-item" data-folder-action="new-file-here">
+      <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <path d="M2 1.5h5.5L10 4v6.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-9A.5.5 0 0 1 2 1.5Z"
+              stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M7.5 1.5V4H10" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M6 6.5v2M5 7.5h2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+      New File Here
+    </button>
+    <button class="file-ctx-item" data-folder-action="new-subfolder">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+              stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M8.5 7.5v3M7 9h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      New Sub-folder
+    </button>
+    <div class="file-ctx-divider"></div>
+    <button class="file-ctx-item" data-folder-action="open-in-explorer">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+              stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+      Open in Explorer
+    </button>
+    <div class="file-ctx-divider" id="folder-ctx-delete-divider"></div>
+    <button class="file-ctx-item file-ctx-item--danger" data-folder-action="delete-folder" id="folder-ctx-delete-btn">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 3.5h10M5 3.5V2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1M5.5 6v4M8.5 6v4M3 3.5l.8 7.2a1 1 0 0 0 1 .8h4.4a1 1 0 0 0 1-.8L11 3.5"
+              stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Delete Folder
+    </button>
+  </div>
+
+  <!-- ── Editor context menu ──────────────────────────────────────── -->
+  <div id="ctx-menu" role="menu" aria-label="Format text">
+    <div class="ctx-group">
+      <button class="ctx-item" data-action="bold">        <b>B</b>         Bold        <kbd>Ctrl B</kbd></button>
+      <button class="ctx-item" data-action="italic">      <i>I</i>         Italic       <kbd>Ctrl I</kbd></button>
+      <button class="ctx-item" data-action="strikethrough"><s>S</s>         Strikethrough</button>
+      <button class="ctx-item" data-action="inlinecode">  <code>&lt;/&gt;</code> Inline Code  </button>
+    </div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-group">
+      <button class="ctx-item" data-action="h1"><span class="ctx-badge">H1</span> Heading 1</button>
+      <button class="ctx-item" data-action="h2"><span class="ctx-badge">H2</span> Heading 2</button>
+      <button class="ctx-item" data-action="h3"><span class="ctx-badge">H3</span> Heading 3</button>
+    </div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-group">
+      <button class="ctx-item" data-action="ul">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="2.5" cy="4" r="1" fill="currentColor"/><circle cx="2.5" cy="7" r="1" fill="currentColor"/><circle cx="2.5" cy="10" r="1" fill="currentColor"/><path d="M5 4h8M5 7h8M5 10h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Bullet List
+      </button>
+      <button class="ctx-item" data-action="ol">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1.5 3h1.2v4M1.5 7h2.4M2.2 10.5h1a.7.7 0 0 1 0 1.5H2M5 4h8M5 7h8M5 10.5h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Numbered List
+      </button>
+      <button class="ctx-item" data-action="blockquote">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 3v3a2 2 0 0 0 2 2M7 3v3a2 2 0 0 0 2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Blockquote
+      </button>
+      <button class="ctx-item" data-action="codeblock">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4.5 4.5 2 7l2.5 2.5M9.5 4.5 12 7l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Code Block
+      </button>
+    </div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-group">
+      <button class="ctx-item" data-action="link">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M5.5 8.5a3.54 3.54 0 0 0 5 0L12 7a3.54 3.54 0 0 0-5-5L6 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M8.5 5.5a3.54 3.54 0 0 0-5 0L2 7a3.54 3.54 0 0 0 5 5L8 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Link
+      </button>
+      <button class="ctx-item" data-action="image">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="11" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="5" cy="5.5" r="1" fill="currentColor"/><path d="M1.5 9.5 4.5 7l2.5 2 2-1.5 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Image
+      </button>
+      <button class="ctx-item" data-action="hr">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Divider
+      </button>
+      <button class="ctx-item" data-action="table">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="11" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 5.5h11M5 2.5v9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Table…
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Settings Modal ─────────────────────────────────────────────── -->
+  <div id="settingsOverlay" class="settings-overlay hidden" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="settings-panel settings-panel--wide">
+
+      <!-- Header -->
+      <div class="settings-panel-header">
+        <span class="settings-panel-title">Settings</span>
+        <button id="btnCloseSettings" class="settings-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body: nav sidebar + content -->
+      <div class="settings-body-split">
+
+        <!-- ── Left nav ── -->
+        <nav class="settings-nav" aria-label="Settings sections">
+
+          <button class="settings-nav-item active" data-settings-panel="ai">
+            <!-- Sparkle / AI icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83
+                       M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+                    stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round"/>
+            </svg>
+            AI Models
+          </button>
+
+          <button class="settings-nav-item" data-settings-panel="editor">
+            <!-- Font / text icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M4 7V5h16v2M9 19h6M12 5v14"
+                    stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Editor
+          </button>
+
+          <button class="settings-nav-item" data-settings-panel="explorer">
+            <!-- Folder / files icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"
+                    stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            Explorer
+          </button>
+
+        </nav>
+
+        <!-- ── Right content panels ── -->
+        <div class="settings-content">
+
+          <!-- ── AI Models pane ── -->
+          <div id="settingsPane-ai" class="settings-pane">
+            <div class="settings-section-header">
+              <h3 class="settings-section-title">AI Models</h3>
+              <p class="settings-section-desc">Configure models for the AI Assistant</p>
+            </div>
+
+            <div id="modelConfigList" class="model-config-list">
+              <p class="model-list-empty">Loading…</p>
+            </div>
+
+            <button id="btnAddModel" class="btn btn-primary btn-add-model">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6"
+                      stroke-linecap="round"/>
+              </svg>
+              Add Model
+            </button>
+          </div>
+
+          <!-- ── Editor pane ── -->
+          <div id="settingsPane-editor" class="settings-pane hidden">
+            <div class="settings-section-header">
+              <h3 class="settings-section-title">Editor</h3>
+              <p class="settings-section-desc">Appearance and typography for the code editor</p>
+            </div>
+
+            <!-- Font Size -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">Font Size</span>
+                <span class="settings-row__desc">Editor text size in pixels</span>
+              </div>
+              <div class="settings-row__control">
+                <div class="font-size-stepper">
+                  <button id="btnFontSizeDown" class="font-step-btn" title="Decrease font size" aria-label="Decrease">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                      <path d="M2 5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                  <span id="fontSizeValue" class="font-size-display">12</span>
+                  <span class="font-size-unit">px</span>
+                  <button id="btnFontSizeUp" class="font-step-btn" title="Increase font size" aria-label="Increase">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                      <path d="M5 2v6M2 5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Font Family -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">Font Family</span>
+                <span class="settings-row__desc">Monospace font used in the editor</span>
+              </div>
+              <div class="settings-row__control">
+                <select id="editorFontFamily" class="form-input settings-select">
+                  <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                  <option value="'Fira Code', monospace">Fira Code</option>
+                  <option value="'Cascadia Code', monospace">Cascadia Code</option>
+                  <option value="Consolas, monospace">Consolas</option>
+                  <option value="'Courier New', monospace">Courier New</option>
+                  <option value="monospace">System Monospace</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Startup Mode -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">Startup Mode</span>
+                <span class="settings-row__desc">Which view opens when the app launches</span>
+              </div>
+              <div class="settings-row__control">
+                <select id="startupMode" class="form-input settings-select">
+                  <option value="preview">Preview</option>
+                  <option value="edit">Edit</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Live preview strip -->
+            <div class="editor-font-preview" id="editorFontPreview">
+              <span># Heading</span>  <span>**bold**</span>  <span>`code`</span>  <span>normal text</span>
+            </div>
+
+          </div><!-- /settingsPane-editor -->
+
+          <!-- ── Explorer pane ── -->
+          <div id="settingsPane-explorer" class="settings-pane hidden">
+            <div class="settings-section-header">
+              <h3 class="settings-section-title">File Explorer</h3>
+              <p class="settings-section-desc">Control how files are listed in the sidebar</p>
+            </div>
+
+            <!-- Explorer Mode -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">Explorer Mode</span>
+                <span class="settings-row__desc">Root only shows date groups, content previews, and tags</span>
+              </div>
+              <div class="settings-row__control">
+                <select id="explorerMode" class="form-input settings-select">
+                  <option value="multi-level">Multi-level</option>
+                  <option value="root-only">Root folder only</option>
+                </select>
+              </div>
+            </div>
+          </div><!-- /settingsPane-explorer -->
+
+        </div><!-- /settings-content -->
+      </div><!-- /settings-body-split -->
+
+    </div><!-- /settings-panel -->
+  </div><!-- /settingsOverlay -->
+
+  <!-- ── Add / Edit Model Modal ─────────────────────────────────────── -->
+  <div id="modelModalOverlay" class="settings-overlay hidden" role="dialog" aria-modal="true" aria-label="Model configuration">
+    <div class="settings-panel settings-panel--sm">
+      <div class="settings-panel-header">
+        <span id="modelModalTitle" class="settings-panel-title">Add Model</span>
+        <button id="btnCloseModelModal" class="settings-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-panel-body">
+
+        <!-- Type selector (hidden when editing — type cannot change) -->
+        <div class="form-group" id="typeSelectorGroup">
+          <label class="form-label">Type</label>
+          <div class="type-radio-group">
+            <label class="type-radio-label">
+              <input type="radio" name="modelType" value="api" checked> API
+            </label>
+            <label class="type-radio-label">
+              <input type="radio" name="modelType" value="ollama"> Ollama
+            </label>
+          </div>
+          <p id="modelTypeHint" class="form-type-hint"></p>
+        </div>
+
+        <!-- Label (all types) -->
+        <div class="form-group">
+          <label class="form-label" for="modelLabel">Label</label>
+          <input type="text" id="modelLabel" class="form-input"
+                 placeholder="e.g. Groq · Llama 3.3 70B" autocomplete="off">
+        </div>
+
+        <!-- Ollama fields -->
+        <div id="ollamaFields" class="hidden">
+          <div class="form-group">
+            <label class="form-label" for="modelBaseUrl">Base URL</label>
+            <input type="text" id="modelBaseUrl" class="form-input"
+                   placeholder="http://localhost:11434" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modelName">Model</label>
+            <div class="ollama-model-row">
+              <select id="modelName" class="form-input">
+                <option value="">— click Detect —</option>
+              </select>
+              <button id="btnDetectOllama" class="btn btn-outline btn-sm">Detect</button>
+            </div>
+            <p class="form-field-hint">
+              💡 For best results use a model with 7B+ parameters — e.g.
+              <strong>llama3.2</strong>, <strong>qwen2.5:7b</strong>, or
+              <strong>mistral</strong>. Small models (&lt;3B) may not follow
+              the structured output format reliably.
+            </p>
+          </div>
+        </div>
+
+        <!-- API fields -->
+        <div id="apiFields">
+          <div class="form-group">
+            <label class="form-label" for="modelApiBaseUrl">Base URL</label>
+            <input type="text" id="modelApiBaseUrl" class="form-input"
+                   placeholder="e.g. https://api.groq.com/openai/v1" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modelApiModelName">Model Name</label>
+            <input type="text" id="modelApiModelName" class="form-input"
+                   placeholder="e.g. llama-3.3-70b-versatile" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modelApiKey">API Key</label>
+            <div class="api-key-row">
+              <input type="password" id="modelApiKey" class="form-input"
+                     placeholder="sk-..." autocomplete="off">
+              <button type="button" id="btnToggleApiKey" class="btn btn-outline btn-sm" title="Show / hide key">
+                <svg id="apiKeyEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M1 12C1 12 5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12Z"
+                        stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Default checkbox (all types) -->
+        <div class="form-group form-group--check">
+          <label class="form-check-label">
+            <input type="checkbox" id="modelIsDefault">
+            Set as default model
+          </label>
+        </div>
+
+        <!-- Modal action buttons -->
+        <div class="modal-actions">
+          <button id="btnCancelModel" class="btn btn-outline">Cancel</button>
+          <button id="btnSaveModel"   class="btn btn-primary">Save</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Save-As Modal ──────────────────────────────────────────────── -->
+  <div id="saveAsOverlay" class="settings-overlay hidden"
+       role="dialog" aria-modal="true" aria-labelledby="saveAsTitle">
+    <div class="settings-panel settings-panel--sm">
+      <div class="settings-panel-header">
+        <span id="saveAsTitle" class="settings-panel-title">Save File</span>
+        <button id="btnCloseSaveAs" class="settings-close-btn" title="Cancel">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-panel-body">
+        <div class="form-group">
+          <label class="form-label">Save into folder</label>
+          <div class="save-as-folder-row">
+            <span id="saveAsFolderDisplay" class="save-as-folder-path">No folder selected</span>
+            <button id="btnSaveAsPickFolder" class="btn btn-outline btn-sm">Browse…</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="saveAsFilename">Filename</label>
+          <input type="text" id="saveAsFilename" class="form-input"
+                 placeholder="untitled.md" autocomplete="off" spellcheck="false" maxlength="120">
+          <span id="saveAsError" class="save-as-error hidden"></span>
+        </div>
+        <div class="modal-actions">
+          <button id="btnSaveAsCancel" class="btn btn-outline">Cancel</button>
+          <button id="btnSaveAsConfirm" class="btn btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Delete confirmation modal ───────────────────────────────────── -->
+  <div id="deleteConfirmOverlay" class="settings-overlay hidden"
+       role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+    <div class="settings-panel settings-panel--sm">
+      <div class="settings-panel-header">
+        <span id="deleteConfirmTitle" class="settings-panel-title">Delete File</span>
+        <button id="btnCloseDeleteConfirm" class="settings-close-btn" title="Cancel">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-panel-body">
+        <p class="delete-confirm-message">
+          <strong id="deleteConfirmFileName"></strong> <span id="deleteConfirmDetail">will be sent to the Recycle Bin and can be restored from there.</span>
+        </p>
+        <p class="delete-confirm-note" id="deleteConfirmNote">Note: On network drives the file may be permanently deleted.</p>
+        <div class="modal-actions">
+          <button id="btnDeleteCancel" class="btn btn-outline">Cancel</button>
+          <button id="btnDeleteConfirm" class="btn btn-danger">Move to Recycle Bin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Label Picker Modal ────────────────────────────────────────────── -->
+  <div id="labelModalOverlay" class="label-modal-overlay hidden"
+       role="dialog" aria-modal="true" aria-label="Pick color">
+    <div class="label-modal">
+      <div class="label-modal__header">
+        <span class="label-modal__title">Pick Color</span>
+        <button id="btnCloseLabelModal" class="settings-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="label-modal__body">
+        <div class="label-color-swatches" id="labelColorSwatches">
+          <button class="label-swatch" data-color="#ef4444" style="background:#ef4444" title="Red"          aria-label="Red"></button>
+          <button class="label-swatch" data-color="#f97316" style="background:#f97316" title="Orange"       aria-label="Orange"></button>
+          <button class="label-swatch" data-color="#eab308" style="background:#eab308" title="Yellow"       aria-label="Yellow"></button>
+          <button class="label-swatch" data-color="#22c55e" style="background:#22c55e" title="Green"        aria-label="Green"></button>
+          <button class="label-swatch" data-color="#14b8a6" style="background:#14b8a6" title="Teal"         aria-label="Teal"></button>
+          <button class="label-swatch" data-color="#3b82f6" style="background:#3b82f6" title="Blue"         aria-label="Blue"></button>
+          <button class="label-swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="Purple"       aria-label="Purple"></button>
+          <button class="label-swatch" data-color="#ec4899" style="background:#ec4899" title="Pink"         aria-label="Pink"></button>
+          <button class="label-swatch" data-color="#991b1b" style="background:#991b1b" title="Dark Red"     aria-label="Dark Red"></button>
+          <button class="label-swatch" data-color="#9a3412" style="background:#9a3412" title="Dark Orange"  aria-label="Dark Orange"></button>
+          <button class="label-swatch" data-color="#854d0e" style="background:#854d0e" title="Dark Amber"   aria-label="Dark Amber"></button>
+          <button class="label-swatch" data-color="#166534" style="background:#166534" title="Dark Green"   aria-label="Dark Green"></button>
+          <button class="label-swatch" data-color="#115e59" style="background:#115e59" title="Dark Teal"    aria-label="Dark Teal"></button>
+          <button class="label-swatch" data-color="#1e40af" style="background:#1e40af" title="Dark Blue"    aria-label="Dark Blue"></button>
+          <button class="label-swatch" data-color="#5b21b6" style="background:#5b21b6" title="Dark Purple"  aria-label="Dark Purple"></button>
+          <button class="label-swatch" data-color="#9f1239" style="background:#9f1239" title="Crimson"      aria-label="Crimson"></button>
+        </div>
+        <div class="label-modal__actions">
+          <button id="btnRemoveLabel" class="btn btn-outline btn-sm">Remove</button>
+          <button id="btnSaveLabel"   class="btn btn-primary  btn-sm">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Table Builder Modal ──────────────────────────────────────────── -->
+  <div id="tableBuilderOverlay" class="settings-overlay hidden"
+       role="dialog" aria-modal="true" aria-label="Insert table">
+    <div class="settings-panel settings-panel--table-builder">
+
+      <div class="settings-panel-header">
+        <span class="settings-panel-title">Insert Table</span>
+        <button id="btnCloseTableBuilder" class="settings-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="tbl-builder-body">
+
+        <p class="tbl-hint">
+          Edit column names in the header · click <strong>L/C/R</strong> to cycle text alignment · <kbd>Tab</kbd> moves between cells
+        </p>
+
+        <div class="tbl-rows-wrap" id="tblRowsWrap"></div>
+
+        <button id="btnTblAddRow" class="tbl-add-btn">+ Add Row</button>
+
+        <div class="modal-actions tbl-footer-actions">
+          <button id="btnTblCancel" class="btn btn-outline">Cancel</button>
+          <button id="btnTblInsert" class="btn btn-primary">Insert</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Feature modules (load order matters — see dependency comments) ── -->
+  <script src="storageManager.js"></script>
+  <script src="themeManager.js"></script>
+  <script src="sidebarManager.js"></script>
+  <script src="statusBar.js"></script>
+  <script src="saveManager.js"></script>
+  <script src="welcomeScreen.js"></script>
+  <script src="findReplaceWidget.js"></script>
+  <script src="contextMenus.js"></script>
+  <script src="fileOperations.js"></script>
+  <script src="fileTreeManager.js"></script>
+  <script src="modalManager.js"></script>
+  <script src="hamburgerMenu.js"></script>
+  <script src="searchPanel.js"></script>
+  <!-- ── Core rendering modules ────────────────────────────────────── -->
+  <script src="aiService.js"></script>
+  <script src="markdownRenderer.js"></script>
+  <script src="editorCore.js"></script>
+  <script src="tableBuilder.js"></script>
+  <script src="chatPanel.js"></script>
+  <!-- ── Orchestration entry point ─────────────────────────────────── -->
+  <script src="index.js"></script>
+  <script src="aiConfig.js"></script>
+</body>
+</html>

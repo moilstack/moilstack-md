@@ -1,0 +1,8 @@
+# All files require review from the moilstack owners team.
+#
+# To enforce this on both protected branches, go to:
+# GitHub → Settings → Branches → Add rule for `main` and `develop`
+# → Enable "Require a pull request before merging"
+# → Enable "Require review from Code Owners"
+
+* @moilstack/owners
