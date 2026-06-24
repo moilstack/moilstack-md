@@ -1,0 +1,43 @@
+version: "2"
+language: "en-US"
+
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false          # skip draft PRs — only review when ready
+  high_level_summary: true # post a plain-English summary of what the PR does
+  review_status: true      # post a status comment when review starts/finishes
+  request_changes_workflow: false  # leave as comments, not blocking "Request changes"
+
+  # Files to skip — build output, generated assets, lock files
+  path_filters:
+    - "!dist/**"
+    - "!node_modules/**"
+    - "!package-lock.json"
+    - "!src/assets/*.ico"
+    - "!src/assets/*.png"
+    - "!assets/**"
+    - "!build/make-file-icon.js"   # generated icon script
+
+  path_instructions:
+    - path: "src/main/**"
+      instructions: >
+        This is the Electron main process. Flag any use of shell: true in
+        child_process calls, unsanitised IPC input, or nodeIntegration being
+        enabled — these are security-sensitive in Electron apps.
+    - path: "src/preload/**"
+      instructions: >
+        This is the context bridge. Only explicitly whitelisted APIs should be
+        exposed to the renderer. Flag any broad or dynamic exposure of Node APIs.
+    - path: "src/renderer/**"
+      instructions: >
+        Renderer process — no direct Node.js access. Flag any direct require()
+        or access to Node built-ins; all IPC should go through the preload bridge.
+    - path: ".github/workflows/**"
+      instructions: >
+        Review for supply chain risks: prefer pinned action versions (SHA),
+        avoid third-party actions with broad permissions, check that
+        GITHUB_TOKEN permissions are scoped as narrowly as possible.
+
+chat:
+  auto_reply: true   # CodeRabbit responds to follow-up questions in PR comments

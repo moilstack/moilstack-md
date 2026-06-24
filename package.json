@@ -1,0 +1,99 @@
+{
+  "name": "moilstack-md",
+  "version": "1.0.0-beta.1",
+  "description": "Markdown editor with AI assistance by MoilStack",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "nodemon --exec electron . --watch src --ext js,html,css",
+    "test": "jest",
+    "make-file-icon": "node build/make-file-icon.js",
+    "package": "electron-builder"
+  },
+  "build": {
+    "appId": "com.moilstack.markdown",
+    "productName": "MoilStack .md",
+    "copyright": "Copyright © 2026 MoilStack",
+    "directories": {
+      "output": "dist"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
+    "fileAssociations": [
+      {
+        "ext": [
+          "md",
+          "markdown",
+          "txt"
+        ],
+        "name": "Markdown File",
+        "description": "Markdown Document",
+        "icon": "src/assets/file-icon-md",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "src/assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MoilStack .md",
+      "include": "build/installer.nsh"
+    },
+    "appx": {
+      "publisher": "CN=MoilStack",
+      "publisherDisplayName": "MoilStack",
+      "identityName": "MoilStack.Markdown",
+      "applicationId": "MoilStackMarkdown",
+      "backgroundColor": "#6366f1",
+      "languages": [
+        "en-US"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  },
+  "keywords": [
+    "markdown",
+    "editor",
+    "ai",
+    "moilstack"
+  ],
+  "author": "MoilStack",
+  "license": "MIT",
+  "type": "commonjs",
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^42.2.0",
+    "electron-builder": "^24.13.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "nodemon": "^3.1.14",
+    "png-to-ico": "^2.1.8",
+    "sharp": "^0.33.5"
+  }
+}
