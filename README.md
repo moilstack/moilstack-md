@@ -1,6 +1,6 @@
 # MoilStack .md
 
-![Version](https://img.shields.io/github/v/release/moilstack/moilstack-md?label=version)
+[![Version](https://img.shields.io/github/v/release/moilstack/moilstack-md?label=version&include_prereleases)](https://github.com/moilstack/moilstack-md/releases)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
