@@ -8,6 +8,8 @@ All notable new features and critical fixes for MoilStack .md.
 
 ### Changed
 - **Custom title bar** — the native OS title bar is replaced by a fully custom frameless title bar that inherits the app's theme color (`--sidebar-bg`); minimize, maximize/restore, and close window-control buttons are now rendered in-app at the right edge of the header, with a red hover on the close button (Windows-style)
+- **Dark theme — One Half Dark Amethyst** — the dark theme is redesigned around the One Half Dark palette: charcoal `#282c34` background (replacing slate `#1e293b`), warm light-gray `#dcdfe4` text, and violet `#c678dd` as the primary accent; heading colors in both the editor and preview now follow the full One Half Dark spectrum (purple H1, blue H2, cyan H3, green H4, yellow H5, red H6); folder icons updated to gold `#e5c07b`
+- **Recent folders dropdown readability** — each folder entry now has more vertical breathing room (item padding `6px` → `9px`, name-to-path gap `1px` → `4px`), larger fonts (folder name `12.5px` → `13px`, path `10.5px` → `11.5px`), a thin divider line between entries, and a slightly wider dropdown (`260px` → `290px` minimum width)
 
 ---
 
