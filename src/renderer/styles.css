@@ -63,46 +63,47 @@
   --scrollbar-track:   transparent;
 }
 
-/* ─── Design tokens — Dark theme ─────────────────────────────────── */
+/* ─── Design tokens — Dark theme (One Half Dark — Amethyst) ─────── */
 [data-theme="dark"] {
-  --primary:           #60a5fa;
+  --primary:           #c678dd;
 
-  --bg:                #1e293b;
-  --surface:           #334155;
-  --sidebar-bg:        #1e293b;
-  --input-bg:          #1e293b;
-  --editor-bg:         #1e293b;
-  --preview-bg:        #1e293b;
+  --bg:                #282c34;
+  --surface:           #2f333d;
+  --sidebar-bg:        #21252b;
+  --input-bg:          #282c34;
+  --editor-bg:         #282c34;
+  --preview-bg:        #282c34;
 
-  --text-primary:      #f1f5f9;
-  --text-secondary:    #cbd5e1;
-  --section-header:    #64748b;
+  --text-primary:      #dcdfe4;
+  --text-secondary:    #9da5b4;
+  --section-header:    #5c6370;
 
-  --border:            #475569;
-  --hover-bg:          #334155;
-  --active-file-bg:    #1e3a5f;
-  --active-file-text:  #60a5fa;
+  --border:            #3e4451;
+  --hover-bg:          #2f333d;
+  --active-file-bg:    #3a2c42;
+  --active-file-text:  #c678dd;
 
-  --statusbar-bg:      #0f172a;
-  --statusbar-text:    #94a3b8;
+  --statusbar-bg:      #1c1f26;
+  --statusbar-text:    #9da5b4;
 
-  --toggle-btn-bg:     #334155;
-  --toggle-btn-border: #475569;
-  --toggle-btn-text:   #f1f5f9;
+  --toggle-btn-bg:     #2f333d;
+  --toggle-btn-border: #3e4451;
+  --toggle-btn-text:   #dcdfe4;
 
-  --chat-user-bg:      #3b82f6;
-  --chat-user-text:    #ffffff;
-  --chat-ai-bg:        #334155;
-  --chat-ai-text:      #f1f5f9;
+  --chat-user-bg:      #c678dd;
+  --chat-user-text:    #1c1f26;
+  --chat-ai-bg:        #2f333d;
+  --chat-ai-text:      #dcdfe4;
 
-  --restore-btn-bg:    #422006;
-  --restore-btn-text:  #fcd34d;
-  --restore-btn-border:#78350f;
+  --restore-btn-bg:    #3a2c10;
+  --restore-btn-text:  #e5c07b;
+  --restore-btn-border:#7a5c20;
 
-  --scrollbar-thumb:   #334155;
-  --scrollbar-thumb-hover: #475569;
+  --scrollbar-thumb:   #3e4451;
+  --scrollbar-thumb-hover: #5c6370;
   --scrollbar-track:   transparent;
 }
+
 
 /* ─── Theme transition — applied briefly on every theme toggle ───── */
 /* Forces ALL elements to fade smoothly; removed after 250 ms via JS  */
@@ -239,8 +240,8 @@ body {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  min-width: 260px;
-  max-width: 380px;
+  min-width: 290px;
+  max-width: 420px;
   background: var(--sidebar-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -254,9 +255,9 @@ body {
 .folder-recent-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 6px 8px;
+  padding: 9px 10px;
   background: none;
   border: none;
   border-radius: 5px;
@@ -264,6 +265,23 @@ body {
   text-align: left;
   color: var(--text-primary);
   transition: background 0.12s;
+}
+
+.folder-recent-item + .folder-recent-item {
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.folder-recent-item:last-child {
+  border-radius: 0 0 4px 4px;
+}
+
+.folder-recent-item:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.folder-recent-item:only-child {
+  border-radius: 4px;
 }
 
 .folder-recent-item:hover {
@@ -277,7 +295,7 @@ body {
 }
 
 .folder-recent-item__name {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
@@ -286,7 +304,7 @@ body {
 }
 
 .folder-recent-item__path {
-  font-size: 10.5px;
+  font-size: 11.5px;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -298,7 +316,7 @@ body {
 }
 
 .folder-recent-empty {
-  padding: 10px 8px;
+  padding: 12px 10px;
   font-size: 12px;
   color: var(--text-secondary);
   text-align: center;
@@ -676,7 +694,7 @@ body {
 }
 
 [data-theme="dark"] .folder-row {
-  color: #f59e0b;
+  color: #e5c07b;
 }
 
 .folder-row:hover {
@@ -785,7 +803,7 @@ body {
 [data-theme="dark"] .folder-row .icon-folder,
 [data-theme="dark"] .file-item .icon-folder,
 [data-theme="dark"] .welcome-recent-item .icon-folder {
-  color: #f59e0b;
+  color: #e5c07b;
 }
 
 .file-item span {
@@ -1496,12 +1514,12 @@ body {
 #editor-highlight .hl-h5 { color: #d97706; }
 #editor-highlight .hl-h6 { color: #dc2626; }
 
-[data-theme="dark"] #editor-highlight .hl-h1 { color: #60a5fa; }
-[data-theme="dark"] #editor-highlight .hl-h2 { color: #a78bfa; }
-[data-theme="dark"] #editor-highlight .hl-h3 { color: #22d3ee; }
-[data-theme="dark"] #editor-highlight .hl-h4 { color: #34d399; }
-[data-theme="dark"] #editor-highlight .hl-h5 { color: #fbbf24; }
-[data-theme="dark"] #editor-highlight .hl-h6 { color: #f87171; }
+[data-theme="dark"] #editor-highlight .hl-h1 { color: #c678dd; }
+[data-theme="dark"] #editor-highlight .hl-h2 { color: #61afef; }
+[data-theme="dark"] #editor-highlight .hl-h3 { color: #56b6c2; }
+[data-theme="dark"] #editor-highlight .hl-h4 { color: #98c379; }
+[data-theme="dark"] #editor-highlight .hl-h5 { color: #e5c07b; }
+[data-theme="dark"] #editor-highlight .hl-h6 { color: #e06c75; }
 
 /* ── Selection ghost — dimmed highlight when editor loses focus ────── */
 /* Sits behind #editor-highlight so syntax colours remain readable.    */
@@ -1626,12 +1644,12 @@ body {
 .preview-content h5 { font-size: .93em; color: #92400e; }
 .preview-content h6 { font-size: .93em; color: #991b1b; }
 
-[data-theme="dark"] .preview-content h1 { color: #60a5fa; }
-[data-theme="dark"] .preview-content h2 { color: #818cf8; }
-[data-theme="dark"] .preview-content h3 { color: #22d3ee; }
-[data-theme="dark"] .preview-content h4 { color: #34d399; }
-[data-theme="dark"] .preview-content h5 { color: #fbbf24; }
-[data-theme="dark"] .preview-content h6 { color: #f87171; }
+[data-theme="dark"] .preview-content h1 { color: #c678dd; }
+[data-theme="dark"] .preview-content h2 { color: #61afef; }
+[data-theme="dark"] .preview-content h3 { color: #56b6c2; }
+[data-theme="dark"] .preview-content h4 { color: #98c379; }
+[data-theme="dark"] .preview-content h5 { color: #e5c07b; }
+[data-theme="dark"] .preview-content h6 { color: #e06c75; }
 
 .preview-content p  { margin: 1.1em 0; }
 .preview-content hr { border: none; border-top: 2px solid var(--border); margin: 1.5em 0; }

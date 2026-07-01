@@ -96,6 +96,21 @@ function postStream(urlStr, body, headers, onChunk) {
       },
     }
     const req = mod.request(opts, (res) => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        // Non-2xx: read the error body and reject with the API's message
+        let errBody = ''
+        res.on('data', chunk => { errBody += chunk.toString('utf8') })
+        res.on('end', () => {
+          let msg = `HTTP ${res.statusCode}`
+          try {
+            const parsed = JSON.parse(errBody)
+            // OpenAI-compatible error envelope: { error: { message } }
+            msg = parsed?.error?.message || parsed?.message || msg
+          } catch { /* use raw status line */ }
+          reject(new Error(msg))
+        })
+        return
+      }
       res.on('data',  onChunk)
       res.on('end',   resolve)
       res.on('error', reject)
