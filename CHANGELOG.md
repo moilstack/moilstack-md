@@ -4,6 +4,13 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Changed
+- **Custom title bar** — the native OS title bar is replaced by a fully custom frameless title bar that inherits the app's theme color (`--sidebar-bg`); minimize, maximize/restore, and close window-control buttons are now rendered in-app at the right edge of the header, with a red hover on the close button (Windows-style)
+
+---
+
 ## [1.0.0-beta.1] - 2026-06-22
 
 ### Added

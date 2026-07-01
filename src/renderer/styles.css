@@ -136,7 +136,7 @@ body {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   height: 42px;
-  padding: 0 12px 0 14px;
+  padding: 0 0 0 14px;
   background: var(--sidebar-bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -2472,6 +2472,39 @@ body {
   width: 30px;
   height: 30px;
   justify-content: center;
+}
+
+/* ─── Custom title-bar window controls ───────────────────────────── */
+.window-controls {
+  display: flex;
+  align-items: stretch;
+  margin-left: 4px;
+  height: 42px;
+  -webkit-app-region: no-drag;
+}
+
+.wc-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  -webkit-app-region: no-drag;
+}
+
+.wc-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.wc-btn--close:hover {
+  background: #e81123;
+  color: #ffffff;
 }
 
 /* ════════════════════════════════════════════════════════════════════

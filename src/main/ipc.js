@@ -201,6 +201,12 @@ function registerIpcHandlers() {
   // Sync IPC: renderer reads app version during preload initialisation
   ipcMain.on('app:get-version', (event) => { event.returnValue = app.getVersion() })
 
+  // ── Custom title-bar window controls ──────────────────────────────────────
+  ipcMain.on('window:minimize',  (e) => { BrowserWindow.fromWebContents(e.sender)?.minimize() })
+  ipcMain.on('window:maximize',  (e) => { const w = BrowserWindow.fromWebContents(e.sender); w?.isMaximized() ? w.restore() : w.maximize() })
+  ipcMain.on('window:close',     (e) => { BrowserWindow.fromWebContents(e.sender)?.close() })
+  ipcMain.handle('window:is-maximized', (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
+
   // Open a URL in the default OS browser — only http/https allowed
   ipcMain.handle('shell:open-external', (_e, url) => {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url)

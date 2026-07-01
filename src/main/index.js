@@ -109,12 +109,17 @@ if (!gotLock) {
       ...(x !== undefined ? { x, y } : {}),
       title: 'MoilStack .md',
       icon: path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+      frame: false,
       webPreferences: {
         preload: path.join(__dirname, '..', 'preload', 'index.js'),
         contextIsolation: true,
         nodeIntegration: false,
       },
     })
+
+    // Forward maximize/unmaximize events so the renderer can update the button icon
+    win.on('maximize',   () => win.webContents.send('window:maximized-change', true))
+    win.on('unmaximize', () => win.webContents.send('window:maximized-change', false))
 
     // ── Persist window size on resize (debounced, first window only) ─────
     if (allWins.length === 0) {

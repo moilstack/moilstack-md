@@ -145,4 +145,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Open a URL in the default OS browser (http/https only)
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
 
+  // ── Custom title-bar window controls ──────────────────────────────────────
+  window: {
+    minimize:          () => ipcRenderer.send('window:minimize'),
+    toggleMaximize:    () => ipcRenderer.send('window:maximize'),
+    close:             () => ipcRenderer.send('window:close'),
+    isMaximized:       () => ipcRenderer.invoke('window:is-maximized'),
+    onMaximizedChange: (cb) => ipcRenderer.on('window:maximized-change', (_e, isMax) => cb(isMax)),
+  },
+
 })
