@@ -35,6 +35,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# ─── Certificates & signing keys (never commit) ──────────────────────────────
+*.pfx
+*.p12
+*.cer
+*.key
+
 # ─── Environment / secrets ───────────────────────────────────────────────────
 .env
 .env.local
