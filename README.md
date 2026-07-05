@@ -37,7 +37,8 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 - **Configurable editor** — font size and font family settings
 
 ---
-
+## Screens
+![AI assistant editing](assets/screenshot-preview.png)
 ![AI assistant editing](assets/screenshot-ai-edit.png)
 ![Table builder](assets/screenshot-table-builder.png)
 

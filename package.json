@@ -1,6 +1,6 @@
 {
   "name": "moilstack-md",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "Markdown editor with AI assistance by MoilStack",
   "main": "src/main/index.js",
   "scripts": {
@@ -50,7 +50,7 @@
       "include": "build/installer.nsh"
     },
     "appx": {
-      "publisher": "CN=MoilStack",
+      "publisher": "CN=MoilStack Tech LLP",
       "publisherDisplayName": "MoilStack",
       "identityName": "MoilStack.Markdown",
       "applicationId": "MoilStackMarkdown",
