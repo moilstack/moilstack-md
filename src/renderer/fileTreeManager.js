@@ -549,7 +549,7 @@ const FileTreeManager = (() => {
             <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
                   stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
           </svg>
-          <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:1px;">
+          <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;">
             <span class="folder-recent-item__name">${item.name}</span>
             <span class="folder-recent-item__path">${item.path}</span>
           </div>`;

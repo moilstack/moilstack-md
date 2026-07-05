@@ -20,6 +20,44 @@ const MarkdownRenderer = (() => {
       .replace(/"/g,  '&quot;');
   }
 
+  /* ── Math (LaTeX) rendering via KaTeX ──────────────────────────── */
+
+  // Extracts $$...$$ and $...$ from raw Markdown *before* HTML escaping,
+  // replacing them with NUL-delimited placeholders so that escapeHtml
+  // never touches the LaTeX source. The slots array carries the originals.
+  function protectMath(raw) {
+    const slots = [];
+    const protect = (expr, display) => {
+      slots.push({ expr, display });
+      return `\x01M${slots.length - 1}\x01`;
+    };
+    const out = raw
+      // Display math: $$...$$  (greedy-safe, dotAll)
+      .replace(/\$\$([^$]*?)\$\$/gs, (_, e) => protect(e, true))
+      // Inline math: $...$  (no newline crossing, no double-dollar confusion)
+      .replace(/(?<!\$)\$(?!\$)([^$\n]+?)(?<!\$)\$(?!\$)/g, (_, e) => protect(e, false));
+    return { text: out, slots };
+  }
+
+  function restoreMath(html, slots) {
+    if (!slots.length) return html;
+    return html.replace(/\x01M(\d+)\x01/g, (_, i) => {
+      const { expr, display } = slots[+i];
+      try {
+        if (typeof katex !== 'undefined') {
+          return katex.renderToString(expr, { displayMode: display, throwOnError: false, output: 'html' });
+        }
+      } catch (_e) { /* fall through */ }
+      return `<code class="math-fallback">${escapeHtml(expr)}</code>`;
+    });
+  }
+
+  // Drop-in replacement for parseInline(escapeHtml(raw)) that preserves math.
+  function parseInlineMath(raw) {
+    const { text, slots } = protectMath(raw);
+    return restoreMath(parseInline(escapeHtml(text)), slots);
+  }
+
   /* ── Inline Markdown rules ──────────────────────────────────────── */
 
   /** Apply inline Markdown rules to an already-escaped string. */
@@ -111,12 +149,12 @@ const MarkdownRenderer = (() => {
 
       if (uncheckedM) {
         hasTaskItems = true;
-        items.push(`<li class="task-list-item"><input type="checkbox" class="task-checkbox"><span class="task-label">${parseInline(escapeHtml(uncheckedM[1]))}</span>${subHtml}</li>`);
+        items.push(`<li class="task-list-item"><input type="checkbox" class="task-checkbox"><span class="task-label">${parseInlineMath(uncheckedM[1])}</span>${subHtml}</li>`);
       } else if (checkedM) {
         hasTaskItems = true;
-        items.push(`<li class="task-list-item task-list-item--checked"><input type="checkbox" class="task-checkbox" checked><span class="task-label">${parseInline(escapeHtml(checkedM[1]))}</span>${subHtml}</li>`);
+        items.push(`<li class="task-list-item task-list-item--checked"><input type="checkbox" class="task-checkbox" checked><span class="task-label">${parseInlineMath(checkedM[1])}</span>${subHtml}</li>`);
       } else {
-        items.push(`<li>${parseInline(escapeHtml(content))}${subHtml}</li>`);
+        items.push(`<li>${parseInlineMath(content)}${subHtml}</li>`);
       }
     }
 
@@ -170,7 +208,7 @@ const MarkdownRenderer = (() => {
       const hm = trimmedLine.match(/^(#{1,6}) (.+)$/);
       if (hm) {
         const lvl = hm[1].length;
-        out.push(`<h${lvl}>${parseInline(escapeHtml(hm[2].trim()))}</h${lvl}>`);
+        out.push(`<h${lvl}>${parseInlineMath(hm[2].trim())}</h${lvl}>`);
         i++;
         continue;
       }
@@ -208,8 +246,9 @@ const MarkdownRenderer = (() => {
         // Allow <br> tags in cells to render as line breaks; escape all other HTML.
         function parseCellContent(c) {
           const BR = '\x00BR\x00';
-          const safe = escapeHtml(c.replace(/<br\s*\/?>/gi, BR)).replace(/\x00BR\x00/g, '<br>');
-          return parseInline(safe);
+          const { text: mathProtected, slots: mathSlots } = protectMath(c.replace(/<br\s*\/?>/gi, BR));
+          const safe = escapeHtml(mathProtected).replace(/\x00BR\x00/g, '<br>');
+          return restoreMath(parseInline(safe), mathSlots);
         }
 
         const headerHtml = headerCells
@@ -296,7 +335,10 @@ const MarkdownRenderer = (() => {
         i++;
       }
       if (paraLines.length) {
-        out.push(`<p>${parseInline(escapeHtml(paraLines.join('\n')).replace(/\n/g, '<br>'))}</p>`);
+        const rawPara = paraLines.join('\n');
+        const { text: mathPara, slots: mathParaSlots } = protectMath(rawPara);
+        const escapedPara = escapeHtml(mathPara).replace(/\n/g, '<br>');
+        out.push(`<p>${restoreMath(parseInline(escapedPara), mathParaSlots)}</p>`);
       } else {
         i++; // safety: no rule consumed this line — advance to prevent infinite loop
       }
@@ -306,11 +348,12 @@ const MarkdownRenderer = (() => {
   }
 
   /* ── Public API ─────────────────────────────────────────────────── */
-  return { parseMarkdown, escapeHtml, parseInline };
+  return { parseMarkdown, escapeHtml, parseInline, parseInlineMath };
 
 })();
 
 // CommonJS export — picked up by Jest; ignored when loaded as a browser script
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { MarkdownRenderer };
+  // katex is not available in Node/Jest, so math slots render as <code> fallbacks.
 }

@@ -96,6 +96,21 @@ function postStream(urlStr, body, headers, onChunk) {
       },
     }
     const req = mod.request(opts, (res) => {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        // Non-2xx: read the error body and reject with the API's message
+        let errBody = ''
+        res.on('data', chunk => { errBody += chunk.toString('utf8') })
+        res.on('end', () => {
+          let msg = `HTTP ${res.statusCode}`
+          try {
+            const parsed = JSON.parse(errBody)
+            // OpenAI-compatible error envelope: { error: { message } }
+            msg = parsed?.error?.message || parsed?.message || msg
+          } catch { /* use raw status line */ }
+          reject(new Error(msg))
+        })
+        return
+      }
       res.on('data',  onChunk)
       res.on('end',   resolve)
       res.on('error', reject)
@@ -200,6 +215,12 @@ function registerIpcHandlers() {
 
   // Sync IPC: renderer reads app version during preload initialisation
   ipcMain.on('app:get-version', (event) => { event.returnValue = app.getVersion() })
+
+  // ── Custom title-bar window controls ──────────────────────────────────────
+  ipcMain.on('window:minimize',  (e) => { BrowserWindow.fromWebContents(e.sender)?.minimize() })
+  ipcMain.on('window:maximize',  (e) => { const w = BrowserWindow.fromWebContents(e.sender); w?.isMaximized() ? w.restore() : w.maximize() })
+  ipcMain.on('window:close',     (e) => { BrowserWindow.fromWebContents(e.sender)?.close() })
+  ipcMain.handle('window:is-maximized', (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
 
   // Open a URL in the default OS browser — only http/https allowed
   ipcMain.handle('shell:open-external', (_e, url) => {

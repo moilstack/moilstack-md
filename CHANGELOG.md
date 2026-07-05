@@ -4,6 +4,15 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [1.0.0-beta.2] - 2026-07-05
+
+### Changed
+- **Custom title bar** — the app now has its own title bar that matches the app's theme, with minimize, maximize, and close buttons built into the header
+- **Dark theme — One Half Dark Amethyst** — the dark theme has been refreshed with a new color palette: deeper charcoal background, warm light-gray text, and a violet accent color; headings in the editor and preview each have their own distinct color
+- **Recent folders dropdown** — the recent folders list is easier to read, with more spacing between entries, larger text, and a slightly wider dropdown
+
+---
+
 ## [1.0.0-beta.1] - 2026-06-22
 
 ### Added

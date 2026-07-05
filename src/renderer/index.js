@@ -411,6 +411,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // ── Custom title-bar window controls ──────────────────────────────
+  const _wcMinimize = document.getElementById('wc-minimize');
+  const _wcMaximize = document.getElementById('wc-maximize');
+  const _wcClose    = document.getElementById('wc-close');
+
+  if (_wcMinimize) _wcMinimize.addEventListener('click', () => window.electronAPI?.window?.minimize())
+  if (_wcClose)    _wcClose.addEventListener('click',    () => window.electronAPI?.window?.close())
+  if (_wcMaximize) {
+    _wcMaximize.addEventListener('click', () => window.electronAPI?.window?.toggleMaximize())
+
+    const MAXIMIZE_ICON = `<rect x="0.6" y="0.6" width="8.8" height="8.8" rx="0.5" stroke="currentColor" stroke-width="1.2"/>`
+    const RESTORE_ICON  = `<rect x="2" y="0.6" width="7.4" height="7.4" rx="0.5" stroke="currentColor" stroke-width="1.2"/>
+      <polyline points="2,2 0.6,2 0.6,9.4 8,9.4 8,8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>`
+
+    function _updateMaximizeIcon(isMax) {
+      const icon = document.getElementById('wc-maximize-icon')
+      if (icon) icon.innerHTML = isMax ? RESTORE_ICON : MAXIMIZE_ICON
+      _wcMaximize.title = isMax ? 'Restore' : 'Maximize'
+      _wcMaximize.setAttribute('aria-label', isMax ? 'Restore window' : 'Maximize window')
+    }
+
+    window.electronAPI?.window?.isMaximized().then(_updateMaximizeIcon)
+    window.electronAPI?.window?.onMaximizedChange(_updateMaximizeIcon)
+  }
+
   // ── Window focus: refresh sidebar ─────────────────────────────────
   let _focusRefreshTimer = null;
 

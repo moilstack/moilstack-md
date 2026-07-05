@@ -1,6 +1,6 @@
 # MoilStack .md
 
-![Version](https://img.shields.io/github/v/release/moilstack/moilstack-md?label=version)
+[![Version](https://img.shields.io/github/v/release/moilstack/moilstack-md?label=version&include_prereleases)](https://github.com/moilstack/moilstack-md/releases)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -37,7 +37,8 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 - **Configurable editor** — font size and font family settings
 
 ---
-
+## Screens
+![AI assistant editing](assets/screenshot-preview.png)
 ![AI assistant editing](assets/screenshot-ai-edit.png)
 ![Table builder](assets/screenshot-table-builder.png)
 
@@ -247,4 +248,6 @@ See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE) for details.
+
+> The project name, logo, and visual branding assets are not open source. See [BRANDING.md](BRANDING.md) for the Trademark & Branding Policy.
