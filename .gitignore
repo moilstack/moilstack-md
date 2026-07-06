@@ -41,6 +41,9 @@ lerna-debug.log*
 *.cer
 *.key
 
+# ─── Microsoft Store build config (contains publisher identity) ──────────────
+build/store-appx.yml
+
 # ─── Environment / secrets ───────────────────────────────────────────────────
 .env
 .env.local
