@@ -110,12 +110,20 @@ if (!gotLock) {
       title: 'MoilStack .md',
       icon: path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
       frame: false,
+      // Matches the dark theme's --bg so there's no white flash before the
+      // page paints, and we hold off showing the window until it has
+      // rendered (see 'ready-to-show' below) so the user never sees the
+      // unstyled/half-loaded page.
+      backgroundColor: '#282c34',
+      show: false,
       webPreferences: {
         preload: path.join(__dirname, '..', 'preload', 'index.js'),
         contextIsolation: true,
         nodeIntegration: false,
       },
     })
+
+    win.once('ready-to-show', () => win.show())
 
     // Forward maximize/unmaximize events so the renderer can update the button icon
     win.on('maximize',   () => win.webContents.send('window:maximized-change', true))

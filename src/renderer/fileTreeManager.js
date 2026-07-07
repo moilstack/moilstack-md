@@ -181,6 +181,31 @@ const FileTreeManager = (() => {
     return localStorage.getItem('explorerMode') || 'multi-level';
   }
 
+  /**
+   * Root-only mode shows a flat, date-grouped file list with no sub-folders,
+   * so New Folder (nowhere to see the folder) and Collapse All (nothing to
+   * collapse) are both meaningless there — disable them in that mode.
+   */
+  function _updateFolderToolbarButtons() {
+    const rootOnly = _getExplorerMode() === 'root-only';
+
+    const newFolderBtn = document.getElementById('btn-new-folder');
+    if (newFolderBtn) {
+      newFolderBtn.disabled = rootOnly;
+      newFolderBtn.title = rootOnly
+        ? 'New Folder (unavailable in Root folder only mode)'
+        : 'New Folder';
+    }
+
+    const collapseAllBtn = document.getElementById('btn-collapse-all');
+    if (collapseAllBtn) {
+      collapseAllBtn.disabled = rootOnly;
+      collapseAllBtn.title = rootOnly
+        ? 'Collapse All (unavailable in Root folder only mode)'
+        : 'Collapse All';
+    }
+  }
+
   function _dayStart(ts) {
     const d = new Date(ts);
     d.setHours(0, 0, 0, 0);
@@ -505,6 +530,8 @@ const FileTreeManager = (() => {
     localStorage.setItem('lastFolder', folderPath);
     sessionStorage.setItem('lastFolder', folderPath);
 
+    _updateFolderToolbarButtons();
+
     if (window.electronAPI?.readFolder) {
       const rootOnly = _getExplorerMode() === 'root-only';
       const result = await window.electronAPI.readFolder(folderPath, { rootOnly, withMeta: rootOnly });
@@ -597,6 +624,8 @@ const FileTreeManager = (() => {
     });
   }
 
+  _updateFolderToolbarButtons();
+
   return {
     renderFileTree,
     setActiveFolder,
@@ -607,6 +636,7 @@ const FileTreeManager = (() => {
     refresh,
     touchFile,
     initFolderDropdown,
+    updateFolderToolbarButtons: _updateFolderToolbarButtons,
   };
 })();
 

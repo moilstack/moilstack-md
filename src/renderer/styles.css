@@ -13,7 +13,7 @@
   --sidebar-max-width: none;
 
   /* Editor typography — overridden at runtime by the Font settings panel */
-  --editor-font-size: 12px;
+  --editor-font-size: 13px;
 
   /* Accent */
   --primary:           #2563eb;
@@ -677,6 +677,12 @@ body {
 .icon-btn:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
+}
+
+.icon-btn:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* ── 2. Folder row ───────────────────────────────────────────────── */

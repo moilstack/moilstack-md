@@ -12,6 +12,9 @@ All notable new features and critical fixes for MoilStack .md.
 - **Copy AI response** — the "Copy" button on AI chat replies now relies solely on the system clipboard API for a more consistent copy experience
 - **Save / export error messages** — failures now show as a small toast notification instead of a disruptive popup dialog
 - Renamed a leftover temporary file that still used the app's old name ("MarkFlow") to use the correct "MoilStack" name
+- **Dark theme on first launch** — the app now opens in dark mode by default when no theme preference has been set yet, instead of light mode
+- **Flash of light theme on launch** — fixed a brief flash of the light theme before the dark theme appeared when starting the app
+- **Startup flicker** — the app window no longer briefly shows an unstyled, oversized version of the toolbar icons while it finishes loading; the window now stays hidden until everything is fully rendered
 
 ---
 

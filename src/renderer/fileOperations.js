@@ -121,8 +121,11 @@ const FileOperations = (() => {
     });
   }
 
-  // New Folder button in sidebar header
+  // New Folder button in sidebar header — disabled in Root folder only mode,
+  // since that view doesn't show sub-folders (see FileTreeManager.updateFolderToolbarButtons).
   document.getElementById('btn-new-folder')?.addEventListener('click', () => {
+    const rootOnly = (localStorage.getItem('explorerMode') || 'multi-level') === 'root-only';
+    if (rootOnly) return;
     const folderPath = sessionStorage.getItem('lastFolder');
     if (!folderPath) return;
     promptNewFolder(folderPath);

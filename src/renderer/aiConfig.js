@@ -439,7 +439,7 @@ const AIConfigManager = (() => {
 
   /** Read persisted font preferences and apply them on startup. */
   function _initEditorFont() {
-    const savedSize   = parseInt(localStorage.getItem('editorFontSize')   || '12', 10)
+    const savedSize   = parseInt(localStorage.getItem('editorFontSize')   || '13', 10)
     const savedFamily = localStorage.getItem('editorFontFamily') || ''
 
     _applyFontSize(savedSize, false)   // false = don't re-save (already stored)
@@ -468,7 +468,7 @@ const AIConfigManager = (() => {
   function _changeFontSize(delta) {
     const current = parseInt(
       getComputedStyle(document.documentElement)
-        .getPropertyValue('--editor-font-size') || '12',
+        .getPropertyValue('--editor-font-size') || '13',
       10
     )
     const next = Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, current + delta))
@@ -658,6 +658,7 @@ const AIConfigManager = (() => {
     /* ── Explorer mode selector ────────────────────────────────────── */
     document.getElementById('explorerMode')?.addEventListener('change', e => {
       localStorage.setItem('explorerMode', e.target.value)
+      FileTreeManager.updateFolderToolbarButtons()
       FileTreeManager.refresh()
     })
   }

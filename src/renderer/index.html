@@ -9,6 +9,8 @@
   <link rel="icon" type="image/png" href="../assets/icon.png" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="../../node_modules/katex/dist/katex.min.css" />
+  <!-- Sets the theme before anything paints, so there's no light-then-dark flash -->
+  <script src="themeInit.js"></script>
 </head>
 <body>
   <!-- ── App Header ───────────────────────────────────────────────── -->
@@ -953,7 +955,7 @@
                       <path d="M2 5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                     </svg>
                   </button>
-                  <span id="fontSizeValue" class="font-size-display">12</span>
+                  <span id="fontSizeValue" class="font-size-display">13</span>
                   <span class="font-size-unit">px</span>
                   <button id="btnFontSizeUp" class="font-step-btn" title="Increase font size" aria-label="Increase">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">

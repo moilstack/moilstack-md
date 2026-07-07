@@ -110,7 +110,11 @@ const HamburgerMenu = (() => {
   });
 
   /* ── Collapse All button (sidebar header) ─────────────────────────── */
+  // Disabled in Root folder only mode, since that view has no sub-folders to
+  // collapse (see FileTreeManager.updateFolderToolbarButtons).
   document.getElementById('btn-collapse-all')?.addEventListener('click', () => {
+    const rootOnly = (localStorage.getItem('explorerMode') || 'multi-level') === 'root-only';
+    if (rootOnly) return;
     FileTreeManager.collapseAll();
   });
 

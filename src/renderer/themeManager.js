@@ -33,8 +33,7 @@ const ThemeManager = (() => {
   }
 
   function applyStoredTheme() {
-    const saved = localStorage.getItem('theme');
-    if (!saved) return;
+    const saved = localStorage.getItem('theme') || 'dark';
     const html = document.documentElement;
     html.setAttribute('data-theme', saved);
     if (saved === 'dark') {
