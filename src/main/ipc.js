@@ -398,7 +398,7 @@ function registerIpcHandlers() {
     if (canceled || !filePath) return { ok: false, canceled: true }
 
     // Write HTML to a temp file so the hidden window can load it
-    const tmpFile = path.join(os.tmpdir(), 'markflow-export.html')
+    const tmpFile = path.join(os.tmpdir(), 'moilstack-export.html')
     await fs.writeFile(tmpFile, html, 'utf8')
 
     const hidden = new BrowserWindow({

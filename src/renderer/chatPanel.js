@@ -721,8 +721,8 @@ const ChatPanel = (() => {
 
   /**
    * "Copy" — copy the AI bubble text to the system clipboard.
-   * Falls back to `execCommand('copy')` for Electron contexts that block
-   * the Clipboard API.
+   * If the Clipboard API is unavailable, this is a no-op (with a warning);
+   * `execCommand('copy')` is no longer a reliable fallback in Electron.
    * @param {HTMLButtonElement} btn  The clicked copy button.
    */
   async function copyResponse(btn) {
@@ -735,13 +735,7 @@ const ChatPanel = (() => {
       btn.style.color = 'var(--primary)';
       setTimeout(() => { btn.innerHTML = origHTML; btn.style.color = ''; }, 1500);
     } catch {
-      // Fallback for Electron context
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy'); // eslint-disable-line no-undef
-      document.body.removeChild(ta);
+      console.warn('copyResponse: navigator.clipboard.writeText unavailable, unable to copy');
     }
   }
 

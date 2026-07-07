@@ -240,14 +240,16 @@ const TableBuilder = (() => {
 
     if (_selStart !== null && _selEnd !== null) {
       editor.setSelectionRange(_selStart, _selEnd);
-      document.execCommand('insertText', false, md);
+      editor.setRangeText(md, _selStart, _selEnd, 'end');
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
     } else {
       const pos    = editor.selectionStart;
       const val    = editor.value;
       const before = pos > 0 && val[pos - 1] !== '\n' ? '\n' : '';
       const after  = pos < val.length && val[pos] !== '\n' ? '\n' : '';
       editor.setSelectionRange(pos, pos);
-      document.execCommand('insertText', false, before + md + after);
+      editor.setRangeText(before + md + after, pos, pos, 'end');
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
     if (typeof EditorCore !== 'undefined') EditorCore.triggerUpdate();

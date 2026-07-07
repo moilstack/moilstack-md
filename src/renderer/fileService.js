@@ -1,15 +1,14 @@
 /**
- * File Service — in-memory save layer for Markdown files.
+ * File Service — test utility only. Not part of the production save path.
  *
  * The renderer loads this as a plain <script> tag (no bundler), so it
  * declares a global `fileService` object.  The CommonJS export guard at
  * the bottom makes the same object importable by Jest / Node without any
  * modification to the browser path.
  *
- * Swap the `setTimeout(resolve, 100)` line for a real IPC call once the
- * Electron back-end is wired:
- *
- *   return window.electronAPI.writeFile(filename, content);
+ * The production save path is SaveManager → electronAPI.writeFile
+ * (see saveManager.js). This module's setTimeout-based mock is only used
+ * in tests.
  */
 
 const fileService = {

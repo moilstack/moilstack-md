@@ -4,6 +4,17 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Editor toolbar buttons** — bold, italic, links, headings, lists, quotes, code blocks, and horizontal rules now insert text using a more modern, reliable method, so the syntax highlighting and "unsaved changes" indicator always stay accurate
+- **Table Builder** — inserting or updating a table now uses the same more reliable text-insertion method
+- **Copy AI response** — the "Copy" button on AI chat replies now relies solely on the system clipboard API for a more consistent copy experience
+- **Save / export error messages** — failures now show as a small toast notification instead of a disruptive popup dialog
+- Renamed a leftover temporary file that still used the app's old name ("MarkFlow") to use the correct "MoilStack" name
+
+---
+
 ## [1.0.0-beta.2] - 2026-07-05
 
 ### Changed

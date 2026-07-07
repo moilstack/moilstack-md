@@ -1,15 +1,12 @@
 /**
- * Export Service — triggers a Markdown file download in the browser/renderer.
+ * Export Service — test utility only. Not part of the production export path.
  *
  * Loaded as a plain <script> tag (no bundler), so it declares a global
  * `exportService` object.  The CommonJS export guard at the bottom makes the
  * same object importable by Jest / Node without modification to the browser path.
  *
- * Production upgrade path:
- *   Replace the Blob/anchor approach inside exportFile() with:
- *     return window.api.exportFile(filename, content);
- *   …where the preload exposes an IPC call to dialog.showSaveDialog in the
- *   Electron main process.
+ * The production export path is SaveManager.exportFile → electronAPI.exportPdf
+ * (see saveManager.js). This module's Blob/anchor download is only used in tests.
  */
 
 const exportService = {
@@ -23,7 +20,6 @@ const exportService = {
   exportFile(filename, content) {
     return new Promise((resolve, reject) => {
       try {
-        // ── Mock implementation: Blob → anchor → click ────────────────────
         const blob = new Blob([content], { type: 'text/markdown' });
         const url  = URL.createObjectURL(blob);
 
@@ -39,10 +35,6 @@ const exportService = {
       } catch (err) {
         reject(err);
       }
-
-      // ── Production Electron (replace block above) ─────────────────────
-      // return window.api.exportFile(filename, content)
-      //   .then(resolve).catch(reject);
     });
   },
 };

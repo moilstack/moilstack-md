@@ -162,7 +162,7 @@ const SaveManager = (() => {
       console.error('[saveFile]', err);
       btn.innerHTML = `<span>✗ Error</span>`;
       setTimeout(() => { btn.innerHTML = `${FLOPPY_SVG}<span>Save</span>`; }, 2000);
-      alert(`Save failed: ${err.message}`);
+      StatusBar.showToast(`Save failed: ${err.message}`);
     } finally {
       btn.disabled = false;
       delete btn.dataset.saving;
@@ -215,7 +215,7 @@ const SaveManager = (() => {
     const editor   = document.getElementById('mdEditor');
     const md       = editor ? editor.value : '';
 
-    if (!md.trim()) { alert('Nothing to export — the document is empty.'); return; }
+    if (!md.trim()) { StatusBar.showToast('Nothing to export — the document is empty.'); return; }
 
     const filename = currentFile.name || 'export.md';
 
