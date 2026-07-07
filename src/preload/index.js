@@ -154,4 +154,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onMaximizedChange: (cb) => ipcRenderer.on('window:maximized-change', (_e, isMax) => cb(isMax)),
   },
 
+  // Tells the main process that startup UI work (theme, sidebar state,
+  // folder listing) has finished, so the window can be shown without a
+  // flash of half-initialised content. See main/index.js createWindow().
+  notifyReady: () => ipcRenderer.send('renderer:ready'),
+
 })

@@ -222,6 +222,13 @@ function registerIpcHandlers() {
   ipcMain.on('window:close',     (e) => { BrowserWindow.fromWebContents(e.sender)?.close() })
   ipcMain.handle('window:is-maximized', (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
 
+  // Renderer signals that startup UI work has finished — show the window now
+  // instead of on first paint, so the user never sees it mid-adjustment.
+  ipcMain.on('renderer:ready', (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (win && !win.isDestroyed() && !win.isVisible()) win.show()
+  })
+
   // Open a URL in the default OS browser — only http/https allowed
   ipcMain.handle('shell:open-external', (_e, url) => {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url)

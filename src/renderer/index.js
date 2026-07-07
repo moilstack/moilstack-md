@@ -432,7 +432,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       _wcMaximize.setAttribute('aria-label', isMax ? 'Restore window' : 'Maximize window')
     }
 
-    window.electronAPI?.window?.isMaximized().then(_updateMaximizeIcon)
+    const _isMax = await window.electronAPI?.window?.isMaximized()
+    _updateMaximizeIcon(_isMax)
     window.electronAPI?.window?.onMaximizedChange(_updateMaximizeIcon)
   }
 
@@ -457,5 +458,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }, 300);
   });
+
+  // ── Startup UI work is done — show the window now ──────────────────
+  window.electronAPI?.notifyReady?.();
 
 });

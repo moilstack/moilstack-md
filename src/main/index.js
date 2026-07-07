@@ -111,9 +111,11 @@ if (!gotLock) {
       icon: path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
       frame: false,
       // Matches the dark theme's --bg so there's no white flash before the
-      // page paints, and we hold off showing the window until it has
-      // rendered (see 'ready-to-show' below) so the user never sees the
-      // unstyled/half-loaded page.
+      // page paints. The window itself stays hidden until the renderer
+      // reports it has finished its startup UI work (see 'renderer:ready'
+      // in ipc.js) — 'ready-to-show' alone only guarantees a first paint,
+      // not that theme/sidebar-state/folder-listing JS has run, so relying
+      // on it left a brief flash of half-initialised UI.
       backgroundColor: '#282c34',
       show: false,
       webPreferences: {
@@ -123,7 +125,13 @@ if (!gotLock) {
       },
     })
 
-    win.once('ready-to-show', () => win.show())
+    // Safety net: if the renderer never sends 'renderer:ready' (e.g. a
+    // startup script error), show the window anyway so it isn't stuck hidden.
+    win.once('ready-to-show', () => {
+      setTimeout(() => {
+        if (!win.isDestroyed() && !win.isVisible()) win.show()
+      }, 2000)
+    })
 
     // Forward maximize/unmaximize events so the renderer can update the button icon
     win.on('maximize',   () => win.webContents.send('window:maximized-change', true))
