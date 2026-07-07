@@ -37,8 +37,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Export rendered HTML as a PDF via the native save dialog
   exportPdf: (html, filename) => ipcRenderer.invoke('file:export-pdf', { html, filename }),
 
-  // Prompt for a filename and create a new Markdown file on disk (fallback / no active folder)
-  newFile: () => ipcRenderer.invoke('file:new'),
+  // Prompt for a filename/location via native Save dialog and create a new Markdown file on disk
+  newFile: (suggestedName, folderPath) => ipcRenderer.invoke('file:new', suggestedName, folderPath),
 
   // Create a new .md file directly inside an already-selected folder (no Save dialog)
   newFileInFolder: (folderPath, fileName) =>
@@ -144,6 +144,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Open a URL in the default OS browser (http/https only)
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
+
+  // Ask the user to Save / Discard / Cancel before an in-app action would discard unsaved changes
+  confirmUnsaved: () => ipcRenderer.invoke('dialog:confirm-unsaved'),
 
   // ── Custom title-bar window controls ──────────────────────────────────────
   window: {

@@ -234,6 +234,29 @@ function registerIpcHandlers() {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url)
   })
 
+  /**
+   * dialog:confirm-unsaved — ask whether to save, discard, or cancel when an
+   * in-app action (e.g. starting a new untitled file) would otherwise discard
+   * unsaved changes. Mirrors the window-close unsaved-changes guard.
+   *
+   * Returns 'save' | 'discard' | 'cancel'.
+   */
+  ipcMain.handle('dialog:confirm-unsaved', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+
+    const { response } = await dialog.showMessageBox(win, {
+      type:      'warning',
+      buttons:   ['Save', 'Discard changes', 'Cancel'],
+      defaultId: 0,
+      cancelId:  2,
+      title:     'Unsaved changes',
+      message:   'You have unsaved changes.',
+      detail:    'Save before starting a new file, or discard and lose your work?',
+    })
+
+    return ['save', 'discard', 'cancel'][response] ?? 'cancel'
+  })
+
   // Set the Windows taskbar jump list with the "New Instance" task.
   updateJumpList()
 
@@ -446,16 +469,25 @@ function registerIpcHandlers() {
 
   /**
    * file:new — show a native Save dialog, then create an empty .md file.
-   * Used as a fallback when no folder is active.
+   * Used for Save-As, and as a fallback when no folder is active.
    *
+   * @param {string} [suggestedName]  Filename to pre-fill the dialog with
+   *                                  (extension appended if absent). Falls back to 'untitled.md'.
+   * @param {string} [folderPath]     Directory to point the dialog at. Falls back to the OS default.
    * Returns { filePath: string } on success, or null when the user cancels.
    */
-  ipcMain.handle('file:new', async (event) => {
+  ipcMain.handle('file:new', async (event, suggestedName, folderPath) => {
     const win = BrowserWindow.fromWebContents(event.sender)
+
+    const safeName  = suggestedName ? path.basename(suggestedName.trim()) : ''
+    const finalName = safeName
+      ? (/\.[a-zA-Z0-9]+$/.test(safeName) ? safeName : `${safeName}.md`)
+      : 'untitled.md'
+    const defaultPath = folderPath ? path.join(folderPath, finalName) : finalName
 
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
       title: 'New File',
-      defaultPath: 'untitled.md',
+      defaultPath,
       filters: [
         { name: 'Markdown & Text', extensions: ['md', 'markdown', 'txt'] },
         { name: 'All Files', extensions: ['*'] },

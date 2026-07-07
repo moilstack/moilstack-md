@@ -177,6 +177,54 @@ async function openSingleFile(filePath) {
   ChatPanel.clearChat();
 }
 
+/**
+ * Start a fresh in-memory, unsaved document (Ctrl+N).
+ * Unlike the explorer's "New File" (which creates a file inside a folder and
+ * needs the sidebar visible), this has no folder/explorer dependency at all —
+ * it works identically whether or not a folder is open or the sidebar is shown.
+ */
+async function newUntitledFile() {
+  if (currentFile.path) {
+    // Existing saved file with unsaved edits — auto-save silently, same as
+    // switching to another file elsewhere in the app.
+    await SaveManager.silentSave();
+  } else if (SaveManager.isDirty()) {
+    // Unsaved untitled buffer — there's no file to silently save to, so ask
+    // before discarding its content.
+    const choice = await window.electronAPI?.confirmUnsaved();
+    if (choice === 'cancel' || !choice) return;
+    if (choice === 'save') {
+      await SaveManager.saveFile(); // opens the native Save-As dialog
+      if (SaveManager.isDirty()) return; // user cancelled the save dialog — abort
+    } else if (choice === 'discard') {
+      SaveManager.clearDraft();
+    }
+  }
+
+  if (mdEditor) {
+    EditorCore.clearAiUndoStack();
+    mdEditor.value     = '';
+    mdEditor.scrollTop = 0;
+    mdEditor.setSelectionRange(0, 0);
+    const gutter = document.getElementById('line-numbers');
+    if (gutter) gutter.scrollTop = 0;
+    EditorCore.updateHighlight();
+    EditorCore.updateStats();
+    EditorCore.triggerUpdate();
+  }
+
+  document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
+
+  currentFile = { name: 'untitled.md', path: null };
+  StatusBar.updateFilename('untitled.md');
+  StatusBar.updateChatContextFile('untitled.md');
+  SaveManager.markClean();
+
+  WelcomeScreen.hideWelcomeScreen();
+  ChatPanel.clearChat();
+  setMode('edit');
+}
+
 /* ── Handle deleted/moved file ────────────────────────────────────── */
 
 function _handleCurrentFileDeleted(deletedPath) {
@@ -212,20 +260,11 @@ document.addEventListener('keydown', async e => {
   }
 });
 
-// Ctrl+N — new file
+// Ctrl+N — new untitled file (notepad-style; no folder or sidebar required)
 document.addEventListener('keydown', async e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
     e.preventDefault();
-    const savedFolder = sessionStorage.getItem('lastFolder');
-    if (savedFolder) {
-      FileOperations.showNewFileInput();
-    } else {
-      const result = await window.electronAPI?.openFolder();
-      if (result?.folderPath) {
-        await FileTreeManager.setActiveFolder(result.folderPath);
-        FileOperations.showNewFileInput();
-      }
-    }
+    await newUntitledFile();
   }
 });
 
@@ -348,7 +387,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     WelcomeScreen.hideWelcomeScreen();
   });
 
-  WelcomeScreen.showWelcomeScreen();
+  const launchBehavior = localStorage.getItem('launchBehavior') || 'recents';
+  // An unsaved draft from a previous session outranks both the Recents screen
+  // and the "start blank" preference — there's real work to hand back.
+  const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();
+
+  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled') {
+    WelcomeScreen.showWelcomeScreen();
+  }
 
   const savedFolder = sessionStorage.getItem('lastFolder') || localStorage.getItem('lastFolder');
   if (savedFolder && !_openFileParam) await FileTreeManager.setActiveFolder(savedFolder);
@@ -392,6 +438,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const _paramFileName = _openFileParam.split(/[\\/]/).pop() || _openFileParam;
     StorageManager.addRecentItem('file', _openFileParam, _paramFileName);
     await openFileByPath(_openFileParam);
+  } else if (_pendingDraft) {
+    await newUntitledFile();
+    if (mdEditor) {
+      mdEditor.value = _pendingDraft;
+      EditorCore.updateHighlight();
+      EditorCore.updateStats();
+      EditorCore.triggerUpdate();
+    }
+    SaveManager.markDirty();
+    StatusBar.showToast('Restored unsaved draft from your last session.');
+  } else if (launchBehavior === 'untitled') {
+    await newUntitledFile();
   }
 
   if (!_openFileParam) ChatPanel.clearChat();
@@ -399,8 +457,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   ChatPanel.updateTokenEstimate();
   ChatPanel.updateFileSizeWarning();
 
-  const startupMode = localStorage.getItem('startupMode') || 'preview';
-  setMode(startupMode);
+  // A fresh untitled launch or a restored draft always opens in edit mode
+  // (newUntitledFile already set this) — the Startup Mode preference only
+  // applies when an existing file was opened.
+  if (_openFileParam || (!_pendingDraft && launchBehavior !== 'untitled')) {
+    const startupMode = localStorage.getItem('startupMode') || 'preview';
+    setMode(startupMode);
+  }
 
   // ── IPC: Save-and-close (user clicked "Save" in unsaved-changes dialog)
   window.electronAPI?.onSaveAndClose?.(async () => {

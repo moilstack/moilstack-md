@@ -998,6 +998,20 @@
               </div>
             </div>
 
+            <!-- Launch Behavior -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">On Launch</span>
+                <span class="settings-row__desc">What to show when the app opens</span>
+              </div>
+              <div class="settings-row__control">
+                <select id="launchBehavior" class="form-input settings-select">
+                  <option value="recents">Show Recents</option>
+                  <option value="untitled">Start a new untitled file</option>
+                </select>
+              </div>
+            </div>
+
             <!-- Live preview strip -->
             <div class="editor-font-preview" id="editorFontPreview">
               <span># Heading</span>  <span>**bold**</span>  <span>`code`</span>  <span>normal text</span>
@@ -1136,40 +1150,6 @@
           <button id="btnSaveModel"   class="btn btn-primary">Save</button>
         </div>
 
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Save-As Modal ──────────────────────────────────────────────── -->
-  <div id="saveAsOverlay" class="settings-overlay hidden"
-       role="dialog" aria-modal="true" aria-labelledby="saveAsTitle">
-    <div class="settings-panel settings-panel--sm">
-      <div class="settings-panel-header">
-        <span id="saveAsTitle" class="settings-panel-title">Save File</span>
-        <button id="btnCloseSaveAs" class="settings-close-btn" title="Cancel">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="settings-panel-body">
-        <div class="form-group">
-          <label class="form-label">Save into folder</label>
-          <div class="save-as-folder-row">
-            <span id="saveAsFolderDisplay" class="save-as-folder-path">No folder selected</span>
-            <button id="btnSaveAsPickFolder" class="btn btn-outline btn-sm">Browse…</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="saveAsFilename">Filename</label>
-          <input type="text" id="saveAsFilename" class="form-input"
-                 placeholder="untitled.md" autocomplete="off" spellcheck="false" maxlength="120">
-          <span id="saveAsError" class="save-as-error hidden"></span>
-        </div>
-        <div class="modal-actions">
-          <button id="btnSaveAsCancel" class="btn btn-outline">Cancel</button>
-          <button id="btnSaveAsConfirm" class="btn btn-primary">Save</button>
-        </div>
       </div>
     </div>
   </div>

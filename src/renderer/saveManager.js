@@ -17,6 +17,13 @@ const SaveManager = (() => {
   const AUTO_SAVE_DELAY = 30_000;
   let _autoSaveTimer    = null;
 
+  /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ── */
+
+  const DRAFT_KEY = 'untitledDraft';
+
+  function getDraft()   { return localStorage.getItem(DRAFT_KEY) || ''; }
+  function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
+
   /* ── Auto-save ────────────────────────────────────────────────────── */
 
   function _scheduleAutoSave() {
@@ -95,10 +102,19 @@ const SaveManager = (() => {
   /* ── Silent save ──────────────────────────────────────────────────── */
 
   async function silentSave() {
-    const filePath = currentFile.path;
-    if (!filePath || !_isDirty) return true;
+    if (!_isDirty) return true;
 
     const content = mdEditor ? mdEditor.value : '';
+
+    const filePath = currentFile.path;
+    if (!filePath) {
+      // No file on disk yet — persist as a recoverable draft (synchronous,
+      // so it's safe to rely on even during window teardown) instead of
+      // silently discarding the content.
+      localStorage.setItem(DRAFT_KEY, content);
+      return true;
+    }
+
     try {
       const result = await window.electronAPI.writeFile(filePath, content);
       if (!result?.ok) throw new Error(result?.error || 'write failed');
@@ -307,6 +323,9 @@ const SaveManager = (() => {
     silentSave,
     saveFile,
     exportFile,
+    extractFirstLine: _extractFirstLine,
+    getDraft,
+    clearDraft,
   };
 })();
 

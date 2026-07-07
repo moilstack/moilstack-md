@@ -459,6 +459,11 @@ const AIConfigManager = (() => {
     const savedExplorerMode = localStorage.getItem('explorerMode') || 'multi-level'
     const explorerModeSel   = document.getElementById('explorerMode')
     if (explorerModeSel) explorerModeSel.value = savedExplorerMode
+
+    // Seed the launch-behavior selector with the saved preference (default: recents)
+    const savedLaunchBehavior = localStorage.getItem('launchBehavior') || 'recents'
+    const launchBehaviorSel   = document.getElementById('launchBehavior')
+    if (launchBehaviorSel) launchBehaviorSel.value = savedLaunchBehavior
   }
 
   /**
@@ -660,6 +665,11 @@ const AIConfigManager = (() => {
       localStorage.setItem('explorerMode', e.target.value)
       FileTreeManager.updateFolderToolbarButtons()
       FileTreeManager.refresh()
+    })
+
+    /* ── Launch behavior selector ─────────────────────────────────── */
+    document.getElementById('launchBehavior')?.addEventListener('change', e => {
+      localStorage.setItem('launchBehavior', e.target.value)
     })
   }
 
