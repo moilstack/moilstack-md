@@ -1,6 +1,6 @@
 {
   "name": "moilstack-md",
-  "version": "1.0.0.0",
+  "version": "1.0.0",
   "description": "Markdown editor with AI assistance by MoilStack",
   "main": "src/main/index.js",
   "scripts": {
