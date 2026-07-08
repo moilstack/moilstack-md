@@ -146,14 +146,11 @@ const SaveManager = (() => {
     const filePath = currentFile.path;
 
     if (!filePath) {
-      // No file on disk yet — persist the untitled slot as a recoverable
-      // draft (synchronous, so it's safe even during window teardown),
-      // regardless of dirty state. Even an empty, never-typed-into untitled
-      // buffer needs to stay reachable from Recent Files after switching
-      // away from it.
       const content = mdEditor ? mdEditor.value : '';
-      _setDraft(content);
-      RecentsPanel?.render();
+      if (content.trim()) {
+        _setDraft(content);
+        RecentsPanel?.render();
+      }
       return true;
     }
 

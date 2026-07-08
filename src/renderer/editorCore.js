@@ -675,13 +675,37 @@ const EditorCore = (() => {
         if (typeof ChatPanel !== 'undefined') ChatPanel.hideSelectionGhost();
       });
 
-      // Tab key → insert two spaces instead of focus-out
+      // Tab key → indent selected lines, or insert two spaces at cursor
       editor.addEventListener('keydown', e => {
         if (e.key === 'Tab') {
           e.preventDefault();
-          const start = editor.selectionStart;
-          const end   = editor.selectionEnd;
-          editor.setRangeText('  ', start, end, 'end');
+          const selStart = editor.selectionStart;
+          const selEnd   = editor.selectionEnd;
+          const value    = editor.value;
+          const INDENT   = '  ';
+
+          // Snapshot for Ctrl+Z undo
+          if (aiUndoStack.length >= AI_UNDO_LIMIT) aiUndoStack.shift();
+          aiUndoStack.push(value);
+
+          if (selEnd > selStart) {
+            // Indent every line touched by the selection
+            const firstLineStart = value.lastIndexOf('\n', selStart - 1) + 1;
+            // If selEnd sits exactly at a line start (preceded by \n), leave that line alone
+            const atLineStart = selEnd > 0 && value[selEnd - 1] === '\n';
+            const regionEnd   = atLineStart ? selEnd - 1 : selEnd;
+
+            const lines    = value.slice(firstLineStart, regionEnd).split('\n');
+            const indented = lines.map(l => INDENT + l).join('\n');
+
+            editor.value          = value.slice(0, firstLineStart) + indented + value.slice(regionEnd);
+            editor.selectionStart = selStart + INDENT.length;
+            editor.selectionEnd   = selEnd + lines.length * INDENT.length;
+          } else {
+            // No selection: insert two spaces at the cursor
+            editor.setRangeText(INDENT, selStart, selEnd, 'end');
+          }
+
           editor.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });

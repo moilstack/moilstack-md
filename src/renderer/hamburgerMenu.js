@@ -40,16 +40,7 @@ const HamburgerMenu = (() => {
 
   document.getElementById('hmenu-new')?.addEventListener('click', async () => {
     closeHamburgerMenu();
-    const savedFolder = sessionStorage.getItem('lastFolder');
-    if (savedFolder) {
-      FileOperations.showNewFileInput();
-    } else {
-      const result = await window.electronAPI?.openFolder();
-      if (result?.folderPath) {
-        await FileTreeManager.setActiveFolder(result.folderPath);
-        FileOperations.showNewFileInput();
-      }
-    }
+    await newUntitledFile();
   });
 
   document.getElementById('hmenu-open-file')?.addEventListener('click', async () => {

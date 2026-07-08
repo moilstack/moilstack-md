@@ -113,7 +113,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── Window close guard ──────────────────────────────────────────────────
   // Called by the main process when the user chose "Save" in the unsaved-
   // changes dialog.  The renderer should save then call window.close().
-  onSaveAndClose: (cb) => ipcRenderer.on('app:save-and-close', () => cb()),
+  onSaveAndClose:    (cb) => ipcRenderer.on('app:save-and-close',    () => cb()),
+  onDiscardAndClose: (cb) => ipcRenderer.on('app:discard-and-close', () => cb()),
 
   // ── OS file open ────────────────────────────────────────────────────────
   // Called by the main process when a .md file is opened from Windows Explorer

@@ -424,7 +424,8 @@ document.addEventListener('keydown', async e => {
 
 // Block close when unsaved — triggers Electron's will-prevent-unload
 window.addEventListener('beforeunload', (e) => {
-  if (SaveManager.isDirty() && !SaveManager.isBypassBeforeUnload()) {
+  const isEmptyUntitled = !currentFile.path && !(mdEditor?.value ?? '').trim();
+  if (SaveManager.isDirty() && !isEmptyUntitled && !SaveManager.isBypassBeforeUnload()) {
     e.preventDefault();
     e.returnValue = '';
   }
@@ -626,6 +627,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       SaveManager.setBypassBeforeUnload(true);
       window.close();
     }
+  });
+
+  // ── IPC: Discard-and-close (user clicked "Discard" in unsaved-changes dialog)
+  window.electronAPI?.onDiscardAndClose?.(() => {
+    SaveManager.setBypassBeforeUnload(true);
+    window.close();
   });
 
   // ── Custom title-bar window controls ──────────────────────────────

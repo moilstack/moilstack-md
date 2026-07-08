@@ -119,7 +119,7 @@ const ContextMenus = (() => {
     _folderCtxDepth  = depth;
 
     const subBtn = folderCtxMenuEl.querySelector('[data-folder-action="new-subfolder"]');
-    if (subBtn) subBtn.classList.toggle('hidden', depth >= 4);
+    if (subBtn) subBtn.classList.toggle('hidden', depth >= 3);
 
     const isEmpty = _isFolderEmpty(folderPath);
     const delBtn      = document.getElementById('folder-ctx-delete-btn');

@@ -163,8 +163,13 @@ if (!gotLock) {
 
     // ── Unsaved-changes guard ─────────────────────────────────────────────
     // Button indices:  0 = Save   1 = Discard   2 = Cancel
-    win.webContents.on('will-prevent-unload', async (event) => {
-      const { response } = await dialog.showMessageBox(win, {
+    // event.preventDefault() on will-prevent-unload is synchronous-only in
+    // Electron — calling it after an await has no effect. Instead we send IPC
+    // messages so the renderer can set the bypass flag and call window.close().
+    win.webContents.on('will-prevent-unload', (event) => {
+      // Prevent the default "keep window open" so we can manage close ourselves.
+      event.preventDefault()
+      dialog.showMessageBox(win, {
         type:      'warning',
         buttons:   ['Save', 'Discard changes', 'Cancel'],
         defaultId: 0,
@@ -172,14 +177,14 @@ if (!gotLock) {
         title:     'Unsaved changes',
         message:   'You have unsaved changes.',
         detail:    'Save before closing, or discard and lose your work?',
+      }).then(({ response }) => {
+        if (response === 0) {
+          win.webContents.send('app:save-and-close')
+        } else if (response === 1) {
+          win.webContents.send('app:discard-and-close')
+        }
+        // response === 2 (Cancel): do nothing → window stays open
       })
-
-      if (response === 0) {
-        win.webContents.send('app:save-and-close')
-      } else if (response === 1) {
-        event.preventDefault()
-      }
-      // response === 2 (Cancel): do nothing → window stays open
     })
 
     // ── Send startup folder once the renderer is ready ───────────────────

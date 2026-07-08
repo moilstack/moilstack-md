@@ -245,7 +245,21 @@ const RecentsPanel = (() => {
     }
 
     const row = e.target.closest('.recents-item');
-    if (!row || row.classList.contains('active')) return;
+    if (!row) return;
+
+    // Clicking the active draft row while the welcome screen is up should
+    // dismiss it and switch to edit mode — the row is "active" because the
+    // untitled buffer is already loaded, but the overlay is hiding the editor.
+    if (row.classList.contains('active')) {
+      if (row.dataset.role === 'draft') {
+        const welcomeScreen = document.getElementById('welcome-screen');
+        if (welcomeScreen && !welcomeScreen.classList.contains('hidden')) {
+          WelcomeScreen.hideWelcomeScreen();
+          setMode('edit');
+        }
+      }
+      return;
+    }
 
     if (row.dataset.role === 'draft') {
       await window.restoreDraftFile?.();
