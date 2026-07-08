@@ -75,7 +75,11 @@ function selectFile(el, filePath, lines, chars) {
 async function openFileByPath(filePath, { addToRecents = false } = {}) {
   if (!filePath) return;
 
-  await SaveManager.silentSave();
+  const saved = await SaveManager.silentSave();
+  if (!saved) {
+    StatusBar.showToast('Could not save current file — please check disk space or permissions.');
+    return;
+  }
 
   const lastSep    = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
   const folderPath = lastSep > 0 ? filePath.substring(0, lastSep) : '';
@@ -155,7 +159,11 @@ async function openFileByPath(filePath, { addToRecents = false } = {}) {
 async function openRecentFile(filePath) {
   if (!filePath) return;
 
-  await SaveManager.silentSave();
+  const saved = await SaveManager.silentSave();
+  if (!saved) {
+    StatusBar.showToast('Could not save current file — please check disk space or permissions.');
+    return;
+  }
 
   const result = await window.electronAPI?.readFile(filePath);
   if (!result) {
@@ -202,7 +210,11 @@ async function openRecentFile(filePath) {
  */
 async function restoreDraftFile() {
   if (currentFile.path) {
-    await SaveManager.silentSave();
+    const saved = await SaveManager.silentSave();
+    if (!saved) {
+      StatusBar.showToast('Could not save current file — please check disk space or permissions.');
+      return;
+    }
   }
 
   const draft = SaveManager.getDraft();
@@ -241,7 +253,11 @@ async function restoreDraftFile() {
 async function openSingleFile(filePath) {
   if (!filePath) return;
 
-  await SaveManager.silentSave();
+  const saved = await SaveManager.silentSave();
+  if (!saved) {
+    StatusBar.showToast('Could not save current file — please check disk space or permissions.');
+    return;
+  }
 
   const result = await window.electronAPI?.readFile(filePath);
   if (!result) { console.warn('[openSingleFile] could not read file:', filePath); return; }
@@ -310,7 +326,11 @@ async function newUntitledFile() {
   if (currentFile.path) {
     // Existing saved file with unsaved edits — auto-save silently, same as
     // switching to another file elsewhere in the app.
-    await SaveManager.silentSave();
+    const saved = await SaveManager.silentSave();
+    if (!saved) {
+      StatusBar.showToast('Could not save current file — please check disk space or permissions.');
+      return;
+    }
 
     // There's only one untitled slot at a time. If an earlier untitled
     // buffer was switched away from and left abandoned in Recent Files with
