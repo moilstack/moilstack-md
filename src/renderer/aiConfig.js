@@ -665,6 +665,8 @@ const AIConfigManager = (() => {
       localStorage.setItem('explorerMode', e.target.value)
       FileTreeManager.updateFolderToolbarButtons()
       FileTreeManager.refresh()
+      RecentsPanel.applyExplorerMode()
+      RecentsPanel.render()
     })
 
     /* ── Launch behavior selector ─────────────────────────────────── */

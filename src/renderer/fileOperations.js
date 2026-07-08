@@ -213,6 +213,12 @@ const FileOperations = (() => {
   }
 
   document.getElementById('btn-new-file')?.addEventListener('click', async () => {
+    const explorerMode = localStorage.getItem('explorerMode') || 'multi-level';
+    if (explorerMode === 'custom') {
+      await window.newUntitledFile?.();
+      return;
+    }
+
     const savedFolder = sessionStorage.getItem('lastFolder');
     if (savedFolder) {
       showNewFileInput();

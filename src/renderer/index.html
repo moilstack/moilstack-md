@@ -275,6 +275,20 @@
         <span class="file-list__empty">Open a folder to see files</span>
       </div>
 
+      <!-- Recent Files (untitled draft + files opened/saved outside the active folder) -->
+      <div class="recents-section" id="recents-section">
+        <button class="recents-header" id="recents-header" type="button" aria-expanded="true">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="recents-header__chevron">
+            <path d="M3 2l4 3-4 3" stroke="currentColor" stroke-width="1.4"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="sidebar-section__label">Recent Files</span>
+          <span class="recents-count" id="recents-count">0</span>
+        </button>
+        <div class="recents-list" id="recents-list"></div>
+      </div>
+
     </aside><!-- /left-sidebar -->
 
     <!-- ── Middle Section: Editor + Preview ────────────────────────── -->
@@ -1030,12 +1044,13 @@
             <div class="settings-row">
               <div class="settings-row__label">
                 <span class="settings-row__name">Explorer Mode</span>
-                <span class="settings-row__desc">Root only shows date groups, content previews, and tags</span>
+                <span class="settings-row__desc">Root only shows date groups, content previews, and tags. Custom hides folders entirely — Recent Files is the only way to open something.</span>
               </div>
               <div class="settings-row__control">
                 <select id="explorerMode" class="form-input settings-select">
                   <option value="multi-level">Multi-level</option>
                   <option value="root-only">Root folder only</option>
+                  <option value="custom">Custom (no folder)</option>
                 </select>
               </div>
             </div>
@@ -1264,6 +1279,7 @@
   <script src="contextMenus.js"></script>
   <script src="fileOperations.js"></script>
   <script src="fileTreeManager.js"></script>
+  <script src="recentsPanel.js"></script>
   <script src="modalManager.js"></script>
   <script src="hamburgerMenu.js"></script>
   <script src="searchPanel.js"></script>

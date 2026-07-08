@@ -424,6 +424,8 @@ const FileTreeManager = (() => {
         selectFile(item, filePath, lines, content.length);
         WelcomeScreen.hideWelcomeScreen();
         ChatPanel.clearChat();
+        // Not added to Recent Files — it's already reachable right here in the tree.
+        RecentsPanel.render();
       });
 
       item.addEventListener('contextmenu', e => {

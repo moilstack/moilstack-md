@@ -16,16 +16,28 @@ const StorageManager = (() => {
     catch { return []; }
   }
 
-  function addRecentItem(type, itemPath, name) {
+  // Re-opening an already-tracked item refreshes its name/preview/timestamp
+  // in place — it does NOT jump to the top. Only brand-new items are
+  // inserted (at the top); list position otherwise stays stable.
+  function addRecentItem(type, itemPath, name, preview) {
     let items = getRecentItems();
-    items = items.filter(i => i.path !== itemPath);
-    items.unshift({ type, path: itemPath, name, timestamp: Date.now() });
-    items = items.slice(0, RECENT_MAX);
+    const idx = items.findIndex(i => i.path === itemPath);
+    if (idx !== -1) {
+      items[idx] = { ...items[idx], name, preview, timestamp: Date.now() };
+    } else {
+      items.unshift({ type, path: itemPath, name, preview, timestamp: Date.now() });
+      items = items.slice(0, RECENT_MAX);
+    }
     localStorage.setItem(RECENT_ITEMS_KEY, JSON.stringify(items));
   }
 
   function clearRecentItems() {
     localStorage.removeItem(RECENT_ITEMS_KEY);
+  }
+
+  function removeRecentItem(itemPath) {
+    const items = getRecentItems().filter(i => i.path !== itemPath);
+    localStorage.setItem(RECENT_ITEMS_KEY, JSON.stringify(items));
   }
 
   function getRecentFolders() {
@@ -89,6 +101,7 @@ const StorageManager = (() => {
   return {
     getRecentItems,
     addRecentItem,
+    removeRecentItem,
     clearRecentItems,
     getRecentFolders,
     getPinnedForFolder,

@@ -19,10 +19,51 @@ const SaveManager = (() => {
 
   /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ── */
 
-  const DRAFT_KEY = 'untitledDraft';
+  const DRAFT_KEY        = 'untitledDraft';
+  const DRAFT_EXISTS_KEY = 'untitledDraftExists';
 
-  function getDraft()   { return localStorage.getItem(DRAFT_KEY) || ''; }
-  function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
+  function getDraft() { return localStorage.getItem(DRAFT_KEY) || ''; }
+
+  // Distinct from getDraft() being non-empty: an untitled buffer that was
+  // switched away from before anything was typed still needs to be
+  // reachable from Recent Files, so its "slot" is tracked even when the
+  // persisted content is an empty string.
+  function hasDraft() { return localStorage.getItem(DRAFT_EXISTS_KEY) === '1'; }
+
+  function _setDraft(content) {
+    localStorage.setItem(DRAFT_KEY, content);
+    localStorage.setItem(DRAFT_EXISTS_KEY, '1');
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(DRAFT_EXISTS_KEY);
+  }
+
+  /**
+   * Save the persisted draft to disk via the native Save dialog, without
+   * touching whatever is currently loaded in the editor. Used by the
+   * "Recent Files" draft row's × button when the user chooses "Save".
+   */
+  async function saveDraftAs() {
+    const content = getDraft();
+    if (!content) return true;
+
+    const raw  = _extractFirstLine(content);
+    const safe = raw.replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 60) || 'untitled';
+    const folder = sessionStorage.getItem('lastFolder') || null;
+
+    const result = await window.electronAPI?.newFile(safe, folder);
+    if (!result?.filePath) return false; // cancelled
+
+    const writeResult = await window.electronAPI.writeFile(result.filePath, content);
+    if (!writeResult?.ok) { StatusBar.showToast(writeResult?.error || 'Save failed.'); return false; }
+
+    clearDraft();
+    const name = result.filePath.split(/[\\/]/).pop();
+    StorageManager.addRecentItem('file', result.filePath, name, raw);
+    return true;
+  }
 
   /* ── Auto-save ────────────────────────────────────────────────────── */
 
@@ -102,18 +143,23 @@ const SaveManager = (() => {
   /* ── Silent save ──────────────────────────────────────────────────── */
 
   async function silentSave() {
+    const filePath = currentFile.path;
+
+    if (!filePath) {
+      // No file on disk yet — persist the untitled slot as a recoverable
+      // draft (synchronous, so it's safe even during window teardown),
+      // regardless of dirty state. Even an empty, never-typed-into untitled
+      // buffer needs to stay reachable from Recent Files after switching
+      // away from it.
+      const content = mdEditor ? mdEditor.value : '';
+      _setDraft(content);
+      RecentsPanel?.render();
+      return true;
+    }
+
     if (!_isDirty) return true;
 
     const content = mdEditor ? mdEditor.value : '';
-
-    const filePath = currentFile.path;
-    if (!filePath) {
-      // No file on disk yet — persist as a recoverable draft (synchronous,
-      // so it's safe to rely on even during window teardown) instead of
-      // silently discarding the content.
-      localStorage.setItem(DRAFT_KEY, content);
-      return true;
-    }
 
     try {
       const result = await window.electronAPI.writeFile(filePath, content);
@@ -325,7 +371,9 @@ const SaveManager = (() => {
     exportFile,
     extractFirstLine: _extractFirstLine,
     getDraft,
+    hasDraft,
     clearDraft,
+    saveDraftAs,
   };
 })();
 

@@ -84,9 +84,7 @@ if (!gotLock) {
 
   /**
    * Create a new BrowserWindow.
-   * @param {{ filePath?: string, folderPath?: string, singleFileMode?: boolean }} [args]
-   *   singleFileMode: when true the renderer opens the file without loading the
-   *   folder sidebar (used by "Open in New Window" from the file context menu).
+   * @param {{ filePath?: string, folderPath?: string }} [args]
    */
   function createWindow(args = {}) {
     // If there's an existing window, cascade the new one 40 px down-right so

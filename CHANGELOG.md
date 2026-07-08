@@ -6,7 +6,22 @@ All notable new features and critical fixes for MoilStack .md.
 
 ## [Unreleased]
 
+### Added
+- **Notepad-style untitled files** — Ctrl+N now creates an in-memory untitled document that works regardless of whether a folder is open or the Explorer sidebar is visible
+- **Save As uses the native OS dialog** — saving an untitled file now opens the system Save dialog directly, pre-pointed at the active folder with a filename suggested from the document's first line of text, instead of a custom in-app modal
+- **"On Launch" setting** — Settings → Editor lets you choose whether the app opens to the Recents screen or straight into a new untitled file
+- **"Custom (no folder)" Explorer mode** — Settings → File Explorer adds a third mode that hides the folder tree entirely; Recent Files becomes the sidebar's only content and the sole way to reopen something
+- **Recent Files section** — a new section at the bottom of the Explorer sidebar tracks the current untitled draft plus files opened via Ctrl+N, Windows Explorer, or the "Open in New Window" context-menu action; entries persist until removed with the row's × button (hover to reveal), independent of which folder is currently active
+  - Capped at 5 visible rows with a scrollbar beyond that, plus a count badge
+  - Multi-level / Root folder only modes show it as a collapsible accordion with single-line icon+filename rows
+  - Custom mode shows it full-height with a second-line content preview per row
+
 ### Fixed
+- **Ctrl+N silently discarding unsaved content** — pressing Ctrl+N with unsaved text in the current untitled buffer now prompts Save / Discard / Cancel instead of clearing it
+- **Unsaved untitled files lost on close** — closing the window (or switching to another file) without saving now persists the untitled buffer as a recoverable draft, restored automatically (with a toast) the next time the app opens
+- **Save As changing the Explorer's active folder** — picking a different folder in the Save dialog no longer navigates the sidebar away from the folder you were browsing
+- **False "file was deleted or moved outside the app" notification** — this could incorrectly fire right after saving or opening a file that lives outside the currently active folder (e.g. Save As to another location); the check now only applies to files that are actually supposed to be inside the active folder's tree
+- **Sidebar hiding on single-file opens** — opening a file via Ctrl+O, the "Open File" button, Windows Explorer, or "Open in New Window" from the context menu no longer hides or resets the Explorer sidebar; it now stays visible until explicitly toggled off from the header icon
 - **Editor toolbar buttons** — bold, italic, links, headings, lists, quotes, code blocks, and horizontal rules now insert text using a more modern, reliable method, so the syntax highlighting and "unsaved changes" indicator always stay accurate
 - **Table Builder** — inserting or updating a table now uses the same more reliable text-insertion method
 - **Copy AI response** — the "Copy" button on AI chat replies now relies solely on the system clipboard API for a more consistent copy experience

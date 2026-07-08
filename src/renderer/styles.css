@@ -870,6 +870,111 @@ body {
   color: var(--text-secondary); /* hint: clicking will unpin */
 }
 
+/* ── Recent Files section (bottom of the Explorer sidebar) ──────────── */
+.recents-section {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+}
+
+.recents-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 32px;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.recents-header:hover {
+  background: var(--hover-bg);
+}
+
+.recents-header__chevron {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transform: rotate(90deg);
+  transition: transform 200ms ease;
+}
+
+.recents-section--collapsed .recents-header__chevron {
+  transform: rotate(0deg);
+}
+
+.recents-count {
+  margin-left: auto;
+  min-width: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--hover-bg);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+}
+
+.recents-list {
+  overflow-y: hidden;
+  padding: 2px 0 4px;
+}
+
+.recents-list--scroll {
+  overflow-y: auto;
+  /* 5 rows max before scrolling — single-line rows, ~28px tall each */
+  max-height: 140px;
+}
+
+.recents-section--collapsed .recents-list {
+  display: none;
+}
+
+.recents-empty {
+  display: block;
+  padding: 4px 14px 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.recents-close-btn {
+  position: static;
+}
+
+/* Custom explorer mode: notepad-style, no folder tree at all — the Recent
+   Files section becomes the sidebar's only content and can't be collapsed. */
+.left-sidebar--custom #file-list,
+.left-sidebar--custom #new-file-row,
+.left-sidebar--custom #btn-open-folder,
+.left-sidebar--custom #btn-new-folder,
+.left-sidebar--custom #btn-collapse-all {
+  display: none !important;
+}
+
+.left-sidebar--custom .recents-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: none;
+}
+
+.left-sidebar--custom .recents-header {
+  cursor: default;
+  flex-shrink: 0;
+}
+
+.left-sidebar--custom .recents-list,
+.left-sidebar--custom .recents-list--scroll {
+  flex: 1;
+  max-height: none;
+  overflow-y: auto;
+}
+
 /* ── Static section labels (Pinned / Files) ─────────────────────────── */
 .file-list-section-header {
   padding: 8px 14px 3px;

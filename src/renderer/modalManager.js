@@ -47,10 +47,13 @@ const ModalManager = (() => {
     StatusBar.updateChatContextFile(name);
     SaveManager.markClean();
     SaveManager.clearDraft();
+    StorageManager.addRecentItem('file', filePath, name, SaveManager.extractFirstLine(content));
 
     document.querySelectorAll('#file-list .file-item').forEach(item => {
       item.classList.toggle('active', item.dataset.path === filePath);
     });
+
+    RecentsPanel.render();
   }
 
   return { showSaveAsModal };

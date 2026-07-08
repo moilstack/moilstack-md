@@ -132,11 +132,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // process — the existing Electron runtime creates the window directly).
   newWindow: () => ipcRenderer.invoke('app:new-window'),
 
-  // Open a specific file in a brand-new window — sidebar hidden, file-only mode.
-  // The file path is passed as a URL query param so the renderer can skip
-  // folder restoration synchronously during DOMContentLoaded (no flash).
+  // Open a specific file in a brand-new window. The file path is passed as
+  // a URL query param so the renderer can skip folder restoration
+  // synchronously during DOMContentLoaded (no flash).
   openInNewWindow: (filePath) =>
-    ipcRenderer.invoke('app:new-window', { filePath, singleFileMode: true }),
+    ipcRenderer.invoke('app:new-window', { filePath }),
 
   // Search filenames and content within the active folder
   searchFiles: (folderPath, query) =>

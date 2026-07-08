@@ -72,7 +72,7 @@ function selectFile(el, filePath, lines, chars) {
  * Open a .md file from an absolute path (OS double-click or second-instance forward).
  * Switches the sidebar folder when needed, highlights the file, resets the chat.
  */
-async function openFileByPath(filePath) {
+async function openFileByPath(filePath, { addToRecents = false } = {}) {
   if (!filePath) return;
 
   await SaveManager.silentSave();
@@ -135,13 +135,108 @@ async function openFileByPath(filePath) {
 
   const lines = content.split('\n').length;
   selectFile(matchedItem, filePath, lines, content.length);
+  // Not added to Recent Files by default — openFileByPath is shared by
+  // search results and in-document link clicks too. Only true "opened from
+  // outside the app" callers (Windows Explorer / OS open) pass addToRecents.
+  if (addToRecents) {
+    const name = filePath.split(/[\\/]/).pop() || filePath;
+    StorageManager.addRecentItem('file', filePath, name, SaveManager.extractFirstLine(content));
+  }
   WelcomeScreen.hideWelcomeScreen();
   ChatPanel.clearChat();
+  RecentsPanel.render();
+}
+
+/**
+ * Open a file from the "Recent Files" sidebar section. Unlike openFileByPath,
+ * this never touches the active folder/tree — recent files are reachable
+ * regardless of which folder (if any) is currently open.
+ */
+async function openRecentFile(filePath) {
+  if (!filePath) return;
+
+  await SaveManager.silentSave();
+
+  const result = await window.electronAPI?.readFile(filePath);
+  if (!result) {
+    StatusBar.showToast('File not found — removed from Recent Files.');
+    StorageManager.removeRecentItem(filePath);
+    RecentsPanel.render();
+    return;
+  }
+  const content = result.content ?? '';
+
+  if (mdEditor) {
+    EditorCore.clearAiUndoStack();
+    mdEditor.value     = content;
+    mdEditor.scrollTop = 0;
+    mdEditor.setSelectionRange(0, 0);
+    const gutter = document.getElementById('line-numbers');
+    if (gutter) gutter.scrollTop = 0;
+    EditorCore.updateHighlight();
+    EditorCore.triggerUpdate();
+  }
+  SaveManager.markClean();
+
+  const name = filePath.split(/[\\/]/).pop() || filePath;
+  currentFile = { name, path: filePath };
+  StatusBar.updateFilename(name);
+  StatusBar.updateChatContextFile(name);
+  StorageManager.addRecentItem('file', filePath, name, SaveManager.extractFirstLine(content));
+
+  const list = document.getElementById('file-list');
+  if (list) {
+    for (const item of list.querySelectorAll('.file-item')) {
+      item.classList.toggle('active', item.dataset.path === filePath);
+    }
+  }
+
+  WelcomeScreen.hideWelcomeScreen();
+  ChatPanel.clearChat();
+  RecentsPanel.render();
+}
+
+/**
+ * Restore the persisted untitled draft into the editor (from the "Recent
+ * Files" section's draft row) after having switched away to another file.
+ */
+async function restoreDraftFile() {
+  if (currentFile.path) {
+    await SaveManager.silentSave();
+  }
+
+  const draft = SaveManager.getDraft();
+
+  if (mdEditor) {
+    EditorCore.clearAiUndoStack();
+    mdEditor.value     = draft;
+    mdEditor.scrollTop = 0;
+    mdEditor.setSelectionRange(0, 0);
+    const gutter = document.getElementById('line-numbers');
+    if (gutter) gutter.scrollTop = 0;
+    EditorCore.updateHighlight();
+    EditorCore.updateStats();
+    EditorCore.triggerUpdate();
+  }
+
+  document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
+
+  currentFile = { name: 'untitled.md', path: null };
+  StatusBar.updateFilename('untitled.md');
+  StatusBar.updateChatContextFile('untitled.md');
+  SaveManager.markDirty();
+
+  WelcomeScreen.hideWelcomeScreen();
+  ChatPanel.clearChat();
+  setMode('edit');
+  RecentsPanel.render();
 }
 
 /**
  * Open a single .md file from the file picker (Ctrl+O or recent-items click).
- * Hides the explorer sidebar (no folder context), shows full path in header.
+ * This file isn't necessarily related to whatever folder was open before —
+ * shows the full path in the header, but keeps the sidebar visible (Recent
+ * Files is where this file is reachable) rather than hiding it.
  */
 async function openSingleFile(filePath) {
   if (!filePath) return;
@@ -164,7 +259,7 @@ async function openSingleFile(filePath) {
   }
   SaveManager.markClean();
 
-  SidebarManager.setExplorerVisible(false, false);
+  SidebarManager.setExplorerVisible(true, true);
 
   const label = document.getElementById('header-folder-name');
   if (label) label.textContent = filePath;
@@ -172,35 +267,18 @@ async function openSingleFile(filePath) {
   selectFile(null, filePath, content.split('\n').length, content.length);
 
   const fileName = filePath.split(/[\\/]/).pop() || filePath;
-  StorageManager.addRecentItem('file', filePath, fileName);
+  StorageManager.addRecentItem('file', filePath, fileName, SaveManager.extractFirstLine(content));
   WelcomeScreen.hideWelcomeScreen();
   ChatPanel.clearChat();
+  RecentsPanel.render();
 }
 
 /**
- * Start a fresh in-memory, unsaved document (Ctrl+N).
- * Unlike the explorer's "New File" (which creates a file inside a folder and
- * needs the sidebar visible), this has no folder/explorer dependency at all —
- * it works identically whether or not a folder is open or the sidebar is shown.
+ * Reset the editor to a blank untitled buffer. Assumes the caller has already
+ * handled whatever was there before (saved, discarded, or it was already
+ * empty) — this just performs the reset.
  */
-async function newUntitledFile() {
-  if (currentFile.path) {
-    // Existing saved file with unsaved edits — auto-save silently, same as
-    // switching to another file elsewhere in the app.
-    await SaveManager.silentSave();
-  } else if (SaveManager.isDirty()) {
-    // Unsaved untitled buffer — there's no file to silently save to, so ask
-    // before discarding its content.
-    const choice = await window.electronAPI?.confirmUnsaved();
-    if (choice === 'cancel' || !choice) return;
-    if (choice === 'save') {
-      await SaveManager.saveFile(); // opens the native Save-As dialog
-      if (SaveManager.isDirty()) return; // user cancelled the save dialog — abort
-    } else if (choice === 'discard') {
-      SaveManager.clearDraft();
-    }
-  }
-
+function _resetToBlankUntitled() {
   if (mdEditor) {
     EditorCore.clearAiUndoStack();
     mdEditor.value     = '';
@@ -219,10 +297,63 @@ async function newUntitledFile() {
   StatusBar.updateFilename('untitled.md');
   StatusBar.updateChatContextFile('untitled.md');
   SaveManager.markClean();
+  SaveManager.clearDraft();
+}
+
+/**
+ * Start a fresh in-memory, unsaved document (Ctrl+N).
+ * Unlike the explorer's "New File" (which creates a file inside a folder and
+ * needs the sidebar visible), this has no folder/explorer dependency at all —
+ * it works identically whether or not a folder is open or the sidebar is shown.
+ */
+async function newUntitledFile() {
+  if (currentFile.path) {
+    // Existing saved file with unsaved edits — auto-save silently, same as
+    // switching to another file elsewhere in the app.
+    await SaveManager.silentSave();
+
+    // There's only one untitled slot at a time. If an earlier untitled
+    // buffer was switched away from and left abandoned in Recent Files with
+    // real content, starting a new blank one would otherwise silently wipe
+    // it — ask first.
+    if (SaveManager.hasDraft() && SaveManager.getDraft()) {
+      const choice = await window.electronAPI?.confirmUnsaved();
+      if (choice === 'cancel' || !choice) return;
+      if (choice === 'save') {
+        const ok = await SaveManager.saveDraftAs();
+        if (!ok) return;
+      }
+    }
+  } else if (SaveManager.isDirty()) {
+    // Unsaved untitled buffer — there's no file to silently save to, so ask
+    // before discarding its content.
+    const choice = await window.electronAPI?.confirmUnsaved();
+    if (choice === 'cancel' || !choice) return;
+    if (choice === 'save') {
+      await SaveManager.saveFile(); // opens the native Save-As dialog
+      if (SaveManager.isDirty()) return; // user cancelled the save dialog — abort
+    }
+  }
+
+  _resetToBlankUntitled();
 
   WelcomeScreen.hideWelcomeScreen();
   ChatPanel.clearChat();
   setMode('edit');
+  RecentsPanel.render();
+}
+
+/**
+ * Discard the untitled buffer that's *currently loaded* in the editor, from
+ * the Recent Files draft row's × button (after the confirm dialog already
+ * approved it). Distinct from newUntitledFile — the caller has already
+ * decided to discard, so this never re-prompts.
+ */
+function discardLiveUntitledDraft() {
+  _resetToBlankUntitled();
+  WelcomeScreen.hideWelcomeScreen();
+  ChatPanel.clearChat();
+  RecentsPanel.render();
 }
 
 /* ── Handle deleted/moved file ────────────────────────────────────── */
@@ -340,6 +471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   SidebarManager.initSidebarToggles();
   SearchPanel.init();
   FileTreeManager.initFolderDropdown();
+  RecentsPanel.applyExplorerMode();
 
   const _version = window.electronAPI?.appVersion;
   if (_version) document.title = `MoilStack .md ${_version}`;
@@ -350,10 +482,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // the async DOMContentLoaded callback is suspended, so messages arrive early.
   if (window.electronAPI?.onOpenFileFromOS) {
     window.electronAPI.onOpenFileFromOS(async (filePath) => {
-      SidebarManager.setExplorerVisible(true, false);
-      const fileName = filePath.split(/[\\/]/).pop() || filePath;
-      StorageManager.addRecentItem('file', filePath, fileName);
-      await openFileByPath(filePath);
+      SidebarManager.setExplorerVisible(true, true);
+      await openFileByPath(filePath, { addToRecents: true });
     });
   }
 
@@ -434,10 +564,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   EditorCore.updateStats();
 
   if (_openFileParam) {
-    SidebarManager.setExplorerVisible(true, false);
-    const _paramFileName = _openFileParam.split(/[\\/]/).pop() || _openFileParam;
-    StorageManager.addRecentItem('file', _openFileParam, _paramFileName);
-    await openFileByPath(_openFileParam);
+    // Opened via "Open in New Window" (Explorer context menu) or Windows
+    // Explorer/file association. This file isn't necessarily related to
+    // whatever folder was open before — persist the sidebar as visible
+    // (Recent Files is where this file is reachable) rather than hiding it;
+    // it now only closes if the user explicitly toggles it via the header icon.
+    SidebarManager.setExplorerVisible(true, true);
+    await openFileByPath(_openFileParam, { addToRecents: true });
   } else if (_pendingDraft) {
     await newUntitledFile();
     if (mdEditor) {
@@ -512,7 +645,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const prevFilePath = currentFile.path;
       await FileTreeManager.setActiveFolder(folderPath);
 
-      if (prevFilePath) {
+      // Only treat a missing tree entry as "deleted" when the open file was
+      // actually supposed to live inside the active folder. A file saved,
+      // opened, or reopened from elsewhere (Save-As to another location,
+      // Ctrl+O, a Recent Files entry from a different folder) is correctly
+      // absent from this tree — that's not a deletion.
+      const insideActiveFolder = prevFilePath && (
+        prevFilePath.startsWith(folderPath + '/') ||
+        prevFilePath.startsWith(folderPath + '\\')
+      );
+
+      if (insideActiveFolder) {
         if (FileTreeManager.fileExistsInTree(prevFilePath)) {
           FileTreeManager.restoreActiveItem();
         } else {
@@ -521,6 +664,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }, 300);
   });
+
+  RecentsPanel.render();
 
   // ── Startup UI work is done — show the window now ──────────────────
   window.electronAPI?.notifyReady?.();
