@@ -23,7 +23,7 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 
 ## Features
 
-- **Dual-pane editor** — syntax-highlighted editor with live Markdown preview (`Ctrl+\`` to toggle)
+- **Dual-pane editor** — syntax-highlighted editor with Markdown preview (`Ctrl+\`` to toggle)
 - **File explorer** — browse, create, rename, and open `.md` files from a folder
 - **AI Assistant** — ask the AI to edit your document, answer questions, or improve your writing
 - **Smart AI editing** — document edits are applied silently and instantly; informational answers stream as chat
