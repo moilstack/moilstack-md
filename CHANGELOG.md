@@ -4,7 +4,7 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
-## [Unreleased]
+## [1.0.1] - 2026-07-08
 
 ### Added
 - **Notepad-style untitled files** — Ctrl+N now creates an in-memory untitled document that works regardless of whether a folder is open or the Explorer sidebar is visible
