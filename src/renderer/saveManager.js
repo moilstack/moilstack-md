@@ -147,10 +147,8 @@ const SaveManager = (() => {
 
     if (!filePath) {
       const content = mdEditor ? mdEditor.value : '';
-      if (content.trim()) {
-        _setDraft(content);
-        RecentsPanel?.render();
-      }
+      _setDraft(content);
+      RecentsPanel?.render();
       return true;
     }
 

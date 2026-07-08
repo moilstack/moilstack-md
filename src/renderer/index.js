@@ -539,7 +539,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     WelcomeScreen.hideWelcomeScreen();
   });
 
-  const launchBehavior = localStorage.getItem('launchBehavior') || 'recents';
+  const launchBehavior = localStorage.getItem('launchBehavior') || 'untitled';
   // An unsaved draft from a previous session outranks both the Recents screen
   // and the "start blank" preference — there's real work to hand back.
   const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();

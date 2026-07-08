@@ -460,8 +460,8 @@ const AIConfigManager = (() => {
     const explorerModeSel   = document.getElementById('explorerMode')
     if (explorerModeSel) explorerModeSel.value = savedExplorerMode
 
-    // Seed the launch-behavior selector with the saved preference (default: recents)
-    const savedLaunchBehavior = localStorage.getItem('launchBehavior') || 'recents'
+    // Seed the launch-behavior selector with the saved preference (default: untitled)
+    const savedLaunchBehavior = localStorage.getItem('launchBehavior') || 'untitled'
     const launchBehaviorSel   = document.getElementById('launchBehavior')
     if (launchBehaviorSel) launchBehaviorSel.value = savedLaunchBehavior
   }
