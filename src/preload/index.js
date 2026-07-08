@@ -142,6 +142,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   searchFiles: (folderPath, query) =>
     ipcRenderer.invoke('search:files', { folderPath, query }),
 
+  // Search filenames and content across an explicit list of files (used in
+  // Custom/no-folder Explorer mode, where there is no folder tree to search)
+  searchRecentFiles: (filePaths, query) =>
+    ipcRenderer.invoke('search:recent-files', { filePaths, query }),
+
   // Open a URL in the default OS browser (http/https only)
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
 

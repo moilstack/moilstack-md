@@ -90,14 +90,33 @@ const SearchPanel = (() => {
     _activeIndex = -1
   }
 
+  function _isCustomMode() {
+    return (localStorage.getItem('explorerMode') || 'multi-level') === 'custom'
+  }
+
   async function _doSearch(query) {
-    const folderPath = sessionStorage.getItem('lastFolder')
-    if (!folderPath) {
-      _dropdown.innerHTML = '<div class="search-no-results">No folder open</div>'
-      _dropdown.classList.remove('hidden')
-      return
-    }
     try {
+      if (_isCustomMode()) {
+        // No folder tree in Custom mode — search the Recent Files list instead.
+        const filePaths = StorageManager.getRecentItems()
+          .filter(i => i.type === 'file')
+          .map(i => i.path)
+        if (!filePaths.length) {
+          _dropdown.innerHTML = '<div class="search-no-results">No recent files</div>'
+          _dropdown.classList.remove('hidden')
+          return
+        }
+        const { results } = await window.electronAPI.searchRecentFiles(filePaths, query)
+        _render(results, query)
+        return
+      }
+
+      const folderPath = sessionStorage.getItem('lastFolder')
+      if (!folderPath) {
+        _dropdown.innerHTML = '<div class="search-no-results">No folder open</div>'
+        _dropdown.classList.remove('hidden')
+        return
+      }
       const { results } = await window.electronAPI.searchFiles(folderPath, query)
       _render(results, query)
     } catch (err) {

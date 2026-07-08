@@ -593,6 +593,32 @@ function registerIpcHandlers() {
   })
 
   /**
+   * Matches a single file against a lowercased query, returning a
+   * SearchResult ({ filePath, fileName, snippet, matchType }) or null.
+   * Shared by search:files (folder walk) and search:recent-files (explicit list).
+   */
+  async function _matchFile(fullPath, fileName, q) {
+    const nameMatch = fileName.toLowerCase().includes(q)
+    let content = ''
+    try { content = await fs.readFile(fullPath, 'utf8') } catch { return null }
+    const contentMatch = content.toLowerCase().includes(q)
+    if (!nameMatch && !contentMatch) return null
+
+    let snippet = ''
+    if (contentMatch) {
+      const idx = content.toLowerCase().indexOf(q)
+      const lineStart = content.lastIndexOf('\n', idx) + 1
+      const lineEnd   = content.indexOf('\n', idx)
+      snippet = content.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim()
+    } else {
+      snippet = content.split('\n').find(l => l.trim()) || ''
+    }
+    snippet = snippet.replace(/^#+\s*/, '').slice(0, 120)
+
+    return { filePath: fullPath, fileName, snippet, matchType: nameMatch ? 'name' : 'content' }
+  }
+
+  /**
    * search:files — full-text + filename search across a folder tree.
    *
    * Args: { folderPath: string, query: string }
@@ -618,34 +644,35 @@ function registerIpcHandlers() {
         if (e.isDirectory()) {
           await walk(fullPath)
         } else if (e.isFile() && /\.(md|markdown|txt)$/i.test(e.name)) {
-          const nameMatch = e.name.toLowerCase().includes(q)
-          let content = ''
-          try { content = await fs.readFile(fullPath, 'utf8') } catch { continue }
-          const contentMatch = content.toLowerCase().includes(q)
-          if (!nameMatch && !contentMatch) continue
-
-          let snippet = ''
-          if (contentMatch) {
-            const idx = content.toLowerCase().indexOf(q)
-            const lineStart = content.lastIndexOf('\n', idx) + 1
-            const lineEnd   = content.indexOf('\n', idx)
-            snippet = content.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim()
-          } else {
-            snippet = content.split('\n').find(l => l.trim()) || ''
-          }
-          snippet = snippet.replace(/^#+\s*/, '').slice(0, 120)
-
-          results.push({
-            filePath:  fullPath,
-            fileName:  e.name,
-            snippet,
-            matchType: nameMatch ? 'name' : 'content',
-          })
+          const result = await _matchFile(fullPath, e.name, q)
+          if (result) results.push(result)
         }
       }
     }
 
     await walk(folderPath)
+    return { results }
+  })
+
+  /**
+   * search:recent-files — full-text + filename search over an explicit list
+   * of file paths (used for Custom/no-folder Explorer mode, where there is
+   * no folder tree to walk — only the Recent Files list).
+   *
+   * Args: { filePaths: string[], query: string }
+   * Returns: { results: SearchResult[] }
+   */
+  ipcMain.handle('search:recent-files', async (_event, { filePaths, query }) => {
+    if (!Array.isArray(filePaths) || !filePaths.length || !query) return { results: [] }
+    const q = query.toLowerCase()
+    const results = []
+
+    for (const fullPath of filePaths) {
+      if (results.length >= 30) break
+      const result = await _matchFile(fullPath, path.basename(fullPath), q)
+      if (result) results.push(result)
+    }
+
     return { results }
   })
 

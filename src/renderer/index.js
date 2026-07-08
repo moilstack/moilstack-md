@@ -182,6 +182,7 @@ async function openRecentFile(filePath) {
     const gutter = document.getElementById('line-numbers');
     if (gutter) gutter.scrollTop = 0;
     EditorCore.updateHighlight();
+    EditorCore.updateStats();
     EditorCore.triggerUpdate();
   }
   SaveManager.markClean();

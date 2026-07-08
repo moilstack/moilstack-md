@@ -177,9 +177,11 @@ const RecentsPanel = (() => {
   /* ── Explorer-mode wiring (hide folder tree entirely in Custom mode) ── */
 
   function applyExplorerMode() {
-    const sidebar = document.querySelector('.left-sidebar');
+    const sidebar    = document.querySelector('.left-sidebar');
+    const folderWrap = document.querySelector('.app-header__folder-wrap');
     const custom  = _isCustomMode();
     if (sidebar) sidebar.classList.toggle('left-sidebar--custom', custom);
+    if (folderWrap) folderWrap.classList.toggle('hidden', custom);
     if (custom) setCollapsed(false);
   }
 

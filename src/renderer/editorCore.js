@@ -682,7 +682,7 @@ const EditorCore = (() => {
           const start = editor.selectionStart;
           const end   = editor.selectionEnd;
           editor.setRangeText('  ', start, end, 'end');
-          triggerUpdate();
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
 
