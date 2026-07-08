@@ -222,9 +222,39 @@ function registerIpcHandlers() {
   ipcMain.on('window:close',     (e) => { BrowserWindow.fromWebContents(e.sender)?.close() })
   ipcMain.handle('window:is-maximized', (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
 
+  // Renderer signals that startup UI work has finished — show the window now
+  // instead of on first paint, so the user never sees it mid-adjustment.
+  ipcMain.on('renderer:ready', (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (win && !win.isDestroyed() && !win.isVisible()) win.show()
+  })
+
   // Open a URL in the default OS browser — only http/https allowed
   ipcMain.handle('shell:open-external', (_e, url) => {
     if (/^https?:\/\//i.test(url)) shell.openExternal(url)
+  })
+
+  /**
+   * dialog:confirm-unsaved — ask whether to save, discard, or cancel when an
+   * in-app action (e.g. starting a new untitled file) would otherwise discard
+   * unsaved changes. Mirrors the window-close unsaved-changes guard.
+   *
+   * Returns 'save' | 'discard' | 'cancel'.
+   */
+  ipcMain.handle('dialog:confirm-unsaved', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+
+    const { response } = await dialog.showMessageBox(win, {
+      type:      'warning',
+      buttons:   ['Save', 'Discard changes', 'Cancel'],
+      defaultId: 0,
+      cancelId:  2,
+      title:     'Unsaved changes',
+      message:   'You have unsaved changes.',
+      detail:    'Save before starting a new file, or discard and lose your work?',
+    })
+
+    return ['save', 'discard', 'cancel'][response] ?? 'cancel'
   })
 
   // Set the Windows taskbar jump list with the "New Instance" task.
@@ -398,7 +428,7 @@ function registerIpcHandlers() {
     if (canceled || !filePath) return { ok: false, canceled: true }
 
     // Write HTML to a temp file so the hidden window can load it
-    const tmpFile = path.join(os.tmpdir(), 'markflow-export.html')
+    const tmpFile = path.join(os.tmpdir(), 'moilstack-export.html')
     await fs.writeFile(tmpFile, html, 'utf8')
 
     const hidden = new BrowserWindow({
@@ -439,16 +469,25 @@ function registerIpcHandlers() {
 
   /**
    * file:new — show a native Save dialog, then create an empty .md file.
-   * Used as a fallback when no folder is active.
+   * Used for Save-As, and as a fallback when no folder is active.
    *
+   * @param {string} [suggestedName]  Filename to pre-fill the dialog with
+   *                                  (extension appended if absent). Falls back to 'untitled.md'.
+   * @param {string} [folderPath]     Directory to point the dialog at. Falls back to the OS default.
    * Returns { filePath: string } on success, or null when the user cancels.
    */
-  ipcMain.handle('file:new', async (event) => {
+  ipcMain.handle('file:new', async (event, suggestedName, folderPath) => {
     const win = BrowserWindow.fromWebContents(event.sender)
+
+    const safeName  = suggestedName ? path.basename(suggestedName.trim()) : ''
+    const finalName = safeName
+      ? (/\.[a-zA-Z0-9]+$/.test(safeName) ? safeName : `${safeName}.md`)
+      : 'untitled.md'
+    const defaultPath = folderPath ? path.join(folderPath, finalName) : finalName
 
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
       title: 'New File',
-      defaultPath: 'untitled.md',
+      defaultPath,
       filters: [
         { name: 'Markdown & Text', extensions: ['md', 'markdown', 'txt'] },
         { name: 'All Files', extensions: ['*'] },
@@ -554,6 +593,32 @@ function registerIpcHandlers() {
   })
 
   /**
+   * Matches a single file against a lowercased query, returning a
+   * SearchResult ({ filePath, fileName, snippet, matchType }) or null.
+   * Shared by search:files (folder walk) and search:recent-files (explicit list).
+   */
+  async function _matchFile(fullPath, fileName, q) {
+    const nameMatch = fileName.toLowerCase().includes(q)
+    let content = ''
+    try { content = await fs.readFile(fullPath, 'utf8') } catch { return null }
+    const contentMatch = content.toLowerCase().includes(q)
+    if (!nameMatch && !contentMatch) return null
+
+    let snippet = ''
+    if (contentMatch) {
+      const idx = content.toLowerCase().indexOf(q)
+      const lineStart = content.lastIndexOf('\n', idx) + 1
+      const lineEnd   = content.indexOf('\n', idx)
+      snippet = content.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim()
+    } else {
+      snippet = content.split('\n').find(l => l.trim()) || ''
+    }
+    snippet = snippet.replace(/^#+\s*/, '').slice(0, 120)
+
+    return { filePath: fullPath, fileName, snippet, matchType: nameMatch ? 'name' : 'content' }
+  }
+
+  /**
    * search:files — full-text + filename search across a folder tree.
    *
    * Args: { folderPath: string, query: string }
@@ -579,34 +644,35 @@ function registerIpcHandlers() {
         if (e.isDirectory()) {
           await walk(fullPath)
         } else if (e.isFile() && /\.(md|markdown|txt)$/i.test(e.name)) {
-          const nameMatch = e.name.toLowerCase().includes(q)
-          let content = ''
-          try { content = await fs.readFile(fullPath, 'utf8') } catch { continue }
-          const contentMatch = content.toLowerCase().includes(q)
-          if (!nameMatch && !contentMatch) continue
-
-          let snippet = ''
-          if (contentMatch) {
-            const idx = content.toLowerCase().indexOf(q)
-            const lineStart = content.lastIndexOf('\n', idx) + 1
-            const lineEnd   = content.indexOf('\n', idx)
-            snippet = content.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim()
-          } else {
-            snippet = content.split('\n').find(l => l.trim()) || ''
-          }
-          snippet = snippet.replace(/^#+\s*/, '').slice(0, 120)
-
-          results.push({
-            filePath:  fullPath,
-            fileName:  e.name,
-            snippet,
-            matchType: nameMatch ? 'name' : 'content',
-          })
+          const result = await _matchFile(fullPath, e.name, q)
+          if (result) results.push(result)
         }
       }
     }
 
     await walk(folderPath)
+    return { results }
+  })
+
+  /**
+   * search:recent-files — full-text + filename search over an explicit list
+   * of file paths (used for Custom/no-folder Explorer mode, where there is
+   * no folder tree to walk — only the Recent Files list).
+   *
+   * Args: { filePaths: string[], query: string }
+   * Returns: { results: SearchResult[] }
+   */
+  ipcMain.handle('search:recent-files', async (_event, { filePaths, query }) => {
+    if (!Array.isArray(filePaths) || !filePaths.length || !query) return { results: [] }
+    const q = query.toLowerCase()
+    const results = []
+
+    for (const fullPath of filePaths) {
+      if (results.length >= 30) break
+      const result = await _matchFile(fullPath, path.basename(fullPath), q)
+      if (result) results.push(result)
+    }
+
     return { results }
   })
 

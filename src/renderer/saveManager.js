@@ -17,6 +17,54 @@ const SaveManager = (() => {
   const AUTO_SAVE_DELAY = 30_000;
   let _autoSaveTimer    = null;
 
+  /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ── */
+
+  const DRAFT_KEY        = 'untitledDraft';
+  const DRAFT_EXISTS_KEY = 'untitledDraftExists';
+
+  function getDraft() { return localStorage.getItem(DRAFT_KEY) || ''; }
+
+  // Distinct from getDraft() being non-empty: an untitled buffer that was
+  // switched away from before anything was typed still needs to be
+  // reachable from Recent Files, so its "slot" is tracked even when the
+  // persisted content is an empty string.
+  function hasDraft() { return localStorage.getItem(DRAFT_EXISTS_KEY) === '1'; }
+
+  function _setDraft(content) {
+    localStorage.setItem(DRAFT_KEY, content);
+    localStorage.setItem(DRAFT_EXISTS_KEY, '1');
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(DRAFT_EXISTS_KEY);
+  }
+
+  /**
+   * Save the persisted draft to disk via the native Save dialog, without
+   * touching whatever is currently loaded in the editor. Used by the
+   * "Recent Files" draft row's × button when the user chooses "Save".
+   */
+  async function saveDraftAs() {
+    const content = getDraft();
+    if (!content) return true;
+
+    const raw  = _extractFirstLine(content);
+    const safe = raw.replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 60) || 'untitled';
+    const folder = sessionStorage.getItem('lastFolder') || null;
+
+    const result = await window.electronAPI?.newFile(safe, folder);
+    if (!result?.filePath) return false; // cancelled
+
+    const writeResult = await window.electronAPI.writeFile(result.filePath, content);
+    if (!writeResult?.ok) { StatusBar.showToast(writeResult?.error || 'Save failed.'); return false; }
+
+    clearDraft();
+    const name = result.filePath.split(/[\\/]/).pop();
+    StorageManager.addRecentItem('file', result.filePath, name, raw);
+    return true;
+  }
+
   /* ── Auto-save ────────────────────────────────────────────────────── */
 
   function _scheduleAutoSave() {
@@ -96,9 +144,18 @@ const SaveManager = (() => {
 
   async function silentSave() {
     const filePath = currentFile.path;
-    if (!filePath || !_isDirty) return true;
+
+    if (!filePath) {
+      const content = mdEditor ? mdEditor.value : '';
+      _setDraft(content);
+      RecentsPanel?.render();
+      return true;
+    }
+
+    if (!_isDirty) return true;
 
     const content = mdEditor ? mdEditor.value : '';
+
     try {
       const result = await window.electronAPI.writeFile(filePath, content);
       if (!result?.ok) throw new Error(result?.error || 'write failed');
@@ -162,7 +219,7 @@ const SaveManager = (() => {
       console.error('[saveFile]', err);
       btn.innerHTML = `<span>✗ Error</span>`;
       setTimeout(() => { btn.innerHTML = `${FLOPPY_SVG}<span>Save</span>`; }, 2000);
-      alert(`Save failed: ${err.message}`);
+      StatusBar.showToast(`Save failed: ${err.message}`);
     } finally {
       btn.disabled = false;
       delete btn.dataset.saving;
@@ -215,7 +272,7 @@ const SaveManager = (() => {
     const editor   = document.getElementById('mdEditor');
     const md       = editor ? editor.value : '';
 
-    if (!md.trim()) { alert('Nothing to export — the document is empty.'); return; }
+    if (!md.trim()) { StatusBar.showToast('Nothing to export — the document is empty.'); return; }
 
     const filename = currentFile.name || 'export.md';
 
@@ -307,6 +364,11 @@ const SaveManager = (() => {
     silentSave,
     saveFile,
     exportFile,
+    extractFirstLine: _extractFirstLine,
+    getDraft,
+    hasDraft,
+    clearDraft,
+    saveDraftAs,
   };
 })();
 

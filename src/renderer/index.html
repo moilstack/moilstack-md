@@ -9,6 +9,8 @@
   <link rel="icon" type="image/png" href="../assets/icon.png" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="../../node_modules/katex/dist/katex.min.css" />
+  <!-- Sets the theme before anything paints, so there's no light-then-dark flash -->
+  <script src="themeInit.js"></script>
 </head>
 <body>
   <!-- ── App Header ───────────────────────────────────────────────── -->
@@ -271,6 +273,20 @@
       <!-- File list -->
       <div class="file-list" id="file-list">
         <span class="file-list__empty">Open a folder to see files</span>
+      </div>
+
+      <!-- Recent Files (untitled draft + files opened/saved outside the active folder) -->
+      <div class="recents-section" id="recents-section">
+        <button class="recents-header" id="recents-header" type="button" aria-expanded="true">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="recents-header__chevron">
+            <path d="M3 2l4 3-4 3" stroke="currentColor" stroke-width="1.4"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="sidebar-section__label">Recent Files</span>
+          <span class="recents-count" id="recents-count">0</span>
+        </button>
+        <div class="recents-list" id="recents-list"></div>
       </div>
 
     </aside><!-- /left-sidebar -->
@@ -953,7 +969,7 @@
                       <path d="M2 5h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                     </svg>
                   </button>
-                  <span id="fontSizeValue" class="font-size-display">12</span>
+                  <span id="fontSizeValue" class="font-size-display">13</span>
                   <span class="font-size-unit">px</span>
                   <button id="btnFontSizeUp" class="font-step-btn" title="Increase font size" aria-label="Increase">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -996,6 +1012,20 @@
               </div>
             </div>
 
+            <!-- Launch Behavior -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">On Launch</span>
+                <span class="settings-row__desc">What to show when the app opens</span>
+              </div>
+              <div class="settings-row__control">
+                <select id="launchBehavior" class="form-input settings-select">
+                  <option value="recents">Show Recents</option>
+                  <option value="untitled">Start a new untitled file</option>
+                </select>
+              </div>
+            </div>
+
             <!-- Live preview strip -->
             <div class="editor-font-preview" id="editorFontPreview">
               <span># Heading</span>  <span>**bold**</span>  <span>`code`</span>  <span>normal text</span>
@@ -1014,12 +1044,13 @@
             <div class="settings-row">
               <div class="settings-row__label">
                 <span class="settings-row__name">Explorer Mode</span>
-                <span class="settings-row__desc">Root only shows date groups, content previews, and tags</span>
+                <span class="settings-row__desc">Root only shows date groups, content previews, and tags. Custom hides folders entirely — Recent Files is the only way to open something.</span>
               </div>
               <div class="settings-row__control">
                 <select id="explorerMode" class="form-input settings-select">
                   <option value="multi-level">Multi-level</option>
                   <option value="root-only">Root folder only</option>
+                  <option value="custom">Custom (no folder)</option>
                 </select>
               </div>
             </div>
@@ -1138,40 +1169,6 @@
     </div>
   </div>
 
-  <!-- ── Save-As Modal ──────────────────────────────────────────────── -->
-  <div id="saveAsOverlay" class="settings-overlay hidden"
-       role="dialog" aria-modal="true" aria-labelledby="saveAsTitle">
-    <div class="settings-panel settings-panel--sm">
-      <div class="settings-panel-header">
-        <span id="saveAsTitle" class="settings-panel-title">Save File</span>
-        <button id="btnCloseSaveAs" class="settings-close-btn" title="Cancel">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="settings-panel-body">
-        <div class="form-group">
-          <label class="form-label">Save into folder</label>
-          <div class="save-as-folder-row">
-            <span id="saveAsFolderDisplay" class="save-as-folder-path">No folder selected</span>
-            <button id="btnSaveAsPickFolder" class="btn btn-outline btn-sm">Browse…</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="saveAsFilename">Filename</label>
-          <input type="text" id="saveAsFilename" class="form-input"
-                 placeholder="untitled.md" autocomplete="off" spellcheck="false" maxlength="120">
-          <span id="saveAsError" class="save-as-error hidden"></span>
-        </div>
-        <div class="modal-actions">
-          <button id="btnSaveAsCancel" class="btn btn-outline">Cancel</button>
-          <button id="btnSaveAsConfirm" class="btn btn-primary">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ── Delete confirmation modal ───────────────────────────────────── -->
   <div id="deleteConfirmOverlay" class="settings-overlay hidden"
        role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
@@ -1282,6 +1279,7 @@
   <script src="contextMenus.js"></script>
   <script src="fileOperations.js"></script>
   <script src="fileTreeManager.js"></script>
+  <script src="recentsPanel.js"></script>
   <script src="modalManager.js"></script>
   <script src="hamburgerMenu.js"></script>
   <script src="searchPanel.js"></script>

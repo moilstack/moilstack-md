@@ -37,8 +37,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Export rendered HTML as a PDF via the native save dialog
   exportPdf: (html, filename) => ipcRenderer.invoke('file:export-pdf', { html, filename }),
 
-  // Prompt for a filename and create a new Markdown file on disk (fallback / no active folder)
-  newFile: () => ipcRenderer.invoke('file:new'),
+  // Prompt for a filename/location via native Save dialog and create a new Markdown file on disk
+  newFile: (suggestedName, folderPath) => ipcRenderer.invoke('file:new', suggestedName, folderPath),
 
   // Create a new .md file directly inside an already-selected folder (no Save dialog)
   newFileInFolder: (folderPath, fileName) =>
@@ -113,7 +113,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── Window close guard ──────────────────────────────────────────────────
   // Called by the main process when the user chose "Save" in the unsaved-
   // changes dialog.  The renderer should save then call window.close().
-  onSaveAndClose: (cb) => ipcRenderer.on('app:save-and-close', () => cb()),
+  onSaveAndClose:    (cb) => ipcRenderer.on('app:save-and-close',    () => cb()),
+  onDiscardAndClose: (cb) => ipcRenderer.on('app:discard-and-close', () => cb()),
 
   // ── OS file open ────────────────────────────────────────────────────────
   // Called by the main process when a .md file is opened from Windows Explorer
@@ -132,18 +133,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // process — the existing Electron runtime creates the window directly).
   newWindow: () => ipcRenderer.invoke('app:new-window'),
 
-  // Open a specific file in a brand-new window — sidebar hidden, file-only mode.
-  // The file path is passed as a URL query param so the renderer can skip
-  // folder restoration synchronously during DOMContentLoaded (no flash).
+  // Open a specific file in a brand-new window. The file path is passed as
+  // a URL query param so the renderer can skip folder restoration
+  // synchronously during DOMContentLoaded (no flash).
   openInNewWindow: (filePath) =>
-    ipcRenderer.invoke('app:new-window', { filePath, singleFileMode: true }),
+    ipcRenderer.invoke('app:new-window', { filePath }),
 
   // Search filenames and content within the active folder
   searchFiles: (folderPath, query) =>
     ipcRenderer.invoke('search:files', { folderPath, query }),
 
+  // Search filenames and content across an explicit list of files (used in
+  // Custom/no-folder Explorer mode, where there is no folder tree to search)
+  searchRecentFiles: (filePaths, query) =>
+    ipcRenderer.invoke('search:recent-files', { filePaths, query }),
+
   // Open a URL in the default OS browser (http/https only)
   openExternal: (url) => ipcRenderer.invoke('shell:open-external', url),
+
+  // Ask the user to Save / Discard / Cancel before an in-app action would discard unsaved changes
+  confirmUnsaved: () => ipcRenderer.invoke('dialog:confirm-unsaved'),
 
   // ── Custom title-bar window controls ──────────────────────────────────────
   window: {
@@ -153,5 +162,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     isMaximized:       () => ipcRenderer.invoke('window:is-maximized'),
     onMaximizedChange: (cb) => ipcRenderer.on('window:maximized-change', (_e, isMax) => cb(isMax)),
   },
+
+  // Tells the main process that startup UI work (theme, sidebar state,
+  // folder listing) has finished, so the window can be shown without a
+  // flash of half-initialised content. See main/index.js createWindow().
+  notifyReady: () => ipcRenderer.send('renderer:ready'),
 
 })

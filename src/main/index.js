@@ -84,9 +84,7 @@ if (!gotLock) {
 
   /**
    * Create a new BrowserWindow.
-   * @param {{ filePath?: string, folderPath?: string, singleFileMode?: boolean }} [args]
-   *   singleFileMode: when true the renderer opens the file without loading the
-   *   folder sidebar (used by "Open in New Window" from the file context menu).
+   * @param {{ filePath?: string, folderPath?: string }} [args]
    */
   function createWindow(args = {}) {
     // If there's an existing window, cascade the new one 40 px down-right so
@@ -110,11 +108,27 @@ if (!gotLock) {
       title: 'MoilStack .md',
       icon: path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
       frame: false,
+      // Matches the dark theme's --bg so there's no white flash before the
+      // page paints. The window itself stays hidden until the renderer
+      // reports it has finished its startup UI work (see 'renderer:ready'
+      // in ipc.js) — 'ready-to-show' alone only guarantees a first paint,
+      // not that theme/sidebar-state/folder-listing JS has run, so relying
+      // on it left a brief flash of half-initialised UI.
+      backgroundColor: '#282c34',
+      show: false,
       webPreferences: {
         preload: path.join(__dirname, '..', 'preload', 'index.js'),
         contextIsolation: true,
         nodeIntegration: false,
       },
+    })
+
+    // Safety net: if the renderer never sends 'renderer:ready' (e.g. a
+    // startup script error), show the window anyway so it isn't stuck hidden.
+    win.once('ready-to-show', () => {
+      setTimeout(() => {
+        if (!win.isDestroyed() && !win.isVisible()) win.show()
+      }, 2000)
     })
 
     // Forward maximize/unmaximize events so the renderer can update the button icon
@@ -149,8 +163,13 @@ if (!gotLock) {
 
     // ── Unsaved-changes guard ─────────────────────────────────────────────
     // Button indices:  0 = Save   1 = Discard   2 = Cancel
-    win.webContents.on('will-prevent-unload', async (event) => {
-      const { response } = await dialog.showMessageBox(win, {
+    // event.preventDefault() on will-prevent-unload is synchronous-only in
+    // Electron — calling it after an await has no effect. Instead we send IPC
+    // messages so the renderer can set the bypass flag and call window.close().
+    win.webContents.on('will-prevent-unload', (event) => {
+      // Prevent the default "keep window open" so we can manage close ourselves.
+      event.preventDefault()
+      dialog.showMessageBox(win, {
         type:      'warning',
         buttons:   ['Save', 'Discard changes', 'Cancel'],
         defaultId: 0,
@@ -158,14 +177,14 @@ if (!gotLock) {
         title:     'Unsaved changes',
         message:   'You have unsaved changes.',
         detail:    'Save before closing, or discard and lose your work?',
+      }).then(({ response }) => {
+        if (response === 0) {
+          win.webContents.send('app:save-and-close')
+        } else if (response === 1) {
+          win.webContents.send('app:discard-and-close')
+        }
+        // response === 2 (Cancel): do nothing → window stays open
       })
-
-      if (response === 0) {
-        win.webContents.send('app:save-and-close')
-      } else if (response === 1) {
-        event.preventDefault()
-      }
-      // response === 2 (Cancel): do nothing → window stays open
     })
 
     // ── Send startup folder once the renderer is ready ───────────────────

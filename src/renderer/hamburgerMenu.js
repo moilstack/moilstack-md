@@ -40,16 +40,7 @@ const HamburgerMenu = (() => {
 
   document.getElementById('hmenu-new')?.addEventListener('click', async () => {
     closeHamburgerMenu();
-    const savedFolder = sessionStorage.getItem('lastFolder');
-    if (savedFolder) {
-      FileOperations.showNewFileInput();
-    } else {
-      const result = await window.electronAPI?.openFolder();
-      if (result?.folderPath) {
-        await FileTreeManager.setActiveFolder(result.folderPath);
-        FileOperations.showNewFileInput();
-      }
-    }
+    await newUntitledFile();
   });
 
   document.getElementById('hmenu-open-file')?.addEventListener('click', async () => {
@@ -110,7 +101,11 @@ const HamburgerMenu = (() => {
   });
 
   /* ── Collapse All button (sidebar header) ─────────────────────────── */
+  // Disabled in Root folder only mode, since that view has no sub-folders to
+  // collapse (see FileTreeManager.updateFolderToolbarButtons).
   document.getElementById('btn-collapse-all')?.addEventListener('click', () => {
+    const rootOnly = (localStorage.getItem('explorerMode') || 'multi-level') === 'root-only';
+    if (rootOnly) return;
     FileTreeManager.collapseAll();
   });
 

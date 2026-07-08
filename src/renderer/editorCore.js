@@ -454,7 +454,8 @@ const EditorCore = (() => {
     const sel = ta.value.substring(start, end);
     ta.focus();
     ta.setSelectionRange(start, end);
-    document.execCommand('insertText', false, before + sel + after);
+    ta.setRangeText(before + sel + after, start, end, 'end');
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
     ta.setSelectionRange(start + before.length, start + before.length + sel.length);
     updateStats();
   }
@@ -469,7 +470,8 @@ const EditorCore = (() => {
     const lineStart = ta.value.lastIndexOf('\n', start - 1) + 1;
     ta.focus();
     ta.setSelectionRange(lineStart, lineStart);
-    document.execCommand('insertText', false, prefix);
+    ta.setRangeText(prefix, lineStart, lineStart, 'end');
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
     ta.setSelectionRange(start + prefix.length, start + prefix.length);
     updateStats();
   }
@@ -486,7 +488,8 @@ const EditorCore = (() => {
     const insertion = before + selected + after;
     editor.focus();
     editor.setSelectionRange(start, end);
-    document.execCommand('insertText', false, insertion);
+    editor.setRangeText(insertion, start, end, 'end');
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
     editor.setSelectionRange(start + before.length, start + before.length + selected.length);
     triggerUpdate();
   }
@@ -516,7 +519,8 @@ const EditorCore = (() => {
     const realEnd = lineEnd === -1 ? val.length : lineEnd;
     editor.focus();
     editor.setSelectionRange(lineStart, realEnd);
-    document.execCommand('insertText', false, newBlock);
+    editor.setRangeText(newBlock, lineStart, realEnd, 'end');
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
     editor.setSelectionRange(lineStart, lineStart + newBlock.length);
     triggerUpdate();
   }
@@ -558,7 +562,8 @@ const EditorCore = (() => {
       const realEnd = lineEnd === -1 ? val.length : lineEnd;
       editor.focus();
       editor.setSelectionRange(lineStart, realEnd);
-      document.execCommand('insertText', false, newBlock);
+      editor.setRangeText(newBlock, lineStart, realEnd, 'end');
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
       editor.setSelectionRange(lineStart, lineStart + newBlock.length);
       triggerUpdate();
     },
@@ -588,7 +593,8 @@ const EditorCore = (() => {
       const insertion = '```\n' + selected + '\n```';
       editor.focus();
       editor.setSelectionRange(start, end);
-      document.execCommand('insertText', false, insertion);
+      editor.setRangeText(insertion, start, end, 'end');
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
       editor.setSelectionRange(start + 4, start + 4 + selected.length);
       triggerUpdate();
     },
@@ -601,7 +607,8 @@ const EditorCore = (() => {
       const after  = val[pos]     === '\n'              ? '' : '\n';
       editor.focus();
       editor.setSelectionRange(pos, pos);
-      document.execCommand('insertText', false, `${before}---${after}`);
+      editor.setRangeText(`${before}---${after}`, pos, pos, 'end');
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
       triggerUpdate();
     },
   };
@@ -668,14 +675,38 @@ const EditorCore = (() => {
         if (typeof ChatPanel !== 'undefined') ChatPanel.hideSelectionGhost();
       });
 
-      // Tab key → insert two spaces instead of focus-out
+      // Tab key → indent selected lines, or insert two spaces at cursor
       editor.addEventListener('keydown', e => {
         if (e.key === 'Tab') {
           e.preventDefault();
-          const start = editor.selectionStart;
-          const end   = editor.selectionEnd;
-          editor.setRangeText('  ', start, end, 'end');
-          triggerUpdate();
+          const selStart = editor.selectionStart;
+          const selEnd   = editor.selectionEnd;
+          const value    = editor.value;
+          const INDENT   = '  ';
+
+          // Snapshot for Ctrl+Z undo
+          if (aiUndoStack.length >= AI_UNDO_LIMIT) aiUndoStack.shift();
+          aiUndoStack.push(value);
+
+          if (selEnd > selStart) {
+            // Indent every line touched by the selection
+            const firstLineStart = value.lastIndexOf('\n', selStart - 1) + 1;
+            // If selEnd sits exactly at a line start (preceded by \n), leave that line alone
+            const atLineStart = selEnd > 0 && value[selEnd - 1] === '\n';
+            const regionEnd   = atLineStart ? selEnd - 1 : selEnd;
+
+            const lines    = value.slice(firstLineStart, regionEnd).split('\n');
+            const indented = lines.map(l => INDENT + l).join('\n');
+
+            editor.value          = value.slice(0, firstLineStart) + indented + value.slice(regionEnd);
+            editor.selectionStart = selStart + INDENT.length;
+            editor.selectionEnd   = selEnd + lines.length * INDENT.length;
+          } else {
+            // No selection: insert two spaces at the cursor
+            editor.setRangeText(INDENT, selStart, selEnd, 'end');
+          }
+
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
 

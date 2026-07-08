@@ -35,6 +35,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# ─── Certificates & signing keys (never commit) ──────────────────────────────
+*.pfx
+*.p12
+*.cer
+*.key
+
+# ─── Microsoft Store build config (contains publisher identity) ──────────────
+build/store-appx.yml
+
 # ─── Environment / secrets ───────────────────────────────────────────────────
 .env
 .env.local

@@ -1,11 +1,12 @@
 {
   "name": "moilstack-md",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.1",
   "description": "Markdown editor with AI assistance by MoilStack",
   "main": "src/main/index.js",
   "scripts": {
     "start": "nodemon --exec electron . --watch src --ext js,html,css",
     "test": "jest",
+    "make-app-icon": "node build/make-app-icon.js",
     "make-file-icon": "node build/make-file-icon.js",
     "package": "electron-builder"
   },
@@ -50,7 +51,7 @@
       "include": "build/installer.nsh"
     },
     "appx": {
-      "publisher": "CN=MoilStack Tech LLP",
+      "publisher": "CN=MoilStack",
       "publisherDisplayName": "MoilStack",
       "identityName": "MoilStack.Markdown",
       "applicationId": "MoilStackMarkdown",
