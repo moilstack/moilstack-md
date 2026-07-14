@@ -27,6 +27,17 @@ const EditorCore = (() => {
   const aiUndoStack  = [];
   const AI_UNDO_LIMIT = 20; // keep at most 20 AI-edit snapshots
 
+  /**
+   * Snapshot the editor's current value onto the undo stack before a
+   * toolbar/context-menu edit. `setRangeText` mutates the textarea directly
+   * and isn't recorded by the browser's native undo history, so without this
+   * snapshot Ctrl+Z has nothing to revert for these actions.
+   */
+  function _snapshotUndo(editor) {
+    aiUndoStack.push(editor.value);
+    if (aiUndoStack.length > AI_UNDO_LIMIT) aiUndoStack.shift();
+  }
+
   /** Heading regex — used by buildHighlight to colour heading lines. */
   const HEADING_RE = /^(#{1,6})(\s)/;
 
@@ -452,6 +463,7 @@ const EditorCore = (() => {
     if (!ta) return;
     const start = ta.selectionStart, end = ta.selectionEnd;
     const sel = ta.value.substring(start, end);
+    _snapshotUndo(ta);
     ta.focus();
     ta.setSelectionRange(start, end);
     ta.setRangeText(before + sel + after, start, end, 'end');
@@ -468,6 +480,7 @@ const EditorCore = (() => {
     if (!ta) return;
     const start     = ta.selectionStart;
     const lineStart = ta.value.lastIndexOf('\n', start - 1) + 1;
+    _snapshotUndo(ta);
     ta.focus();
     ta.setSelectionRange(lineStart, lineStart);
     ta.setRangeText(prefix, lineStart, lineStart, 'end');
@@ -486,6 +499,7 @@ const EditorCore = (() => {
     const end      = editor.selectionEnd;
     const selected = editor.value.slice(start, end) || placeholder;
     const insertion = before + selected + after;
+    _snapshotUndo(editor);
     editor.focus();
     editor.setSelectionRange(start, end);
     editor.setRangeText(insertion, start, end, 'end');
@@ -517,6 +531,7 @@ const EditorCore = (() => {
       : lines.map(l => prefix + l).join('\n');
 
     const realEnd = lineEnd === -1 ? val.length : lineEnd;
+    _snapshotUndo(editor);
     editor.focus();
     editor.setSelectionRange(lineStart, realEnd);
     editor.setRangeText(newBlock, lineStart, realEnd, 'end');
@@ -528,12 +543,26 @@ const EditorCore = (() => {
   /* ── Toolbar actions map ────────────────────────────────────────── */
 
   const TOOLBAR_ACTIONS = {
+    // ── Clipboard ──────────────────────────────────────────────────
+    copy: () => {
+      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      if (!editor) return;
+      editor.focus();
+      document.execCommand('copy');
+    },
+    paste: () => {
+      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      if (!editor) return;
+      editor.focus();
+      document.execCommand('paste');
+    },
+
     // ── Toolbar-left buttons (insertMd / insertLine) ──────────────────
     bold:          () => insertMd('**', '**'),
     italic:        () => insertMd('*',  '*'),
     inlinecode:    () => insertMd('`',  '`'),
     link:          () => insertMd('[',  '](url)'),
-    image:         () => insertMd('![alt](', ')'),
+    image:         () => insertMd('![', '](url)'),
     h1:            () => insertLine('# '),
     h2:            () => insertLine('## '),
     list:          () => insertLine('- '),
@@ -560,6 +589,7 @@ const EditorCore = (() => {
         ? lines.map((l, i) => l.slice(`${i + 1}. `.length)).join('\n')
         : lines.map((l, i) => `${i + 1}. ${l}`).join('\n');
       const realEnd = lineEnd === -1 ? val.length : lineEnd;
+      _snapshotUndo(editor);
       editor.focus();
       editor.setSelectionRange(lineStart, realEnd);
       editor.setRangeText(newBlock, lineStart, realEnd, 'end');
@@ -591,6 +621,7 @@ const EditorCore = (() => {
       const end      = editor.selectionEnd;
       const selected = editor.value.slice(start, end) || 'code here';
       const insertion = '```\n' + selected + '\n```';
+      _snapshotUndo(editor);
       editor.focus();
       editor.setSelectionRange(start, end);
       editor.setRangeText(insertion, start, end, 'end');
@@ -605,11 +636,15 @@ const EditorCore = (() => {
       const val    = editor.value;
       const before = val[pos - 1] === '\n' || pos === 0 ? '' : '\n';
       const after  = val[pos]     === '\n'              ? '' : '\n';
+      _snapshotUndo(editor);
       editor.focus();
       editor.setSelectionRange(pos, pos);
       editor.setRangeText(`${before}---${after}`, pos, pos, 'end');
       editor.dispatchEvent(new Event('input', { bubbles: true }));
       triggerUpdate();
+    },
+    tags: () => {
+      if (typeof TagModal !== 'undefined') TagModal.show();
     },
   };
 
@@ -788,6 +823,7 @@ const EditorCore = (() => {
     renderMarkdown,
     setEditorContentUndoable,
     clearAiUndoStack,
+    snapshotUndo: _snapshotUndo,
     syncRuler,
     visualRowsForLine,
     computeMatches,

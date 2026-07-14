@@ -1046,13 +1046,16 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
-  min-width: 0;
+  min-width: 56px; /* keep the filename legible even when tags would otherwise crowd it out */
 }
 
 .file-item__tags {
   display: flex;
   gap: 3px;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
   align-items: center;
   margin-left: auto;
 }
@@ -3313,6 +3316,23 @@ select.form-input {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* ── Tag Modal (reuses .label-modal shell) ────────────────────────── */
+#tagModalOverlay .label-modal { width: 320px; }
+
+.tag-modal__hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.tag-modal__hint code {
+  font-size: 11px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
 }
 
 /* ════════════════════════════════════════════════════════════════════

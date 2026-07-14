@@ -140,11 +140,21 @@ function fetchJson(urlStr) {
 }
 
 /**
+ * Strip a leading UTF-8 BOM (U+FEFF), if present.
+ * fs.readFile(..., 'utf8') does not strip it, and several common Windows
+ * editors (Notepad, some Git configs) write one by default — without this,
+ * `content.startsWith('---')` silently fails for otherwise-valid frontmatter.
+ */
+function _stripBOM(content) {
+  return content.charCodeAt(0) === 0xFEFF ? content.slice(1) : content
+}
+
+/**
  * Extract a plain-text first line from file content.
  * Skips YAML frontmatter and strips basic Markdown syntax.
  */
 function _extractFirstLine(content) {
-  let text = content
+  let text = _stripBOM(content)
   if (text.startsWith('---')) {
     const fmEnd = text.indexOf('\n---', 3)
     if (fmEnd !== -1) text = text.slice(fmEnd + 4)
@@ -163,40 +173,39 @@ function _extractFirstLine(content) {
 }
 
 /**
- * Extract up to 5 tags from file content.
- * Checks YAML frontmatter `tags:` first, then inline `#hashtag` patterns.
+ * Extract up to 5 tags from a file's YAML frontmatter `tags:` field.
+ * Recognized shapes only — inline array `tags: [a, b]` or a YAML list:
+ *   tags:
+ *     - a
+ *     - b
+ * No inline #hashtag fallback: scanning file prose for stray `#word` text
+ * produced false positives (URLs, anchors, code) with no way to tell a real
+ * tag from a coincidental match, so tags are only ever what the user
+ * explicitly declared in frontmatter.
  */
 function _extractTags(content) {
-  const tags = new Set()
-  const sample = content.slice(0, 2000)
+  content = _stripBOM(content)
+  if (!content.startsWith('---')) return []
+  const fmEnd = content.indexOf('\n---', 3)
+  if (fmEnd === -1) return []
 
-  if (sample.startsWith('---')) {
-    const fmEnd = sample.indexOf('\n---', 3)
-    if (fmEnd !== -1) {
-      const fm = sample.slice(3, fmEnd)
-      const inlineMatch = fm.match(/^tags:\s*\[([^\]]+)\]/m)
-      if (inlineMatch) {
-        for (const t of inlineMatch[1].split(',')) {
-          const tag = t.trim().replace(/^['"]|['"]$/g, '')
-          if (tag) tags.add(tag)
-        }
-      }
-      if (tags.size === 0) {
-        const listMatch = fm.match(/^tags:\s*\n((?:[ \t]*-[ \t]+.+\n?)+)/m)
-        if (listMatch) {
-          for (const line of listMatch[1].split('\n')) {
-            const tag = line.replace(/^[ \t]*-[ \t]+/, '').replace(/^['"]|['"]$/g, '').trim()
-            if (tag) tags.add(tag)
-          }
-        }
-      }
+  const tags = new Set()
+  const fm = content.slice(3, fmEnd)
+  const inlineMatch = fm.match(/^tags:\s*\[([^\]]+)\]/m)
+  if (inlineMatch) {
+    for (const t of inlineMatch[1].split(',')) {
+      const tag = t.trim().replace(/^['"]|['"]$/g, '')
+      if (tag) tags.add(tag)
     }
   }
-
   if (tags.size === 0) {
-    const re = /(?<=\s)#([a-zA-Z][a-zA-Z0-9_-]{1,20})/g
-    let m
-    while ((m = re.exec(sample)) !== null && tags.size < 5) tags.add(m[1])
+    const listMatch = fm.match(/^tags:\s*\n((?:[ \t]*-[ \t]+.+\n?)+)/m)
+    if (listMatch) {
+      for (const line of listMatch[1].split('\n')) {
+        const tag = line.replace(/^[ \t]*-[ \t]+/, '').replace(/^['"]|['"]$/g, '').trim()
+        if (tag) tags.add(tag)
+      }
+    }
   }
 
   return [...tags].slice(0, 5)
@@ -596,11 +605,26 @@ function registerIpcHandlers() {
    * Matches a single file against a lowercased query, returning a
    * SearchResult ({ filePath, fileName, snippet, matchType }) or null.
    * Shared by search:files (folder walk) and search:recent-files (explicit list).
+   *
+   * Query syntax: a leading `#` or `tag:` (e.g. `#project`, `tag:project`)
+   * searches only the file's frontmatter tags (see _extractTags) instead of
+   * filename/content — lets a user look up files by tag specifically rather
+   * than relying on the tag word happening to also appear in the text.
    */
   async function _matchFile(fullPath, fileName, q) {
-    const nameMatch = fileName.toLowerCase().includes(q)
     let content = ''
     try { content = await fs.readFile(fullPath, 'utf8') } catch { return null }
+
+    const tagQuery = q.match(/^(?:#|tag:)\s*(.+)$/)
+    if (tagQuery) {
+      const wanted = tagQuery[1].trim()
+      if (!wanted) return null
+      const tags = _extractTags(content)
+      if (!tags.some(t => t.toLowerCase().includes(wanted))) return null
+      return { filePath: fullPath, fileName, snippet: `Tags: ${tags.join(', ')}`, matchType: 'tag' }
+    }
+
+    const nameMatch = fileName.toLowerCase().includes(q)
     const contentMatch = content.toLowerCase().includes(q)
     if (!nameMatch && !contentMatch) return null
 
@@ -620,10 +644,12 @@ function registerIpcHandlers() {
 
   /**
    * search:files — full-text + filename search across a folder tree.
+   * A query starting with `#` or `tag:` (e.g. `#project`) matches only
+   * against frontmatter tags instead — see _matchFile.
    *
    * Args: { folderPath: string, query: string }
    * Returns: { results: SearchResult[] }
-   *   SearchResult: { filePath, fileName, snippet, matchType: 'name'|'content' }
+   *   SearchResult: { filePath, fileName, snippet, matchType: 'name'|'content'|'tag' }
    * Caps at 30 results. Skips hidden files and non-text files.
    */
   ipcMain.handle('search:files', async (_event, { folderPath, query }) => {
@@ -658,6 +684,7 @@ function registerIpcHandlers() {
    * search:recent-files — full-text + filename search over an explicit list
    * of file paths (used for Custom/no-folder Explorer mode, where there is
    * no folder tree to walk — only the Recent Files list).
+   * Same `#tag` / `tag:` query syntax as search:files — see _matchFile.
    *
    * Args: { filePaths: string[], query: string }
    * Returns: { results: SearchResult[] }

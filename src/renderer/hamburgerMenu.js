@@ -43,6 +43,11 @@ const HamburgerMenu = (() => {
     await newUntitledFile();
   });
 
+  document.getElementById('hmenu-new-explorer-file')?.addEventListener('click', async () => {
+    closeHamburgerMenu();
+    await FileOperations.triggerExplorerNewFile();
+  });
+
   document.getElementById('hmenu-open-file')?.addEventListener('click', async () => {
     closeHamburgerMenu();
     const result = await window.electronAPI?.openFile();

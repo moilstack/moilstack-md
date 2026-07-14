@@ -237,6 +237,7 @@ const TableBuilder = (() => {
     if (!editor) { _hide(); return; }
 
     editor.focus();
+    if (typeof EditorCore !== 'undefined') EditorCore.snapshotUndo(editor);
 
     if (_selStart !== null && _selEnd !== null) {
       editor.setSelectionRange(_selStart, _selEnd);

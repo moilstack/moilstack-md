@@ -212,7 +212,7 @@ const FileOperations = (() => {
     });
   }
 
-  document.getElementById('btn-new-file')?.addEventListener('click', async () => {
+  async function triggerExplorerNewFile() {
     const explorerMode = localStorage.getItem('explorerMode') || 'multi-level';
     if (explorerMode === 'custom') {
       await window.newUntitledFile?.();
@@ -229,7 +229,9 @@ const FileOperations = (() => {
         showNewFileInput();
       }
     }
-  });
+  }
+
+  document.getElementById('btn-new-file')?.addEventListener('click', triggerExplorerNewFile);
 
   return {
     startInlineRename,
@@ -237,6 +239,7 @@ const FileOperations = (() => {
     showNewFileInput,
     hideNewFileInput,
     confirmNewFile,
+    triggerExplorerNewFile,
   };
 })();
 
