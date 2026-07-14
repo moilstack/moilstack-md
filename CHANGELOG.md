@@ -4,6 +4,29 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Copy / Paste in the editor context menu** — added as a new group at the top, above the formatting options, with `Ctrl C` / `Ctrl V` shown as hints
+- **Ctrl+Shift+N — New File (Explorer)** — creates a file on disk in the active Explorer folder (prompting to open a folder first if none is active), distinct from Ctrl+N's in-memory untitled buffer; also added to the hamburger menu
+- **File tagging** — right-click → "Add Tags…" opens a small modal to add/edit a file's tags, stored in its YAML frontmatter (`tags: [work, project]`); pre-fills with existing tags and preserves cursor position in the document body when saved
+  - Tags are shown as `#tag` pills next to filenames in Root folder only Explorer mode
+  - Search by tag with `#tag` or `tag:name` in the header search box — works across Multi-level, Root-only, and Custom (Recents) explorer modes, matching only real frontmatter tags rather than plain text
+  - Settings → File Explorer now explains the frontmatter format and search syntax directly in the Explorer Mode description
+- **Quick jump to Explorer settings** — clicking the "Explorer" label in the sidebar header (now shown with a small gear icon) opens Settings, switches to the Explorer tab, and scrolls to/highlights the Explorer Mode row
+- **Remove recent folders** — a hover-revealed × button now lets you remove a folder from the recents list without switching to it first, in both the Welcome screen's Recents list and the header folder-path dropdown
+
+### Changed
+- **Editor context menu decluttered** — removed Bullet List and Numbered List (they only ever applied to the first level and behaved inconsistently on nested lists) and Divider/horizontal-rule; users can still type Markdown list/`---` syntax directly
+- **File tags are frontmatter-only** — dropped the inline `#hashtag`-in-body fallback for tag detection (it produced false positives from URLs, anchors, and code); a file's tags now only come from an explicit `tags:` field in YAML frontmatter
+- **Image toolbar/context-menu action** — selected text now becomes the image's alt text (`![alt](url)`), matching how the Link action already worked, instead of incorrectly becoming the image path
+
+### Fixed
+- **Ctrl+Z not undoing context-menu formatting actions** — Bold, Italic, Strikethrough, headings, lists, blockquote, code block, and table insert now push an undo snapshot before editing, so Ctrl+Z correctly reverts them (previously these used a text-insertion method that the browser's native undo history didn't track)
+- **Long tag lists squeezing the filename out of view** — in Root folder only Explorer mode, a file with several tags could shrink its filename down to nothing; the filename now keeps a minimum width and the tag list clips instead
+
+---
+
 ## [1.0.1] - 2026-07-08
 
 ### Added
