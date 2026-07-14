@@ -294,6 +294,33 @@ body {
   opacity: 0.7;
 }
 
+.folder-recent-remove-btn {
+  display: none;          /* hidden until the row is hovered/focused */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+}
+.folder-recent-remove-btn svg { opacity: 1; }
+
+.folder-recent-item:hover .folder-recent-remove-btn,
+.folder-recent-item:focus-within .folder-recent-remove-btn {
+  display: flex;
+}
+
+.folder-recent-remove-btn:hover {
+  background: var(--hover-bg, rgba(128,128,128,0.12));
+  color: var(--danger, #ef4444);
+}
+
 .folder-recent-item__name {
   font-size: 13px;
   font-weight: 500;
@@ -636,6 +663,31 @@ body {
   text-transform: uppercase;
   color: var(--text-secondary);
   user-select: none;
+}
+
+.sidebar-section__label--link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.sidebar-section__label--link:hover,
+.sidebar-section__label--link:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.sidebar-section__label-icon {
+  color: var(--text-secondary);
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.2s;
+}
+.sidebar-section__label--link:hover .sidebar-section__label-icon,
+.sidebar-section__label--link:focus-visible .sidebar-section__label-icon {
+  opacity: 1;
+  transform: rotate(35deg);
 }
 
 .sidebar-section__actions {
@@ -3602,6 +3654,32 @@ select.form-input {
   flex: 1;
 }
 
+.welcome-recent-remove-btn {
+  display: none;          /* hidden until the row is hovered */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+}
+
+.welcome-recent-item:hover .welcome-recent-remove-btn {
+  display: flex;
+}
+
+.welcome-recent-remove-btn:hover {
+  background: var(--hover-bg);
+  color: var(--danger, #ef4444);
+}
+
 .welcome-recent-empty {
   font-size: 0.82rem;
   color: var(--text-secondary);
@@ -3628,6 +3706,13 @@ select.form-input {
   gap: 16px;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+/* Briefly highlights a row scrolled-to programmatically (e.g. from the sidebar "Explorer" label) */
+.settings-row--flash {
+  background-color: color-mix(in srgb, var(--primary) 16%, transparent);
 }
 
 .settings-row:last-of-type {

@@ -562,7 +562,11 @@ const EditorCore = (() => {
     italic:        () => insertMd('*',  '*'),
     inlinecode:    () => insertMd('`',  '`'),
     link:          () => insertMd('[',  '](url)'),
-    image:         () => insertMd('![', '](url)'),
+    // Empty URL slot (not a literal "url" placeholder) — the live preview
+    // renders this straight into <img src="...">, and a non-empty bogus
+    // relative path gets eagerly fetched under file://, throwing
+    // net::ERR_FILE_NOT_FOUND. An explicit src="" fires no request at all.
+    image:         () => insertMd('![', ']()'),
     h1:            () => insertLine('# '),
     h2:            () => insertLine('## '),
     list:          () => insertLine('- '),

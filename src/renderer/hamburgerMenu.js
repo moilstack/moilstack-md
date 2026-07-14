@@ -105,6 +105,24 @@ const HamburgerMenu = (() => {
     document.getElementById('btnSettings')?.click();
   });
 
+  /* ── "Explorer" label (sidebar header) — jumps to Explorer settings ── */
+  function _openExplorerSettings() {
+    document.getElementById('btnSettings')?.click();
+    document.querySelector('.settings-nav-item[data-settings-panel="explorer"]')?.click();
+    requestAnimationFrame(() => {
+      const row = document.getElementById('settingsRow-explorerMode');
+      if (!row) return;
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('settings-row--flash');
+      setTimeout(() => row.classList.remove('settings-row--flash'), 1200);
+    });
+  }
+  const _sidebarExplorerLabel = document.getElementById('sidebarExplorerLabel');
+  _sidebarExplorerLabel?.addEventListener('click', _openExplorerSettings);
+  _sidebarExplorerLabel?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _openExplorerSettings(); }
+  });
+
   /* ── Collapse All button (sidebar header) ─────────────────────────── */
   // Disabled in Root folder only mode, since that view has no sub-folders to
   // collapse (see FileTreeManager.updateFolderToolbarButtons).

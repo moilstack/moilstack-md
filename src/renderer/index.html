@@ -215,7 +215,16 @@
 
       <!-- 1. Section header row -->
       <div class="sidebar-section">
-        <span class="sidebar-section__label">Explorer</span>
+        <span class="sidebar-section__label sidebar-section__label--link" id="sidebarExplorerLabel"
+              role="button" tabindex="0" title="Explorer settings">
+          Explorer
+          <svg class="sidebar-section__label-icon" width="10" height="10" viewBox="0 0 14 14"
+               fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M7 4.5A2.5 2.5 0 1 0 7 9.5 2.5 2.5 0 0 0 7 4.5Z" stroke="currentColor" stroke-width="1.1"/>
+            <path d="M7 1.5v1.2M7 11.3v1.2M12.5 7h-1.2M2.7 7H1.5M10.8 3.2l-.85.85M4.05 9.95l-.85.85M10.8 10.8l-.85-.85M4.05 4.05l-.85-.85"
+                  stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+        </span>
         <div class="sidebar-section__actions">
 
           <!-- Open Folder button -->
@@ -1051,7 +1060,7 @@
             </div>
 
             <!-- Explorer Mode -->
-            <div class="settings-row">
+            <div class="settings-row" id="settingsRow-explorerMode">
               <div class="settings-row__label">
                 <span class="settings-row__name">Explorer Mode</span>
                 <span class="settings-row__desc">Root only shows date groups, content previews, and tags — start the file with a frontmatter block (<code>---</code> ... <code>tags: [work, project]</code> ... <code>---</code>) to tag it; search with <code>#tag</code> or <code>tag:name</code>. Custom hides folders entirely — Recent Files is the only way to open something.</span>
