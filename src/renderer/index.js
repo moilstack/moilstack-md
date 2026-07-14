@@ -499,7 +499,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   RecentsPanel.applyExplorerMode();
 
   const _version = window.electronAPI?.appVersion;
-  if (_version) document.title = `MoilStack .md ${_version}`;
+  if (_version) {
+    document.title = `MoilStack .md ${_version}`;
+    const sbVersion = document.getElementById('sbVersion');
+    if (sbVersion) sbVersion.textContent = `v${_version}`;
+  }
 
   const _openFileParam = new URLSearchParams(location.search).get('openFile');
 

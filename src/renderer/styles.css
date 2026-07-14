@@ -4047,6 +4047,65 @@ select.form-input {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
+/* ── New-release notice ───────────────────────────────────────────────
+   Shown once, a few seconds after launch, when a newer GitHub release
+   exists. Stays until dismissed — unlike focus-toast, it's an action
+   the user may want to come back to, not a transient blip.
+   ──────────────────────────────────────────────────────────────────── */
+.release-notice {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-left: 3px solid #6366f1;
+  border-radius: 6px;
+  padding: 8px 10px 8px 14px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: calc(100vw - 32px);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.release-notice--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.release-notice button {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.release-notice button:hover {
+  background: var(--border);
+}
+
+.release-notice__dismiss {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  padding: 2px 6px;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .release-notice {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
 /* ════════════════════════════════════════════════════════════════════
    Table Builder Modal
    ════════════════════════════════════════════════════════════════════ */

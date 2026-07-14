@@ -1,6 +1,6 @@
 {
   "name": "moilstack-md",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Markdown editor with AI assistance by MoilStack",
   "main": "src/main/index.js",
   "scripts": {
@@ -40,7 +40,8 @@
         "nsis",
         "zip"
       ],
-      "icon": "src/assets/icon.ico"
+      "icon": "src/assets/icon.ico",
+      "artifactName": "MoilStack.md.${ext}"
     },
     "nsis": {
       "oneClick": false,

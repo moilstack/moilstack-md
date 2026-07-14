@@ -93,6 +93,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     listModels: (host) => ipcRenderer.invoke('ollama:list-models', { host }),
   },
 
+  // Fired once, a few seconds after launch, if a newer GitHub release exists.
+  onReleaseAvailable: (cb) => ipcRenderer.on('release:available', (_e, info) => cb(info)),
+
   // ── AI Streaming ─────────────────────────────────────────────────────
   // Fire the AI request (Ollama or API backend)
   askAI: (payload) => ipcRenderer.invoke('ai:ask', payload),
