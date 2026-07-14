@@ -696,7 +696,7 @@ const ChatPanel = (() => {
     if (!row) return;
     const newContent = row.dataset.aiText;
     if (!newContent) return;
-    _deps.setEditorContentUndoable(newContent);
+    _deps.setEditorContentNative(newContent);
     _deps.saveFile();
   }
 
@@ -711,7 +711,7 @@ const ChatPanel = (() => {
     if (!row) return;
     const before = row.dataset.beforeText;
     if (before === undefined || before === null) return;
-    _deps.setEditorContentUndoable(before);
+    _deps.setEditorContentNative(before);
     _deps.saveFile();
     const origHTML = btn.innerHTML;
     btn.textContent = '✓ Restored';
@@ -787,10 +787,19 @@ const ChatPanel = (() => {
     if (sendBtn)   sendBtn.disabled   = true;
     if (chatInput) chatInput.disabled = true;
 
-    /** Re-enable input — called in all exit paths (success, error, no-model). */
-    function _reenableInput() {
+    /**
+     * Re-enable input — called in all exit paths (success, error, no-model).
+     * @param {boolean} [focusChatInput=true]  Pass false after a document/block
+     *   edit was just applied — the edit already focused the editor so that
+     *   Ctrl+Z operates on it, and stealing focus back to the chat box here
+     *   would make Ctrl+Z target the chat textarea's own undo history instead.
+     */
+    function _reenableInput(focusChatInput = true) {
       if (sendBtn)   sendBtn.disabled   = false;
-      if (chatInput) { chatInput.disabled = false; chatInput.focus(); }
+      if (chatInput) {
+        chatInput.disabled = false;
+        if (focusChatInput) chatInput.focus();
+      }
     }
 
     // 5. Build messages array — rules first, then file context appended at the end
@@ -884,6 +893,11 @@ const ChatPanel = (() => {
         // Priority: BLOCK_EDIT (selection active) → DOC_EDIT → conversational
         const blockContent = capturedSelection ? extractBlockEdit(fullResponse) : null;
         const docContent   = blockContent === null ? extractDocEdit(fullResponse) : null;
+        // Any of the three edit paths below focuses the editor via
+        // replaceRangeNative()/setEditorContentNative() — keep focus there
+        // afterward (see _reenableInput) so Ctrl+Z targets the editor.
+        const editorWasEdited = blockContent !== null || docContent !== null
+          || (!isAskMode && capturedSelection);
 
         if (blockContent !== null) {
           // ── BLOCK EDIT path ──────────────────────────────────────────
@@ -897,7 +911,7 @@ const ChatPanel = (() => {
           if (!origEndsNL && replacement.endsWith('\n'))  replacement = replacement.slice(0, -1);
 
           if (editor) {
-            editor.setRangeText(replacement, blockStart, blockEnd, 'end');
+            _deps.replaceRangeNative(blockStart, blockEnd, replacement);
             _deps.updateStats();
             _deps.updateHighlight();
             _deps.triggerUpdate();
@@ -937,10 +951,12 @@ const ChatPanel = (() => {
             streaming.row.dataset.beforeText = editorContent;
           }
 
-          // ③ Apply the AI edit — through the native undo stack so Ctrl+Z works
+          // ③ Apply the AI edit via the browser's native undo stack (execCommand
+          //    'insertText') rather than a direct .value assign, so Ctrl+Z chains
+          //    back through the user's own prior typing instead of stopping here.
           const editor = _deps.getEditor();
           if (editor) {
-            _deps.setEditorContentUndoable(docContent);
+            _deps.setEditorContentNative(docContent);
             _deps.saveFile();
           }
 
@@ -978,7 +994,7 @@ const ChatPanel = (() => {
             if (origEndsNL && !replacement.endsWith('\n'))  replacement += '\n';
             if (!origEndsNL && replacement.endsWith('\n'))  replacement = replacement.slice(0, -1);
 
-            editor.setRangeText(replacement, blockStart, blockEnd, 'end');
+            _deps.replaceRangeNative(blockStart, blockEnd, replacement);
             _deps.updateStats();
             _deps.updateHighlight();
             _deps.triggerUpdate();
@@ -1028,7 +1044,7 @@ const ChatPanel = (() => {
         updateChatCount();
         updateTokenEstimate();
         scrollChatToBottom();
-        _reenableInput();
+        _reenableInput(!editorWasEdited);
       })
       .catch((err) => {
         console.error('[sendMessage] AI error:', err);

@@ -416,7 +416,6 @@ const FileTreeManager = (() => {
 
         const editor = document.getElementById('mdEditor');
         if (editor) {
-          EditorCore.clearAiUndoStack();
           editor.value     = content;
           editor.scrollTop = 0;
           const gutter = document.getElementById('line-numbers');

@@ -24,6 +24,7 @@ All notable new features and critical fixes for MoilStack .md.
 ### Fixed
 - **Ctrl+Z not undoing context-menu formatting actions** — Bold, Italic, Strikethrough, headings, lists, blockquote, code block, and table insert now push an undo snapshot before editing, so Ctrl+Z correctly reverts them (previously these used a text-insertion method that the browser's native undo history didn't track)
 - **Long tag lists squeezing the filename out of view** — in Root folder only Explorer mode, a file with several tags could shrink its filename down to nothing; the filename now keeps a minimum width and the tag list clips instead
+- **"Untitled (unsaved)" row disappearing after Save As** — the Recent Files sidebar now always shows an "Untitled (unsaved)" row, so there's a one-click way back to a blank document after saving instead of having to press Ctrl+N again
 
 ---
 

@@ -237,20 +237,15 @@ const TableBuilder = (() => {
     if (!editor) { _hide(); return; }
 
     editor.focus();
-    if (typeof EditorCore !== 'undefined') EditorCore.snapshotUndo(editor);
 
     if (_selStart !== null && _selEnd !== null) {
-      editor.setSelectionRange(_selStart, _selEnd);
-      editor.setRangeText(md, _selStart, _selEnd, 'end');
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof EditorCore !== 'undefined') EditorCore.replaceRangeNative(_selStart, _selEnd, md);
     } else {
       const pos    = editor.selectionStart;
       const val    = editor.value;
       const before = pos > 0 && val[pos - 1] !== '\n' ? '\n' : '';
       const after  = pos < val.length && val[pos] !== '\n' ? '\n' : '';
-      editor.setSelectionRange(pos, pos);
-      editor.setRangeText(before + md + after, pos, pos, 'end');
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof EditorCore !== 'undefined') EditorCore.replaceRangeNative(pos, pos, before + md + after);
     }
 
     if (typeof EditorCore !== 'undefined') EditorCore.triggerUpdate();

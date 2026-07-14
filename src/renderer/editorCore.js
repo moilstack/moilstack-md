@@ -19,25 +19,6 @@ const EditorCore = (() => {
      Private state
      ═══════════════════════════════════════════════════════════════════ */
 
-  /**
-   * Stack of full-document snapshots taken before each AI edit.
-   * Drained by the Ctrl+Z interceptor in the editor keydown handler.
-   * @type {string[]}
-   */
-  const aiUndoStack  = [];
-  const AI_UNDO_LIMIT = 20; // keep at most 20 AI-edit snapshots
-
-  /**
-   * Snapshot the editor's current value onto the undo stack before a
-   * toolbar/context-menu edit. `setRangeText` mutates the textarea directly
-   * and isn't recorded by the browser's native undo history, so without this
-   * snapshot Ctrl+Z has nothing to revert for these actions.
-   */
-  function _snapshotUndo(editor) {
-    aiUndoStack.push(editor.value);
-    if (aiUndoStack.length > AI_UNDO_LIMIT) aiUndoStack.shift();
-  }
-
   /** Heading regex — used by buildHighlight to colour heading lines. */
   const HEADING_RE = /^(#{1,6})(\s)/;
 
@@ -370,7 +351,7 @@ const EditorCore = (() => {
     );
 
     if (found && newMd !== editor.value) {
-      setEditorContentUndoable(newMd);
+      setEditorContentNative(newMd);
       _deps.markDirty();
       // Manually update just the preview — skip triggerUpdate() debounce so the
       // checkbox toggle feels instant.
@@ -427,25 +408,84 @@ const EditorCore = (() => {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     AI undo stack
+     Native undo-recorded content replacement
      ═══════════════════════════════════════════════════════════════════ */
 
   /**
-   * Replace the entire editor content and push a snapshot to the AI undo stack.
-   * Goes through direct assignment so it targets the correct element every time.
+   * Replace a range of the editor content via document.execCommand('insertText', ...)
+   * instead of direct `.value =`/`setRangeText()` mutation, so the change lands in
+   * the textarea's native undo/redo history and chains with the user's own
+   * keystroke history. jsdom (used by the Jest test environment) has no
+   * execCommand implementation, so this falls back to direct slicing there.
    *
-   * @param {string} content  New content to place in the editor.
+   * @param {number} start        Range start offset.
+   * @param {number} end          Range end offset.
+   * @param {string} replacement  Text to place in [start, end).
    */
-  function setEditorContentUndoable(content) {
+  function replaceRangeNative(start, end, replacement) {
     const editor = _deps.getEditor ? _deps.getEditor() : null;
     if (!editor) return;
 
-    // Push current content onto the AI undo stack before overwriting
-    aiUndoStack.push(editor.value);
-    if (aiUndoStack.length > AI_UNDO_LIMIT) aiUndoStack.shift(); // cap size
-
-    editor.value = content;
     editor.focus();
+
+    // True no-op (nothing selected, nothing to insert) — skip execCommand
+    // entirely. Calling it anyway would still push an empty edit onto the
+    // native undo stack, forcing an extra Ctrl+Z press to skip past it
+    // before reaching any real prior edit.
+    if (start === end && replacement === '') return;
+
+    editor.setSelectionRange(start, end);
+    let applied = false;
+    try { applied = document.execCommand('insertText', false, replacement); }
+    catch (_) { applied = false; }
+    if (!applied) {
+      editor.value = editor.value.slice(0, start) + replacement + editor.value.slice(end);
+      const caret = start + replacement.length;
+      editor.setSelectionRange(caret, caret);
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+
+  /**
+   * Find the smallest [start, end) range in `oldStr` that differs from `newStr`,
+   * by trimming the longest common prefix and suffix. Selecting-and-replacing
+   * the *entire* buffer via execCommand doesn't reliably chain into the native
+   * undo history the way a small, localized edit does — so full-document
+   * replacements are turned into the minimal underlying patch before applying.
+   *
+   * @param {string} oldStr
+   * @param {string} newStr
+   * @returns {{start: number, end: number, replacement: string}}
+   */
+  function _minimalDiff(oldStr, newStr) {
+    const maxCommon = Math.min(oldStr.length, newStr.length);
+    let start = 0;
+    while (start < maxCommon && oldStr[start] === newStr[start]) start++;
+
+    let oldEnd = oldStr.length;
+    let newEnd = newStr.length;
+    while (oldEnd > start && newEnd > start && oldStr[oldEnd - 1] === newStr[newEnd - 1]) {
+      oldEnd--;
+      newEnd--;
+    }
+
+    return { start, end: oldEnd, replacement: newStr.slice(start, newEnd) };
+  }
+
+  /**
+   * Replace the editor content with `content`, patching only the minimal
+   * changed range (via replaceRangeNative) so full-document edits (AI edits,
+   * checkbox toggles, tag edits, find/replace-all) chain into the browser's
+   * native undo/redo history instead of resetting it.
+   *
+   * @param {string} content  New content to place in the editor.
+   */
+  function setEditorContentNative(content) {
+    const editor = _deps.getEditor ? _deps.getEditor() : null;
+    if (!editor) return;
+
+    const { start, end, replacement } = _minimalDiff(editor.value, content);
+    replaceRangeNative(start, end, replacement);
     updateStats();
     updateHighlight();
     triggerUpdate();
@@ -463,11 +503,7 @@ const EditorCore = (() => {
     if (!ta) return;
     const start = ta.selectionStart, end = ta.selectionEnd;
     const sel = ta.value.substring(start, end);
-    _snapshotUndo(ta);
-    ta.focus();
-    ta.setSelectionRange(start, end);
-    ta.setRangeText(before + sel + after, start, end, 'end');
-    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    replaceRangeNative(start, end, before + sel + after);
     ta.setSelectionRange(start + before.length, start + before.length + sel.length);
     updateStats();
   }
@@ -480,11 +516,7 @@ const EditorCore = (() => {
     if (!ta) return;
     const start     = ta.selectionStart;
     const lineStart = ta.value.lastIndexOf('\n', start - 1) + 1;
-    _snapshotUndo(ta);
-    ta.focus();
-    ta.setSelectionRange(lineStart, lineStart);
-    ta.setRangeText(prefix, lineStart, lineStart, 'end');
-    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    replaceRangeNative(lineStart, lineStart, prefix);
     ta.setSelectionRange(start + prefix.length, start + prefix.length);
     updateStats();
   }
@@ -499,11 +531,7 @@ const EditorCore = (() => {
     const end      = editor.selectionEnd;
     const selected = editor.value.slice(start, end) || placeholder;
     const insertion = before + selected + after;
-    _snapshotUndo(editor);
-    editor.focus();
-    editor.setSelectionRange(start, end);
-    editor.setRangeText(insertion, start, end, 'end');
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    replaceRangeNative(start, end, insertion);
     editor.setSelectionRange(start + before.length, start + before.length + selected.length);
     triggerUpdate();
   }
@@ -531,11 +559,7 @@ const EditorCore = (() => {
       : lines.map(l => prefix + l).join('\n');
 
     const realEnd = lineEnd === -1 ? val.length : lineEnd;
-    _snapshotUndo(editor);
-    editor.focus();
-    editor.setSelectionRange(lineStart, realEnd);
-    editor.setRangeText(newBlock, lineStart, realEnd, 'end');
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    replaceRangeNative(lineStart, realEnd, newBlock);
     editor.setSelectionRange(lineStart, lineStart + newBlock.length);
     triggerUpdate();
   }
@@ -593,11 +617,7 @@ const EditorCore = (() => {
         ? lines.map((l, i) => l.slice(`${i + 1}. `.length)).join('\n')
         : lines.map((l, i) => `${i + 1}. ${l}`).join('\n');
       const realEnd = lineEnd === -1 ? val.length : lineEnd;
-      _snapshotUndo(editor);
-      editor.focus();
-      editor.setSelectionRange(lineStart, realEnd);
-      editor.setRangeText(newBlock, lineStart, realEnd, 'end');
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      replaceRangeNative(lineStart, realEnd, newBlock);
       editor.setSelectionRange(lineStart, lineStart + newBlock.length);
       triggerUpdate();
     },
@@ -625,11 +645,7 @@ const EditorCore = (() => {
       const end      = editor.selectionEnd;
       const selected = editor.value.slice(start, end) || 'code here';
       const insertion = '```\n' + selected + '\n```';
-      _snapshotUndo(editor);
-      editor.focus();
-      editor.setSelectionRange(start, end);
-      editor.setRangeText(insertion, start, end, 'end');
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      replaceRangeNative(start, end, insertion);
       editor.setSelectionRange(start + 4, start + 4 + selected.length);
       triggerUpdate();
     },
@@ -640,11 +656,7 @@ const EditorCore = (() => {
       const val    = editor.value;
       const before = val[pos - 1] === '\n' || pos === 0 ? '' : '\n';
       const after  = val[pos]     === '\n'              ? '' : '\n';
-      _snapshotUndo(editor);
-      editor.focus();
-      editor.setSelectionRange(pos, pos);
-      editor.setRangeText(`${before}---${after}`, pos, pos, 'end');
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      replaceRangeNative(pos, pos, `${before}---${after}`);
       triggerUpdate();
     },
     tags: () => {
@@ -723,10 +735,6 @@ const EditorCore = (() => {
           const value    = editor.value;
           const INDENT   = '  ';
 
-          // Snapshot for Ctrl+Z undo
-          if (aiUndoStack.length >= AI_UNDO_LIMIT) aiUndoStack.shift();
-          aiUndoStack.push(value);
-
           if (selEnd > selStart) {
             // Indent every line touched by the selection
             const firstLineStart = value.lastIndexOf('\n', selStart - 1) + 1;
@@ -737,19 +745,20 @@ const EditorCore = (() => {
             const lines    = value.slice(firstLineStart, regionEnd).split('\n');
             const indented = lines.map(l => INDENT + l).join('\n');
 
-            editor.value          = value.slice(0, firstLineStart) + indented + value.slice(regionEnd);
+            replaceRangeNative(firstLineStart, regionEnd, indented);
             editor.selectionStart = selStart + INDENT.length;
             editor.selectionEnd   = selEnd + lines.length * INDENT.length;
           } else {
             // No selection: insert two spaces at the cursor
-            editor.setRangeText(INDENT, selStart, selEnd, 'end');
+            replaceRangeNative(selStart, selEnd, INDENT);
           }
-
-          editor.dispatchEvent(new Event('input', { bubbles: true }));
         }
       });
 
-      // Keyboard shortcuts: Ctrl+B, Ctrl+I, Ctrl+Z (AI undo)
+      // Keyboard shortcuts: Ctrl+B, Ctrl+I
+      // (Ctrl+Z/Ctrl+Shift+Z are left to the textarea's native undo/redo —
+      // every programmatic edit now goes through replaceRangeNative()/
+      // setEditorContentNative(), which records into that same history.)
       editor.addEventListener('keydown', e => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
           e.preventDefault();
@@ -758,23 +767,6 @@ const EditorCore = (() => {
         if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
           e.preventDefault();
           TOOLBAR_ACTIONS.italic();
-        }
-
-        // Ctrl+Z — AI undo takes priority over textarea's native undo.
-        // Once the AI stack is empty the event falls through to the browser
-        // so normal keystroke undo continues to work.
-        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-          if (aiUndoStack.length > 0) {
-            e.preventDefault();
-            const prev = aiUndoStack.pop();
-            editor.value = prev;
-            updateStats();
-            updateHighlight();
-            triggerUpdate();
-            const filePath = deps.getCurrentFilePath ? deps.getCurrentFilePath() : null;
-            if (filePath) deps.saveFile();
-          }
-          // else: let native undo handle regular typing
         }
       });
     }
@@ -815,9 +807,6 @@ const EditorCore = (() => {
 
   /* ── Public API ─────────────────────────────────────────────────── */
 
-  /** Clear the AI undo stack — must be called whenever a new file is loaded. */
-  function clearAiUndoStack() { aiUndoStack.length = 0; }
-
   return {
     init,
     updateHighlight,
@@ -825,9 +814,8 @@ const EditorCore = (() => {
     updateStats,
     triggerUpdate,
     renderMarkdown,
-    setEditorContentUndoable,
-    clearAiUndoStack,
-    snapshotUndo: _snapshotUndo,
+    setEditorContentNative,
+    replaceRangeNative,
     syncRuler,
     visualRowsForLine,
     computeMatches,

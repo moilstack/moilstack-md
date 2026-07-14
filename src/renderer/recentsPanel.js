@@ -110,11 +110,12 @@ const RecentsPanel = (() => {
     if (!listEl || !countEl) return;
 
     // The buffer currently loaded in the editor is untitled — show it live,
-    // whether or not it has been typed into yet. Once switched away from,
-    // its slot stays reachable (SaveManager.hasDraft()) even if it was
-    // never typed into — nothing about it should vanish silently.
+    // whether or not it has been typed into yet.
     const isLive   = !currentFile.path;
-    const showDraft = isLive || SaveManager.hasDraft();
+    // Pinned unconditionally (not just while a draft exists) so there's
+    // always a one-click way back to a blank document, even right after
+    // Save-As clears the draft and points currentFile at the saved path.
+    const showDraft = true;
 
     // Content-preview second line only in Custom mode (no folder tree to
     // provide that context) — Multi-level/Root-only stay single-line.
@@ -262,7 +263,11 @@ const RecentsPanel = (() => {
     }
 
     if (row.dataset.role === 'draft') {
-      await window.restoreDraftFile?.();
+      if (SaveManager.hasDraft()) {
+        await window.restoreDraftFile?.();   // real persisted content — restore it
+      } else {
+        await window.newUntitledFile?.();    // nothing persisted — fresh blank buffer
+      }
     } else if (row.dataset.path) {
       await window.openRecentFile?.(row.dataset.path);
     }

@@ -98,7 +98,6 @@ async function openFileByPath(filePath, { addToRecents = false } = {}) {
   const content = result.content ?? '';
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = content;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -175,7 +174,6 @@ async function openRecentFile(filePath) {
   const content = result.content ?? '';
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = content;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -221,7 +219,6 @@ async function restoreDraftFile() {
   const draft = SaveManager.getDraft();
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = draft;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -265,7 +262,6 @@ async function openSingleFile(filePath) {
   const content = result.content ?? '';
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = content;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -297,7 +293,6 @@ async function openSingleFile(filePath) {
  */
 function _resetToBlankUntitled() {
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = '';
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -579,7 +574,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     getEditor:                () => document.getElementById('mdEditor'),
     getCurrentFile:           () => currentFile,
     escapeHtml:               MarkdownRenderer.escapeHtml,
-    setEditorContentUndoable: EditorCore.setEditorContentUndoable,
+    setEditorContentNative:   EditorCore.setEditorContentNative,
+    replaceRangeNative:       EditorCore.replaceRangeNative,
     saveFile:                 SaveManager.saveFile,
     updateStats:              EditorCore.updateStats,
     updateHighlight:          EditorCore.updateHighlight,

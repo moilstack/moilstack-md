@@ -107,15 +107,16 @@ const TagModal = (() => {
       // cursor to the top of the file. Everything after the frontmatter
       // block (the "body") is untouched by _applyTags, so shift the caret by
       // however much the frontmatter's length changed, keeping it at the
-      // same spot in the body rather than wherever setEditorContentUndoable
-      // resets it (position 0, as a side effect of reassigning editor.value).
+      // same spot in the body rather than wherever setEditorContentNative
+      // leaves it (end of the inserted text, as a side effect of the
+      // whole-document replace).
       const cursorPos    = editor.selectionStart;
       const oldParsed    = _splitFrontmatter(oldContent);
       const oldBody      = oldParsed ? oldParsed.bodyLines.join('\n') : oldContent;
       const oldPrefixLen = oldContent.length - oldBody.length;
       const newPrefixLen = newContent.length - oldBody.length;
 
-      EditorCore.setEditorContentUndoable(newContent);
+      EditorCore.setEditorContentNative(newContent);
 
       const newCursor = cursorPos >= oldPrefixLen
         ? cursorPos + (newPrefixLen - oldPrefixLen)
