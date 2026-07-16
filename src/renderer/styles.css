@@ -737,6 +737,12 @@ body {
   pointer-events: none;
 }
 
+/* Larger icon-only variant (e.g. Export/Save in the editor toolbar) */
+.icon-btn--lg {
+  width: 32px;
+  height: 32px;
+}
+
 /* ── 2. Folder row ───────────────────────────────────────────────── */
 .folder-row {
   display: flex;
@@ -1534,6 +1540,14 @@ body {
 }
 .btn-danger:hover {
   background: #c9302c;
+}
+
+.btn-warning {
+  background: #f0ad4e;
+  color: #ffffff;
+}
+.btn-warning:hover {
+  background: #ec971f;
 }
 
 .delete-confirm-message {

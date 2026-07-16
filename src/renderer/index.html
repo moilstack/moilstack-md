@@ -381,8 +381,19 @@
 
           <!-- Right: Export + Save buttons + Edit/Preview toggle -->
           <div class="topbar-actions">
-            <button class="btn btn-outline" id="btn-export" title="Export Markdown file">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+            <button class="icon-btn icon-btn--lg" id="btn-save" title="Save file (Ctrl+S)" aria-label="Save file">
+              <svg width="18" height="18" viewBox="0 0 13 13" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="1" y="1" width="11" height="11" rx="1.5"
+                      stroke="currentColor" stroke-width="1.3"/>
+                <rect x="3.5" y="1" width="4" height="3.5" rx=".5"
+                      fill="currentColor" stroke="none"/>
+                <rect x="2.5" y="7" width="8" height="4" rx=".8"
+                      stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+            </button>
+            <button class="icon-btn icon-btn--lg" id="btn-export" title="Export Markdown file" aria-label="Export Markdown file">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
                       stroke="currentColor" stroke-width="2"
@@ -394,19 +405,6 @@
                       stroke="currentColor" stroke-width="2"
                       stroke-linecap="round"/>
               </svg>
-              <span>Export</span>
-            </button>
-            <button class="btn btn-primary" id="btn-save" title="Save file (Ctrl+S)">
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
-                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <rect x="1" y="1" width="11" height="11" rx="1.5"
-                      stroke="currentColor" stroke-width="1.3"/>
-                <rect x="3.5" y="1" width="4" height="3.5" rx=".5"
-                      fill="currentColor" stroke="none"/>
-                <rect x="2.5" y="7" width="8" height="4" rx=".8"
-                      stroke="currentColor" stroke-width="1.2"/>
-              </svg>
-              <span>Save</span>
             </button>
           </div>
 
