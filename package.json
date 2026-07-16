@@ -8,7 +8,8 @@
     "test": "jest",
     "make-app-icon": "node build/make-app-icon.js",
     "make-file-icon": "node build/make-file-icon.js",
-    "package": "electron-builder"
+    "package": "electron-builder",
+    "postinstall": "patch-package"
   },
   "build": {
     "appId": "com.moilstack.markdown",
@@ -95,6 +96,7 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "nodemon": "^3.1.14",
+    "patch-package": "^8.0.1",
     "png-to-ico": "^2.1.8",
     "sharp": "^0.33.5"
   },

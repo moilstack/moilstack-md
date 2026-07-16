@@ -1,0 +1,22 @@
+diff --git a/node_modules/app-builder-lib/out/targets/AppxTarget.js b/node_modules/app-builder-lib/out/targets/AppxTarget.js
+index 1bb0b5f..66f36b2 100644
+--- a/node_modules/app-builder-lib/out/targets/AppxTarget.js
++++ b/node_modules/app-builder-lib/out/targets/AppxTarget.js
+@@ -233,7 +233,7 @@ class AppXTarget extends core_1.Target {
+         for (const protocol of uriSchemes) {
+             for (const scheme of (0, builder_util_1.asArray)(protocol.schemes)) {
+                 extensions += `
+-          <uap:Extension Category="windows.protocol">
++          <uap:Extension Category="windows.protocol" Executable="${executable}" EntryPoint="Windows.FullTrustApplication">
+             <uap:Protocol Name="${scheme}">
+                <uap:DisplayName>${protocol.name}</uap:DisplayName>
+              </uap:Protocol>
+@@ -243,7 +243,7 @@ class AppXTarget extends core_1.Target {
+         for (const fileAssociation of fileAssociations) {
+             for (const ext of (0, builder_util_1.asArray)(fileAssociation.ext)) {
+                 extensions += `
+-          <uap:Extension Category="windows.fileTypeAssociation">
++          <uap:Extension Category="windows.fileTypeAssociation" Executable="${executable}" EntryPoint="Windows.FullTrustApplication">
+             <uap:FileTypeAssociation Name="${ext}">
+               <uap:SupportedFileTypes>
+                 <uap:FileType>.${ext}</uap:FileType>
