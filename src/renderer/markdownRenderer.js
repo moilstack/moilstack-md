@@ -76,13 +76,16 @@ const MarkdownRenderer = (() => {
     s = s
       // Bold + italic (***text***)
       .replace(/\*\*\*(.+?)\*\*\*/g,  '<strong><em>$1</em></strong>')
-      .replace(/___(.+?)___/g,         '<strong><em>$1</em></strong>')
+      .replace(/(?<!\w)___(.+?)___(?!\w)/g, '<strong><em>$1</em></strong>')
       // Bold (**text**)
       .replace(/\*\*(.+?)\*\*/g,       '<strong>$1</strong>')
-      .replace(/__(.+?)__/g,            '<strong>$1</strong>')
+      .replace(/(?<!\w)__(.+?)__(?!\w)/g,   '<strong>$1</strong>')
       // Italic (*text*)
       .replace(/\*([^*\n]+?)\*/g,       '<em>$1</em>')
-      .replace(/_([^_\n]+?)_/g,         '<em>$1</em>')
+      // Underscore italic — unlike *, _ must NOT trigger mid-word (CommonMark
+      // intraword-emphasis rule), otherwise identifiers like debt_summary_table
+      // get their underscores eaten and part of the name turned italic.
+      .replace(/(?<!\w)_([^_\n]+?)_(?!\w)/g, '<em>$1</em>')
       // Strikethrough (~~text~~)
       .replace(/~~(.+?)~~/g,            '<del>$1</del>')
       // Inline code (`code`) — input is already HTML-escaped by the caller, no double-escape
