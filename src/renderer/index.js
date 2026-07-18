@@ -98,7 +98,6 @@ async function openFileByPath(filePath, { addToRecents = false } = {}) {
   const content = result.content ?? '';
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = content;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -175,7 +174,6 @@ async function openRecentFile(filePath) {
   const content = result.content ?? '';
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = content;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -221,7 +219,6 @@ async function restoreDraftFile() {
   const draft = SaveManager.getDraft();
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = draft;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -265,7 +262,6 @@ async function openSingleFile(filePath) {
   const content = result.content ?? '';
 
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = content;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -297,7 +293,6 @@ async function openSingleFile(filePath) {
  */
 function _resetToBlankUntitled() {
   if (mdEditor) {
-    EditorCore.clearAiUndoStack();
     mdEditor.value     = '';
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
@@ -414,9 +409,17 @@ document.addEventListener('keydown', async e => {
 
 // Ctrl+N — new untitled file (notepad-style; no folder or sidebar required)
 document.addEventListener('keydown', async e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'n') {
     e.preventDefault();
     await newUntitledFile();
+  }
+});
+
+// Ctrl+Shift+N — new file in the explorer (creates a file on disk in the active folder)
+document.addEventListener('keydown', async e => {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+    e.preventDefault();
+    await FileOperations.triggerExplorerNewFile();
   }
 });
 
@@ -496,7 +499,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   RecentsPanel.applyExplorerMode();
 
   const _version = window.electronAPI?.appVersion;
-  if (_version) document.title = `MoilStack .md ${_version}`;
+  if (_version) {
+    document.title = `MoilStack .md ${_version}`;
+    const sbVersion = document.getElementById('sbVersion');
+    if (sbVersion) sbVersion.textContent = `v${_version}`;
+  }
 
   const _openFileParam = new URLSearchParams(location.search).get('openFile');
 
@@ -571,7 +578,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     getEditor:                () => document.getElementById('mdEditor'),
     getCurrentFile:           () => currentFile,
     escapeHtml:               MarkdownRenderer.escapeHtml,
-    setEditorContentUndoable: EditorCore.setEditorContentUndoable,
+    setEditorContentNative:   EditorCore.setEditorContentNative,
+    replaceRangeNative:       EditorCore.replaceRangeNative,
     saveFile:                 SaveManager.saveFile,
     updateStats:              EditorCore.updateStats,
     updateHighlight:          EditorCore.updateHighlight,

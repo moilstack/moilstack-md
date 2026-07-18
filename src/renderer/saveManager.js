@@ -171,7 +171,7 @@ const SaveManager = (() => {
 
   /* ── Manual save ──────────────────────────────────────────────────── */
 
-  const FLOPPY_SVG = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+  const FLOPPY_SVG = `<svg width="18" height="18" viewBox="0 0 13 13" fill="none"
      xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <rect x="1" y="1" width="11" height="11" rx="1.5"
         stroke="currentColor" stroke-width="1.3"/>
@@ -181,7 +181,7 @@ const SaveManager = (() => {
         stroke="currentColor" stroke-width="1.2"/>
 </svg>`;
 
-  const SPINNER_SVG = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+  const SPINNER_SVG = `<svg width="18" height="18" viewBox="0 0 13 13" fill="none"
      xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="spin">
   <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"
           stroke-dasharray="22" stroke-dashoffset="10" stroke-linecap="round"/>
@@ -204,7 +204,8 @@ const SaveManager = (() => {
 
     btn.dataset.saving = '1';
     btn.disabled       = true;
-    btn.innerHTML      = `${SPINNER_SVG}<span>Saving…</span>`;
+    btn.innerHTML      = SPINNER_SVG;
+    btn.title          = 'Saving…';
 
     try {
       const result = await window.electronAPI.writeFile(filePath, content);
@@ -213,12 +214,15 @@ const SaveManager = (() => {
       markClean();
       _updateSidebarPreview(filePath, content);
       FileTreeManager.touchFile(filePath, _extractFirstLine(content));
-      btn.innerHTML = `<span>✓ Saved</span>`;
-      setTimeout(() => { btn.innerHTML = `${FLOPPY_SVG}<span>Save</span>`; }, 1500);
+      btn.innerHTML = FLOPPY_SVG;
+      btn.title     = 'Saved';
+      StatusBar.showToast(`Saved "${currentFile.name}" successfully.`);
+      setTimeout(() => { btn.title = 'Save file (Ctrl+S)'; }, 1500);
     } catch (err) {
       console.error('[saveFile]', err);
-      btn.innerHTML = `<span>✗ Error</span>`;
-      setTimeout(() => { btn.innerHTML = `${FLOPPY_SVG}<span>Save</span>`; }, 2000);
+      btn.innerHTML = FLOPPY_SVG;
+      btn.title     = `Save failed: ${err.message}`;
+      setTimeout(() => { btn.title = 'Save file (Ctrl+S)'; }, 2000);
       StatusBar.showToast(`Save failed: ${err.message}`);
     } finally {
       btn.disabled = false;
@@ -339,19 +343,24 @@ const SaveManager = (() => {
 <body>${bodyHtml}</body>
 </html>`;
 
-    const origHTML = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = '<span>Exporting…</span>'; }
+    const origTitle = btn ? btn.title : '';
+    const origHTML  = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.title = 'Exporting…'; btn.innerHTML = SPINNER_SVG; }
 
     try {
       const result = await window.electronAPI.exportPdf(html, filename);
-      if (result?.canceled) return;
+      if (result?.canceled) { if (btn) { btn.title = origTitle; btn.innerHTML = origHTML; } return; }
       if (!result?.ok) throw new Error(result?.error || 'Unknown error');
-      if (btn) { btn.innerHTML = '<span>✓ Exported</span>'; }
-      setTimeout(() => { if (btn) { btn.disabled = false; btn.innerHTML = origHTML; } }, 1800);
+      if (btn) { btn.title = 'Exported'; btn.innerHTML = origHTML; }
+      const pdfName = filename.replace(/\.md$/i, '') + '.pdf';
+      StatusBar.showToast(`Exported "${pdfName}" successfully.`);
+      setTimeout(() => { if (btn) { btn.title = origTitle; } }, 1800);
     } catch (err) {
       console.error('[exportFile]', err);
+      if (btn) { btn.title = origTitle; btn.innerHTML = origHTML; }
       alert(`Export failed: ${err.message}`);
-      if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+    } finally {
+      if (btn) { btn.disabled = false; }
     }
   }
 

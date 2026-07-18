@@ -43,6 +43,11 @@ const HamburgerMenu = (() => {
     await newUntitledFile();
   });
 
+  document.getElementById('hmenu-new-explorer-file')?.addEventListener('click', async () => {
+    closeHamburgerMenu();
+    await FileOperations.triggerExplorerNewFile();
+  });
+
   document.getElementById('hmenu-open-file')?.addEventListener('click', async () => {
     closeHamburgerMenu();
     const result = await window.electronAPI?.openFile();
@@ -98,6 +103,24 @@ const HamburgerMenu = (() => {
   document.getElementById('hmenu-settings')?.addEventListener('click', () => {
     closeHamburgerMenu();
     document.getElementById('btnSettings')?.click();
+  });
+
+  /* ── "Explorer" label (sidebar header) — jumps to Explorer settings ── */
+  function _openExplorerSettings() {
+    document.getElementById('btnSettings')?.click();
+    document.querySelector('.settings-nav-item[data-settings-panel="explorer"]')?.click();
+    requestAnimationFrame(() => {
+      const row = document.getElementById('settingsRow-explorerMode');
+      if (!row) return;
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('settings-row--flash');
+      setTimeout(() => row.classList.remove('settings-row--flash'), 1200);
+    });
+  }
+  const _sidebarExplorerLabel = document.getElementById('sidebarExplorerLabel');
+  _sidebarExplorerLabel?.addEventListener('click', _openExplorerSettings);
+  _sidebarExplorerLabel?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _openExplorerSettings(); }
   });
 
   /* ── Collapse All button (sidebar header) ─────────────────────────── */

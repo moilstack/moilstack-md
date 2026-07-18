@@ -181,8 +181,7 @@ const FindReplaceWidget = (() => {
     const { start, end } = _matches[_activeIndex];
 
     SaveManager.markDirty();
-    editor.focus();
-    editor.setRangeText(replaceWith, start, end, 'end');
+    EditorCore.replaceRangeNative(start, end, replaceWith);
     EditorCore.updateStats();
 
     runSearch();
@@ -200,7 +199,7 @@ const FindReplaceWidget = (() => {
       result = result.slice(0, start) + replaceWith + result.slice(end);
     }
 
-    EditorCore.setEditorContentUndoable(result);
+    EditorCore.setEditorContentNative(result);
     SaveManager.markDirty();
     if (currentFile.path) SaveManager.saveFile();
 

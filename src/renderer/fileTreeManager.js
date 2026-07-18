@@ -61,6 +61,11 @@ const FileTreeManager = (() => {
           stroke-linejoin="round" stroke-linecap="round"/>
   </svg>`;
 
+  const REMOVE_ICON_SVG = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none"
+     xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path d="M1 1l7 7M8 1 1 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+</svg>`;
+
   /* ── HTML builders ────────────────────────────────────────────────── */
 
   function _escHtml(str) {
@@ -132,6 +137,7 @@ const FileTreeManager = (() => {
     const tags = file.tags || [];
     const preview = file.firstLine || '';
     const tagsHTML = tags.map(t => `<span class="file-tag">${_escHtml('#' + t)}</span>`).join('');
+    const tagsTitle = tags.length ? ` title="${_escHtml(tags.map(t => '#' + t).join(', '))}"` : '';
     const labelDot = label
       ? `<svg class="file-item__label-dot" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="4" cy="4" r="4" fill="${label.color}"/></svg>`
       : '';
@@ -143,7 +149,7 @@ const FileTreeManager = (() => {
           ${_fileIconSVG(file.name)}
           <span class="file-item__name">${file.name}</span>
           ${labelDot}
-          ${tagsHTML ? `<div class="file-item__tags">${tagsHTML}</div>` : ''}
+          ${tagsHTML ? `<div class="file-item__tags"${tagsTitle}>${tagsHTML}</div>` : ''}
           <button class="file-pin-btn${pinned ? ' file-pin-btn--active' : ''}"
                   data-pin-path="${escapedPath}"
                   title="${pinned ? 'Unpin file' : 'Pin file'}"
@@ -410,7 +416,6 @@ const FileTreeManager = (() => {
 
         const editor = document.getElementById('mdEditor');
         if (editor) {
-          EditorCore.clearAiUndoStack();
           editor.value     = content;
           editor.scrollTop = 0;
           const gutter = document.getElementById('line-numbers');
@@ -567,9 +572,13 @@ const FileTreeManager = (() => {
       }
 
       folders.forEach(item => {
-        const row = document.createElement('button');
+        // A <div> here, not a <button> — it needs to nest the remove
+        // button below, and a <button> can't legally contain another
+        // <button> (the browser would silently close the outer one early).
+        const row = document.createElement('div');
         row.className = 'folder-recent-item';
         row.setAttribute('role', 'menuitem');
+        row.setAttribute('tabindex', '0');
         row.setAttribute('title', item.path);
 
         row.innerHTML = `
@@ -581,11 +590,29 @@ const FileTreeManager = (() => {
           <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;">
             <span class="folder-recent-item__name">${item.name}</span>
             <span class="folder-recent-item__path">${item.path}</span>
-          </div>`;
+          </div>
+          <button class="folder-recent-remove-btn" title="Remove from Recents"
+                  aria-label="Remove ${item.name} from recent folders">
+            ${REMOVE_ICON_SVG}
+          </button>`;
 
-        row.addEventListener('click', async () => {
+        const _open = async () => {
           _closeDropdown();
           await setActiveFolder(item.path);
+        };
+
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.folder-recent-remove-btn')) return;
+          _open();
+        });
+        row.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _open(); }
+        });
+
+        row.querySelector('.folder-recent-remove-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          StorageManager.removeRecentItem(item.path);
+          _populateDropdown(); // refresh in place, keep the dropdown open
         });
 
         dropdown.appendChild(row);

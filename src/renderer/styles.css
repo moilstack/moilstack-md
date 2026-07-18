@@ -294,6 +294,33 @@ body {
   opacity: 0.7;
 }
 
+.folder-recent-remove-btn {
+  display: none;          /* hidden until the row is hovered/focused */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+}
+.folder-recent-remove-btn svg { opacity: 1; }
+
+.folder-recent-item:hover .folder-recent-remove-btn,
+.folder-recent-item:focus-within .folder-recent-remove-btn {
+  display: flex;
+}
+
+.folder-recent-remove-btn:hover {
+  background: var(--hover-bg, rgba(128,128,128,0.12));
+  color: var(--danger, #ef4444);
+}
+
 .folder-recent-item__name {
   font-size: 13px;
   font-weight: 500;
@@ -638,6 +665,31 @@ body {
   user-select: none;
 }
 
+.sidebar-section__label--link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.sidebar-section__label--link:hover,
+.sidebar-section__label--link:focus-visible {
+  color: var(--text-primary);
+  outline: none;
+}
+
+.sidebar-section__label-icon {
+  color: var(--text-secondary);
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.2s;
+}
+.sidebar-section__label--link:hover .sidebar-section__label-icon,
+.sidebar-section__label--link:focus-visible .sidebar-section__label-icon {
+  opacity: 1;
+  transform: rotate(35deg);
+}
+
 .sidebar-section__actions {
   display: flex;
   align-items: center;
@@ -683,6 +735,12 @@ body {
   opacity: 0.3 !important;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Larger icon-only variant (e.g. Export/Save in the editor toolbar) */
+.icon-btn--lg {
+  width: 32px;
+  height: 32px;
 }
 
 /* ── 2. Folder row ───────────────────────────────────────────────── */
@@ -1046,13 +1104,16 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
-  min-width: 0;
+  min-width: 56px; /* keep the filename legible even when tags would otherwise crowd it out */
 }
 
 .file-item__tags {
   display: flex;
   gap: 3px;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
   align-items: center;
   margin-left: auto;
 }
@@ -1479,6 +1540,14 @@ body {
 }
 .btn-danger:hover {
   background: #c9302c;
+}
+
+.btn-warning {
+  background: #f0ad4e;
+  color: #ffffff;
+}
+.btn-warning:hover {
+  background: #ec971f;
 }
 
 .delete-confirm-message {
@@ -3315,6 +3384,23 @@ select.form-input {
   gap: 8px;
 }
 
+/* ── Tag Modal (reuses .label-modal shell) ────────────────────────── */
+#tagModalOverlay .label-modal { width: 320px; }
+
+.tag-modal__hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.tag-modal__hint code {
+  font-size: 11px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+}
+
 /* ════════════════════════════════════════════════════════════════════
    Settings Modal — sidebar layout
    ════════════════════════════════════════════════════════════════════ */
@@ -3582,6 +3668,32 @@ select.form-input {
   flex: 1;
 }
 
+.welcome-recent-remove-btn {
+  display: none;          /* hidden until the row is hovered */
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+}
+
+.welcome-recent-item:hover .welcome-recent-remove-btn {
+  display: flex;
+}
+
+.welcome-recent-remove-btn:hover {
+  background: var(--hover-bg);
+  color: var(--danger, #ef4444);
+}
+
 .welcome-recent-empty {
   font-size: 0.82rem;
   color: var(--text-secondary);
@@ -3608,6 +3720,13 @@ select.form-input {
   gap: 16px;
   padding: 14px 0;
   border-bottom: 1px solid var(--border);
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+
+/* Briefly highlights a row scrolled-to programmatically (e.g. from the sidebar "Explorer" label) */
+.settings-row--flash {
+  background-color: color-mix(in srgb, var(--primary) 16%, transparent);
 }
 
 .settings-row:last-of-type {
@@ -3939,6 +4058,65 @@ select.form-input {
 }
 
 [data-theme="dark"] .focus-toast {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* ── New-release notice ───────────────────────────────────────────────
+   Shown once, a few seconds after launch, when a newer GitHub release
+   exists. Stays until dismissed — unlike focus-toast, it's an action
+   the user may want to come back to, not a transient blip.
+   ──────────────────────────────────────────────────────────────────── */
+.release-notice {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-left: 3px solid #6366f1;
+  border-radius: 6px;
+  padding: 8px 10px 8px 14px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: calc(100vw - 32px);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.release-notice--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.release-notice button {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.release-notice button:hover {
+  background: var(--border);
+}
+
+.release-notice__dismiss {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  padding: 2px 6px;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .release-notice {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 

@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net } = require('el
 const path = require('path')
 const fs   = require('fs')
 const { registerIpcHandlers, updateJumpList } = require('./ipc')
+const { startReleaseCheck } = require('./releaseCheck')
 
 // ── Window state persistence ───────────────────────────────────────────────
 // Stored in <userData>/window-state.json so it survives app restarts.
@@ -228,6 +229,8 @@ if (!gotLock) {
 
     // First window — pass any file/folder from the CLI args
     createWindow(getArgsFromArgv(process.argv))
+
+    startReleaseCheck()
 
     app.on('activate', () => {
       // macOS: re-create a window when dock icon is clicked and no windows exist

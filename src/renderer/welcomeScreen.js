@@ -15,6 +15,10 @@ const WelcomeScreen = (() => {
     <path d="M7.5 1.5V4H10" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
   </svg>`;
 
+  const REMOVE_ICON = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
+    <path d="M1 1l7 7M8 1 1 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+  </svg>`;
+
   function showWelcomeScreen() {
     const screen = document.getElementById('welcome-screen');
     if (!screen) return;
@@ -40,10 +44,19 @@ const WelcomeScreen = (() => {
                     ${icon}
                     <span class="welcome-recent-item__name">${item.name}</span>
                     <span class="welcome-recent-item__path">${item.path}</span>
+                    <button class="welcome-recent-remove-btn" title="Remove from Recents">
+                      ${REMOVE_ICON}
+                    </button>
                   </li>`;
         }).join('');
 
         listEl.querySelectorAll('.welcome-recent-item').forEach(li => {
+          li.querySelector('.welcome-recent-remove-btn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            StorageManager.removeRecentItem(li.dataset.path);
+            showWelcomeScreen();
+          });
+
           li.addEventListener('click', async () => {
             const { type, path } = li.dataset;
             if (type === 'folder') {
