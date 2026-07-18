@@ -24,7 +24,7 @@ const path = require('path');
  * Returns basename only (no parent-dir escapes).
  */
 function sanitizeFilename(fileName) {
-  const safeName = path.basename(fileName.trim());
+  const safeName = path.win32.basename(fileName.trim());
   if (!safeName) throw new Error('Invalid filename.');
   return safeName;
 }
@@ -42,7 +42,7 @@ function ensureMarkdownExt(fileName) {
  * Format: originalname_ISO-TIMESTAMP.md
  */
 function generateBackupPath(filePath) {
-  const basename = path.basename(filePath, path.extname(filePath));
+  const basename = path.win32.basename(filePath, path.win32.extname(filePath));
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   return `${basename}_${timestamp}.md`;
 }
