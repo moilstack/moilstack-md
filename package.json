@@ -24,11 +24,7 @@
     },
     "fileAssociations": [
       {
-        "ext": [
-          "md",
-          "markdown",
-          "txt"
-        ],
+        "ext": "md",
         "name": "Markdown File",
         "description": "Markdown Document",
         "icon": "src/assets/file-icon-md",
