@@ -68,7 +68,8 @@
       "target": [
         "AppImage",
         "deb"
-      ]
+      ],
+      "maintainer": "MoilStack <support@moilstack.com>"
     }
   },
   "keywords": [
