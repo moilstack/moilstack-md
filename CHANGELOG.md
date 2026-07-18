@@ -4,7 +4,7 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
-## [Unreleased]
+## [1.1.0] - 2026-07-18
 
 ### Added
 - **Copy / Paste in the editor context menu** — added as a new group at the top, above the formatting options, with `Ctrl C` / `Ctrl V` shown as hints
