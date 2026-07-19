@@ -175,8 +175,25 @@ const MarkdownRenderer = (() => {
    * @param {string} src  Raw Markdown source.
    * @returns {string}    HTML output.
    */
+  /**
+   * Strip a leading YAML frontmatter block (used for tags, etc.) so it never
+   * renders as visible content — mirrors the skip logic in ipc.js's
+   * _extractFirstLine/_extractTags on the main-process side.
+   */
+  function _stripFrontmatter(src) {
+    if (!src.startsWith('---')) return src;
+    const fmEnd = src.indexOf('\n---', 3);
+    if (fmEnd === -1) return src;
+    const afterDelim = fmEnd + 4; // past "\n---"
+    const nextNewline = src.indexOf('\n', afterDelim);
+    return nextNewline === -1 ? '' : src.slice(nextNewline + 1);
+  }
+
   function parseMarkdown(src) {
     if (!src || !src.trim()) return '';
+
+    src = _stripFrontmatter(src);
+    if (!src.trim()) return '';
 
     const lines = src.split('\n');
     const out   = [];
