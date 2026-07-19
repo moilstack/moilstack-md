@@ -150,6 +150,15 @@ function _stripBOM(content) {
 }
 
 /**
+ * Return true if the text between a pair of `---` delimiters actually looks
+ * like YAML (at least one `key: value` or `key:` line) rather than being
+ * ordinary prose that just happens to sit between two horizontal rules.
+ */
+function _looksLikeYaml(fmText) {
+  return /^[ \t]*[A-Za-z0-9_-]+:([ \t]|$)/m.test(fmText)
+}
+
+/**
  * Extract a plain-text first line from file content.
  * Skips YAML frontmatter and strips basic Markdown syntax.
  */
@@ -157,7 +166,7 @@ function _extractFirstLine(content) {
   let text = _stripBOM(content)
   if (text.startsWith('---')) {
     const fmEnd = text.indexOf('\n---', 3)
-    if (fmEnd !== -1) text = text.slice(fmEnd + 4)
+    if (fmEnd !== -1 && _looksLikeYaml(text.slice(3, fmEnd))) text = text.slice(fmEnd + 4)
   }
   for (const line of text.split('\n')) {
     const stripped = line
@@ -189,8 +198,9 @@ function _extractTags(content) {
   const fmEnd = content.indexOf('\n---', 3)
   if (fmEnd === -1) return []
 
-  const tags = new Set()
   const fm = content.slice(3, fmEnd)
+  if (!_looksLikeYaml(fm)) return []
+  const tags = new Set()
   const inlineMatch = fm.match(/^tags:\s*\[([^\]]+)\]/m)
   if (inlineMatch) {
     for (const t of inlineMatch[1].split(',')) {

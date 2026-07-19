@@ -101,11 +101,18 @@ const SaveManager = (() => {
 
   /* ── Sidebar preview update ───────────────────────────────────────── */
 
+  // Only treat a leading `---`…`---` block as frontmatter to skip if it
+  // actually contains YAML (`key: value`) — otherwise it's just two
+  // horizontal rules with ordinary prose between them.
+  function _looksLikeYaml(fmText) {
+    return /^[ \t]*[A-Za-z0-9_-]+:([ \t]|$)/m.test(fmText);
+  }
+
   function _extractFirstLine(content) {
     let text = content;
     if (text.startsWith('---')) {
       const fmEnd = text.indexOf('\n---', 3);
-      if (fmEnd !== -1) text = text.slice(fmEnd + 4);
+      if (fmEnd !== -1 && _looksLikeYaml(text.slice(3, fmEnd))) text = text.slice(fmEnd + 4);
     }
     for (const line of text.split('\n')) {
       const stripped = line.replace(/^#+\s*/, '').replace(/[*_`]/g, '').trim();

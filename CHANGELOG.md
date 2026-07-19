@@ -4,6 +4,13 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **File preview stripping non-frontmatter text** — the sidebar/Explorer content preview and tag extraction treated any leading `---` … `---` block as YAML frontmatter and discarded it, even when it was just two horizontal rules with ordinary prose between them (no actual `key: value` YAML). The block is now only treated as frontmatter if it actually contains YAML.
+
+---
+
 ## [1.1.0] - 2026-07-18
 
 ### Added
