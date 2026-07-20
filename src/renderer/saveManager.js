@@ -147,6 +147,20 @@ const SaveManager = (() => {
     previewSpan.textContent = firstLine;
   }
 
+  /* ── Backup-before-overwrite ─────────────────────────────────────────
+     Snapshots whatever is currently on disk (not yet the new content)
+     into the same rolling backup store used for AI edits, so a plain
+     save/autosave also leaves a recovery point. ──────────────────── */
+
+  async function _backupBeforeOverwrite(filePath) {
+    try {
+      const existing = await window.electronAPI.readFile(filePath);
+      if (existing?.content !== undefined) {
+        await window.electronAPI.writeBackup(filePath, existing.content);
+      }
+    } catch { /* no existing file or backup write failed — nothing to snapshot */ }
+  }
+
   /* ── Silent save ──────────────────────────────────────────────────── */
 
   async function silentSave() {
@@ -164,6 +178,7 @@ const SaveManager = (() => {
     const content = mdEditor ? mdEditor.value : '';
 
     try {
+      await _backupBeforeOverwrite(filePath);
       const result = await window.electronAPI.writeFile(filePath, content);
       if (!result?.ok) throw new Error(result?.error || 'write failed');
       markClean();
@@ -215,6 +230,7 @@ const SaveManager = (() => {
     btn.title          = 'Saving…';
 
     try {
+      await _backupBeforeOverwrite(filePath);
       const result = await window.electronAPI.writeFile(filePath, content);
       if (!result?.ok) throw new Error(result?.error || 'Unknown write error');
 

@@ -125,7 +125,7 @@ When the AI assistant processes an edit, changes are applied silently and instan
 
 ### Safety & Version Controls
 * **Instant Undo:** Every single document modification made by the AI can be instantly reversed using the UI Undo button (↺) or by pressing `Ctrl+Z`.
-* **Automatic Snapshots:** For absolute safety, MoilStack .md saves automatic file backups to the app's user data directory (not your workspace folder) before any AI processing occurs.
+* **Automatic Snapshots:** For absolute safety, MoilStack .md saves automatic file backups to the app's user data directory (not your workspace folder) before any AI processing occurs, and also before every manual save and autosave.
 * **Scoped Selections:** Highlight specific sentences or code lines inside the editor pane before typing a prompt to limit the AI assistant's scope exclusively to that text selection.
 
 
@@ -145,9 +145,9 @@ When the AI assistant processes an edit, changes are applied silently and instan
 | `Alt+Enter` | New line in chat input |
 | `Escape` | Close any open modal or dropdown |
 
-## File Backups
+## File Backups & Version History
 
-Every time the AI edits your document, MoilStack .md saves a backup to the app's user data directory, keyed to your file's parent folder — not inside your workspace:
+Every time your document is written to disk — an AI edit, `Ctrl+S`, or autosave — MoilStack .md saves a backup to the app's user data directory, keyed to your file's parent folder — not inside your workspace:
 
 ```
 <app userData>/backups/<folder-name>-<folder-hash>/
@@ -155,7 +155,13 @@ Every time the AI edits your document, MoilStack .md saves a backup to the app's
 
 On Windows this is typically under `%APPDATA%`, on macOS under `~/Library/Application Support`, and on Linux under `~/.config`.
 
-Files are named `<filename>_<timestamp>.md` and the last **10 backups per file** are kept automatically. Use these to recover from any unwanted AI changes.
+Files are named `<filename>_<timestamp>.md` and the last **10 backups per file** are kept automatically. Empty or duplicate-content snapshots are skipped so the 10 slots aren't wasted. Use these to recover from unwanted AI changes or accidental edits/deletions during normal editing.
+
+No need to dig through that folder by hand — right-click any file in the Explorer and choose **Version History…** to browse it:
+
+* A two-pane view lists every snapshot by date/time on the left; click one to see its raw text on the right.
+* A pinned **Current** entry always shows the file's live content for comparison, and is selected by default when the panel opens.
+* **Restore This Version** loads the selected snapshot back in (with a confirm step) and is disabled while Current is selected — restoring backs up whatever's there first, so nothing is lost either way.
 
 
 

@@ -777,6 +777,13 @@
       Open in New Window
     </button>
     <div class="file-ctx-divider"></div>
+    <button class="file-ctx-item" data-file-action="version-history">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M7 4.5V7.5L9.2 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Version History…
+    </button>
     <button class="file-ctx-item" data-file-action="label">
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M2 2h5.5l4.5 4.5-5.5 5.5L2 7.5V2Z"
@@ -1284,6 +1291,49 @@
     </div>
   </div>
 
+  <!-- ── Version History Modal ────────────────────────────────────────── -->
+  <div id="versionHistoryOverlay" class="settings-overlay hidden"
+       role="dialog" aria-modal="true" aria-labelledby="versionHistoryTitle">
+    <div class="settings-panel settings-panel--wide vh-panel">
+      <div class="settings-panel-header">
+        <span id="versionHistoryTitle" class="settings-panel-title">Version History</span>
+        <button id="btnCloseVersionHistory" class="settings-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-panel-body vh-split">
+
+        <!-- Left: list of {status} {date} rows -->
+        <div class="vh-sidebar">
+          <div class="vh-list" id="vhList"></div>
+          <p class="vh-empty hidden" id="vhEmpty">No backups yet for this file.</p>
+        </div>
+
+        <!-- Right: selected snapshot's text + restore actions -->
+        <div class="vh-main">
+          <p class="vh-placeholder" id="vhPlaceholder">Select a version on the left to preview it.</p>
+
+          <div id="vhDetail" class="hidden">
+            <p class="vh-preview-meta" id="vhPreviewMeta"></p>
+            <pre class="vh-preview-content" id="vhPreviewContent"></pre>
+
+            <div class="modal-actions vh-restore-actions" id="vhRestoreActions">
+              <button id="btnVhRestore" class="btn btn-primary btn-sm">Restore This Version</button>
+            </div>
+            <div class="modal-actions vh-restore-confirm hidden" id="vhRestoreConfirm">
+              <span class="vh-restore-confirm-text">Replace current content with this version?</span>
+              <button id="btnVhRestoreCancel" class="btn btn-outline btn-sm">Cancel</button>
+              <button id="btnVhRestoreConfirm" class="btn btn-danger btn-sm">Yes, Restore</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- ── Table Builder Modal ──────────────────────────────────────────── -->
   <div id="tableBuilderOverlay" class="settings-overlay hidden"
        role="dialog" aria-modal="true" aria-label="Insert table">
@@ -1329,6 +1379,7 @@
   <script src="findReplaceWidget.js"></script>
   <script src="contextMenus.js"></script>
   <script src="tagModal.js"></script>
+  <script src="versionHistoryModal.js"></script>
   <script src="fileOperations.js"></script>
   <script src="fileTreeManager.js"></script>
   <script src="recentsPanel.js"></script>

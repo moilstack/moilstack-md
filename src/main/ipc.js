@@ -883,35 +883,118 @@ function registerIpcHandlers() {
   })
 
   /* ── Backup ──────────────────────────────────────────────────────────
-     backup:write — snapshot the current file content before an AI edit.
+     backup:write — snapshot a file's content before it gets overwritten,
+     whether by an AI edit or a plain save/autosave.
      Stored under <userData>/backups/<folderName>-<hash8>/ to avoid
      cluttering the user's workspace with .markflow directories.
      Keeps the 10 most recent backups per file; older ones are pruned.
+     No distinction is made between what triggered a snapshot — just a
+     rolling list of "<basename>_<isoTimestamp><ext>" files, newest last.
      ──────────────────────────────────────────────────────────────── */
+
+  function _backupDir(filePath) {
+    const folderPath = path.dirname(filePath)
+    const folderKey  = path.basename(folderPath) + '-' +
+                       crypto.createHash('sha1').update(folderPath).digest('hex').slice(0, 8)
+    return path.join(app.getPath('userData'), 'backups', folderKey)
+  }
+
+  // Parses "<basename>_<isoTimestamp><ext>" back into a Date-parseable ISO string.
+  function _parseBackupFilename(filename, basename, ext) {
+    const tsRaw = filename.slice(basename.length + 1, filename.length - ext.length)
+    const m = tsRaw.match(/^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/)
+    if (!m) return null
+    return `${m[1]}T${m[2]}:${m[3]}:${m[4]}.${m[5]}Z`
+  }
+
   ipcMain.handle('backup:write', async (_e, { filePath, content }) => {
     try {
-      const folderPath = path.dirname(filePath)
-      const folderKey  = path.basename(folderPath) + '-' +
-                         crypto.createHash('sha1').update(folderPath).digest('hex').slice(0, 8)
-      const dir        = path.join(app.getPath('userData'), 'backups', folderKey)
+      // An empty snapshot is never useful to restore — skip it rather than
+      // burning one of the 10 rolling slots on it.
+      if (!content || !content.trim()) return { ok: true, skipped: true }
+
+      const dir = _backupDir(filePath)
       await fs.mkdir(dir, { recursive: true })
 
-      const ext        = path.extname(filePath) || '.md'
-      const basename   = path.basename(filePath, ext)
+      const ext      = path.extname(filePath) || '.md'
+      const basename = path.basename(filePath, ext)
+
+      const all  = await fs.readdir(dir).catch(() => [])
+      const mine = all
+        .filter(f => f.startsWith(basename + '_') && f.endsWith(ext))
+        .sort()  // ISO timestamps sort correctly as strings
+
+      // Skip if identical to the most recent backup already stored — avoids
+      // near-duplicate snapshots when a save/autosave fires right after
+      // something else already backed up the same still-on-disk content.
+      const latest = mine[mine.length - 1]
+      if (latest) {
+        const latestContent = await fs.readFile(path.join(dir, latest), 'utf8').catch(() => null)
+        if (latestContent === content) return { ok: true, skipped: true }
+      }
+
       const timestamp  = new Date().toISOString().replace(/[:.]/g, '-')
       const backupPath = path.join(dir, `${basename}_${timestamp}${ext}`)
       await fs.writeFile(backupPath, content, 'utf8')
 
       // Prune: keep only the 10 most recent backups for this file
-      const all  = await fs.readdir(dir)
-      const mine = all
-        .filter(f => f.startsWith(basename + '_') && f.endsWith(ext))
-        .sort()  // ISO timestamps sort correctly as strings
-      for (const old of mine.slice(0, Math.max(0, mine.length - 10))) {
+      const updated = [...mine, path.basename(backupPath)]
+      for (const old of updated.slice(0, Math.max(0, updated.length - 10))) {
         await fs.unlink(path.join(dir, old)).catch(() => {})
       }
 
       return { ok: true, backupPath }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  // backup:list — enumerate stored snapshots for a file, newest first.
+  ipcMain.handle('backup:list', async (_e, { filePath }) => {
+    try {
+      const dir      = _backupDir(filePath)
+      const ext      = path.extname(filePath) || '.md'
+      const basename = path.basename(filePath, ext)
+
+      const all  = await fs.readdir(dir).catch(() => [])
+      const mine = all.filter(f => f.startsWith(basename + '_') && f.endsWith(ext))
+
+      const parsedEntries = mine
+        .map(f => {
+          const timestamp = _parseBackupFilename(f, basename, ext)
+          return timestamp ? { backupPath: path.join(dir, f), timestamp } : null
+        })
+        .filter(Boolean)
+
+      // Skip empty (or whitespace-only) snapshots — legacy backups written
+      // before backup:write started refusing empty content, or files that
+      // were emptied out. Nobody ever wants to restore a blank file.
+      const checked = await Promise.all(parsedEntries.map(async entry => {
+        const text = await fs.readFile(entry.backupPath, 'utf8').catch(() => '')
+        return text.trim() ? entry : null
+      }))
+
+      const items = checked
+        .filter(Boolean)
+        .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+
+      return { ok: true, items }
+    } catch (err) {
+      return { ok: false, error: err.message, items: [] }
+    }
+  })
+
+  // backup:read — read a single snapshot's content. Restricted to the backups
+  // directory so the renderer can't use this to read arbitrary files on disk.
+  ipcMain.handle('backup:read', async (_e, { backupPath }) => {
+    try {
+      const backupsRoot = path.join(app.getPath('userData'), 'backups')
+      const resolved     = path.resolve(backupPath)
+      if (!resolved.startsWith(path.resolve(backupsRoot) + path.sep)) {
+        return { ok: false, error: 'Invalid backup path' }
+      }
+      const content = await fs.readFile(resolved, 'utf8')
+      return { ok: true, content }
     } catch (err) {
       return { ok: false, error: err.message }
     }

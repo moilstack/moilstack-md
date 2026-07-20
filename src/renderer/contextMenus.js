@@ -87,6 +87,8 @@ const ContextMenus = (() => {
         ContextMenus.showDeleteConfirm(filePath);
       } else if (action === 'label') {
         LabelModal.show(filePath);
+      } else if (action === 'version-history') {
+        VersionHistoryModal.show(filePath);
       }
     });
   });

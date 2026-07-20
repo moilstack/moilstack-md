@@ -6,6 +6,12 @@ All notable new features and critical fixes for MoilStack .md.
 
 ## [Unreleased]
 
+### Added
+- **Version History panel** — right-click any file → "Version History…" for a two-pane view: every backup snapshot listed by date/time on the left, raw text of the selected one on the right, with a **Restore This Version** action (confirm step, backs up current content first). A pinned **Current** entry shows the file's live content for comparison and is selected by default when the panel opens. Panel width/height scale with the window instead of being fixed. Empty or duplicate-content snapshots are skipped rather than filling up the rolling 10-per-file store.
+
+### Changed
+- **Automatic backups now cover every save, not just AI edits** — a snapshot of the on-disk content is taken before manual saves (`Ctrl+S`) and autosave overwrite it too, so accidental edits/deletions during normal editing are recoverable, not just unwanted AI changes. Same rolling 10-per-file store under `<userData>/backups/`.
+
 ### Fixed
 - **File preview stripping non-frontmatter text** — the sidebar/Explorer content preview and tag extraction treated any leading `---` … `---` block as YAML frontmatter and discarded it, even when it was just two horizontal rules with ordinary prose between them (no actual `key: value` YAML). The block is now only treated as frontmatter if it actually contains YAML.
 

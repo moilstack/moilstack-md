@@ -59,10 +59,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showInExplorer: (filePath) =>
     ipcRenderer.invoke('file:show-in-explorer', filePath),
 
-  // Write a backup snapshot before an AI edit is applied.
+  // Write a backup snapshot before a file is overwritten (AI edit, save, or autosave).
   // Saved to <userData>/backups/<folderName>-<hash>/  (last 10 per file)
   writeBackup: (filePath, content) =>
     ipcRenderer.invoke('backup:write', { filePath, content }),
+
+  // List/read stored backup snapshots for a file (Version History modal).
+  listBackups: (filePath)   => ipcRenderer.invoke('backup:list', { filePath }),
+  readBackup:  (backupPath) => ipcRenderer.invoke('backup:read', { backupPath }),
 
   // ── Pinned Files ────────────────────────────────────────────────────
   // Stored in <userData>/pinned-files.json — no localStorage, no size limit.
