@@ -362,6 +362,77 @@ const EditorCore = (() => {
     }
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     Split-mode scroll sync
+     ═══════════════════════════════════════════════════════════════════ */
+
+  // Set while a sync-triggered scroll is in flight, so the resulting 'scroll'
+  // event on the *other* pane doesn't bounce back and fight this one.
+  let _scrollSyncing = false;
+
+  function _isSplitMode() {
+    const area = document.getElementById('editorArea');
+    return !!area && area.getAttribute('data-view') === 'split';
+  }
+
+  /** Last [data-line] element at or before targetLine, within container. */
+  function _closestLineEl(container, targetLine) {
+    const els = container.querySelectorAll('[data-line]');
+    let best = null;
+    for (const el of els) {
+      if (+el.getAttribute('data-line') <= targetLine) best = el;
+      else break;
+    }
+    return best || els[0] || null;
+  }
+
+  /** Scroll the preview pane to track the editor's current scroll position. */
+  function syncPreviewScrollFromEditor() {
+    if (_scrollSyncing || !_isSplitMode()) return;
+    const editor      = _deps.getEditor ? _deps.getEditor() : null;
+    const preview     = _deps.getPreviewContent ? _deps.getPreviewContent() : null;
+    const previewPane = document.getElementById('previewPane');
+    if (!editor || !preview || !previewPane) return;
+
+    const totalLines = editor.value.split('\n').length;
+    const maxScroll   = Math.max(1, editor.scrollHeight - editor.clientHeight);
+    const targetLine  = (editor.scrollTop / maxScroll) * (totalLines - 1);
+
+    const el = _closestLineEl(preview, targetLine);
+    if (!el) return;
+
+    const paneMax = Math.max(1, previewPane.scrollHeight - previewPane.clientHeight);
+    previewPane.scrollTop = Math.min(paneMax, Math.max(0, el.offsetTop - 8));
+
+    _scrollSyncing = true;
+    requestAnimationFrame(() => { _scrollSyncing = false; });
+  }
+
+  /** Scroll the editor to track the preview pane's current scroll position. */
+  function syncEditorScrollFromPreview() {
+    if (_scrollSyncing || !_isSplitMode()) return;
+    const editor      = _deps.getEditor ? _deps.getEditor() : null;
+    const preview     = _deps.getPreviewContent ? _deps.getPreviewContent() : null;
+    const previewPane = document.getElementById('previewPane');
+    if (!editor || !preview || !previewPane) return;
+
+    const els = preview.querySelectorAll('[data-line]');
+    if (!els.length) return;
+    let best = els[0];
+    for (const el of els) {
+      if (el.offsetTop <= previewPane.scrollTop + 4) best = el;
+      else break;
+    }
+
+    const line       = +best.getAttribute('data-line');
+    const totalLines = editor.value.split('\n').length;
+    const maxScroll  = Math.max(1, editor.scrollHeight - editor.clientHeight);
+    editor.scrollTop = Math.min(maxScroll, Math.max(0, (line / Math.max(1, totalLines - 1)) * maxScroll));
+
+    _scrollSyncing = true;
+    requestAnimationFrame(() => { _scrollSyncing = false; });
+  }
+
   /** Re-render preview and update status bar (debounced). */
   function triggerUpdate() {
     clearTimeout(renderTimer);
@@ -714,6 +785,8 @@ const EditorCore = (() => {
 
         // Reposition the selection ghost whenever the user scrolls
         if (typeof ChatPanel !== 'undefined') ChatPanel.positionSelectionGhost();
+
+        syncPreviewScrollFromEditor();
       });
 
       // When the editor loses focus and a line range is selected, paint the ghost
@@ -771,8 +844,13 @@ const EditorCore = (() => {
       });
     }
 
-    /* ── Preview: delegated task-checkbox listener ────────────────── */
+    /* ── Preview: scroll sync + delegated task-checkbox listener ──── */
     if (preview) {
+      const previewPane = document.getElementById('previewPane');
+      if (previewPane) {
+        previewPane.addEventListener('scroll', () => syncEditorScrollFromPreview());
+      }
+
       preview.addEventListener('change', (e) => {
         const cb = e.target;
         if (!cb.matches('.task-checkbox')) return;

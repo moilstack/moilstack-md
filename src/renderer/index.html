@@ -430,6 +430,16 @@
               </svg>
               Preview
             </button>
+            <button id="splitBtn" data-mode="split" title="Split mode (Ctrl+`)">
+              <!-- Split-columns SVG 12×12 -->
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="1" y="1.5" width="10" height="9" rx="1.2"
+                      stroke="currentColor" stroke-width="1.2"/>
+                <line x1="6" y1="1.5" x2="6" y2="10.5" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              Split
+            </button>
           </div>
 
         </div><!-- /editor-toolbar -->
@@ -1039,6 +1049,7 @@
                 <select id="startupMode" class="form-input settings-select">
                   <option value="preview">Preview</option>
                   <option value="edit">Edit</option>
+                  <option value="split">Split</option>
                 </select>
               </div>
             </div>

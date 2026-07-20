@@ -18,17 +18,22 @@ var currentMode    = 'edit';
 
 const toggleEditBtn    = document.getElementById('editBtn');
 const togglePreviewBtn = document.getElementById('previewBtn');
+const toggleSplitBtn   = document.getElementById('splitBtn');
 
 function setMode(mode) {
   currentMode = mode;
   const editorPane  = document.getElementById('editorPane');
   const previewPane = document.getElementById('previewPane');
+  const editorArea  = document.getElementById('editorArea');
+
+  editorArea.setAttribute('data-view', mode);
+  toggleEditBtn.classList.toggle('active',    mode === 'edit');
+  togglePreviewBtn.classList.toggle('active', mode === 'preview');
+  toggleSplitBtn.classList.toggle('active',   mode === 'split');
 
   if (mode === 'edit') {
     editorPane.classList.remove('hidden');
     previewPane.classList.add('hidden');
-    toggleEditBtn.classList.add('active');
-    togglePreviewBtn.classList.remove('active');
     if (mdEditor) {
       mdEditor.focus();
       requestAnimationFrame(() => {
@@ -36,17 +41,21 @@ function setMode(mode) {
         mdEditor.setSelectionRange(0, 0);
       });
     }
+  } else if (mode === 'split') {
+    editorPane.classList.remove('hidden');
+    previewPane.classList.remove('hidden');
+    EditorCore.renderMarkdown();
+    if (mdEditor) mdEditor.focus();
   } else {
     editorPane.classList.add('hidden');
     previewPane.classList.remove('hidden');
-    toggleEditBtn.classList.remove('active');
-    togglePreviewBtn.classList.add('active');
     EditorCore.renderMarkdown();
   }
 }
 
 if (toggleEditBtn)    toggleEditBtn.addEventListener('click',    () => setMode('edit'));
 if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', () => setMode('preview'));
+if (toggleSplitBtn)   toggleSplitBtn.addEventListener('click',   () => setMode('split'));
 
 /* ── Status bar / file selection ──────────────────────────────────── */
 
@@ -390,11 +399,12 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); SaveManager.saveFile(); }
 });
 
-// Ctrl+` — toggle edit / preview
+// Ctrl+` — cycle edit → split → preview
 document.addEventListener('keydown', e => {
   if (e.key === '`' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
-    setMode(currentMode === 'edit' ? 'preview' : 'edit');
+    const next = { edit: 'split', split: 'preview', preview: 'edit' };
+    setMode(next[currentMode] || 'edit');
   }
 });
 

@@ -1966,6 +1966,16 @@ body {
   border-left: none;
 }
 
+/* Split mode — both panes visible side by side, divider persists */
+.editor-area[data-view="split"] #editorPane,
+.editor-area[data-view="split"] #previewPane {
+  flex: 1;
+  min-width: 0;
+}
+.editor-area[data-view="split"] #editorPane {
+  border-right: 1px solid var(--border);
+}
+
 /* ─── Bottom App Status Bar ──────────────────────────────────────── */
 .statusbar {
   display: flex;

@@ -114,7 +114,7 @@ const MarkdownRenderer = (() => {
 
   /* ── List parser (recursive — supports nested lists) ───────────── */
 
-  function parseListBlock(lines, startIdx, baseIndent) {
+  function parseListBlock(lines, startIdx, baseIndent, topLine) {
     const ordered    = /^\d+\. /.test(lines[startIdx].trimStart());
     const items      = [];
     let hasTaskItems = false;
@@ -163,7 +163,10 @@ const MarkdownRenderer = (() => {
 
     const tag  = ordered ? 'ol' : 'ul';
     const attr = (!ordered && hasTaskItems) ? ' class="task-list"' : '';
-    return { html: `<${tag}${attr}>${items.join('')}</${tag}>`, nextIdx: i };
+    // topLine is only set by the outermost call (see call site) — nested sublists
+    // don't carry their own data-line, so scroll-sync anchors on the top item only.
+    const lineAttr = topLine !== undefined ? ` data-line="${topLine}"` : '';
+    return { html: `<${tag}${attr}${lineAttr}>${items.join('')}</${tag}>`, nextIdx: i };
   }
 
   /* ── Block parser ───────────────────────────────────────────────── */
@@ -189,11 +192,18 @@ const MarkdownRenderer = (() => {
     return nextNewline === -1 ? '' : src.slice(nextNewline + 1);
   }
 
-  function parseMarkdown(src) {
+  function parseMarkdown(src, startLine = 0) {
     if (!src || !src.trim()) return '';
 
+    const beforeStrip = src;
     src = _stripFrontmatter(src);
     if (!src.trim()) return '';
+    if (src !== beforeStrip) {
+      // Frontmatter removed — shift startLine so data-line still points at the
+      // matching line in the *original* editor source (frontmatter only ever
+      // appears at the very top, so this only affects the outermost call).
+      startLine += beforeStrip.split('\n').length - src.split('\n').length;
+    }
 
     const lines = src.split('\n');
     const out   = [];
@@ -202,6 +212,7 @@ const MarkdownRenderer = (() => {
     while (i < lines.length) {
       const line        = lines[i];
       const trimmedLine = line.trimStart();
+      const blockLine   = startLine + i;
 
       /* ── Fenced code block ──────────────────────────────────────── */
       // CommonMark: opening fence may have 0–3 leading spaces.
@@ -220,7 +231,7 @@ const MarkdownRenderer = (() => {
         }
         i++; // consume closing ```
         const langAttr = lang ? ` class="language-${escapeHtml(lang)}"` : '';
-        out.push(`<pre><code${langAttr}>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
+        out.push(`<pre data-line="${blockLine}"><code${langAttr}>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
         continue;
       }
 
@@ -228,27 +239,28 @@ const MarkdownRenderer = (() => {
       const hm = trimmedLine.match(/^(#{1,6}) (.+)$/);
       if (hm) {
         const lvl = hm[1].length;
-        out.push(`<h${lvl}>${parseInlineMath(hm[2].trim())}</h${lvl}>`);
+        out.push(`<h${lvl} data-line="${blockLine}">${parseInlineMath(hm[2].trim())}</h${lvl}>`);
         i++;
         continue;
       }
 
       /* ── Horizontal rule ────────────────────────────────────────── */
       if (/^(-{3,}|\*{3,}|_{3,})\s*$/.test(trimmedLine)) {
-        out.push('<hr>');
+        out.push(`<hr data-line="${blockLine}">`);
         i++;
         continue;
       }
 
       /* ── Blockquote ─────────────────────────────────────────────── */
       if (trimmedLine.startsWith('> ') || trimmedLine === '>') {
+        const quoteStartLine = blockLine;
         const quoteLines = [];
         while (i < lines.length && (lines[i].trimStart().startsWith('> ') || lines[i].trim() === '>')) {
           quoteLines.push(lines[i].trimStart().slice(2));
           i++;
         }
-        // Recursively parse inner content for nested Markdown
-        out.push(`<blockquote>${parseMarkdown(quoteLines.join('\n'))}</blockquote>`);
+        // Recursively parse inner content for nested Markdown, preserving absolute line numbers
+        out.push(`<blockquote data-line="${quoteStartLine}">${parseMarkdown(quoteLines.join('\n'), quoteStartLine)}</blockquote>`);
         continue;
       }
 
@@ -314,7 +326,7 @@ const MarkdownRenderer = (() => {
         }
 
         out.push(
-          `<table><thead><tr>${headerHtml}</tr></thead>` +
+          `<table data-line="${blockLine}"><thead><tr>${headerHtml}</tr></thead>` +
           `<tbody>${bodyRows.join('')}</tbody></table>`
         );
         continue;
@@ -323,7 +335,7 @@ const MarkdownRenderer = (() => {
       /* ── Unordered list (+ GFM task list) or Ordered list ─────────── */
       if (/^[*\-+] /.test(trimmedLine) || /^\d+\. /.test(trimmedLine)) {
         const baseIndent = line.length - trimmedLine.length;
-        const result     = parseListBlock(lines, i, baseIndent);
+        const result     = parseListBlock(lines, i, baseIndent, blockLine);
         out.push(result.html);
         i = result.nextIdx;
         continue;
@@ -358,7 +370,7 @@ const MarkdownRenderer = (() => {
         const rawPara = paraLines.join('\n');
         const { text: mathPara, slots: mathParaSlots } = protectMath(rawPara);
         const escapedPara = escapeHtml(mathPara).replace(/\n/g, '<br>');
-        out.push(`<p>${restoreMath(parseInline(escapedPara), mathParaSlots)}</p>`);
+        out.push(`<p data-line="${blockLine}">${restoreMath(parseInline(escapedPara), mathParaSlots)}</p>`);
       } else {
         i++; // safety: no rule consumed this line — advance to prevent infinite loop
       }
