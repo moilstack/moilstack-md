@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // and the "start blank" preference — there's real work to hand back.
   const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();
 
-  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled') {
+  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled' && launchBehavior !== 'first-file') {
     WelcomeScreen.showWelcomeScreen();
   }
 
@@ -623,6 +623,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     StatusBar.showToast('Restored unsaved draft from your last session.');
   } else if (launchBehavior === 'untitled') {
     await newUntitledFile();
+  } else if (launchBehavior === 'first-file') {
+    // "Open first file in Explorer" — take the top-most file row as shown in
+    // the sidebar (pinned files first, then the active folder's tree/list),
+    // same order the user sees, not a re-derived alphabetical walk.
+    const firstItem = document.querySelector('#file-list .file-item');
+    if (firstItem?.dataset.path) {
+      await openFileByPath(firstItem.dataset.path);
+    } else {
+      WelcomeScreen.showWelcomeScreen();
+    }
   }
 
   if (!_openFileParam) ChatPanel.clearChat();
@@ -630,10 +640,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   ChatPanel.updateTokenEstimate();
   ChatPanel.updateFileSizeWarning();
 
-  // A fresh untitled launch or a restored draft always opens in edit mode
-  // (newUntitledFile already set this) — the Startup Mode preference only
-  // applies when an existing file was opened.
-  if (_openFileParam || (!_pendingDraft && launchBehavior !== 'untitled')) {
+  // A restored draft always opens in edit mode (newUntitledFile already set
+  // this) — you're mid-thought, picking up where you left off. Every other
+  // "On Launch" outcome (untitled, first-file, recents/existing file) defers
+  // to the Startup Mode preference.
+  if (_openFileParam || !_pendingDraft) {
     const startupMode = localStorage.getItem('startupMode') || 'preview';
     setMode(startupMode);
   }
