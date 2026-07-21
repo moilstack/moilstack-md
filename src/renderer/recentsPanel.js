@@ -266,7 +266,13 @@ const RecentsPanel = (() => {
       if (SaveManager.hasDraft()) {
         await window.restoreDraftFile?.();   // real persisted content — restore it
       } else {
-        await window.newUntitledFile?.();    // nothing persisted — fresh blank buffer
+        // Nothing persisted — fresh blank buffer. newUntitledFile() forces edit
+        // mode for its "create a new file" callers (menu/Ctrl+N); here we're
+        // just navigating back to the (already blank) untitled tab, so restore
+        // whatever mode was active rather than resetting it.
+        const prevMode = currentMode;
+        await window.newUntitledFile?.();
+        setMode(prevMode);
       }
     } else if (row.dataset.path) {
       await window.openRecentFile?.(row.dataset.path);

@@ -743,6 +743,16 @@ body {
   height: 32px;
 }
 
+/* Toggled-on state (e.g. Focus mode) — mirrors .sidebar-toggle-btn--active */
+.icon-btn--active {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+.icon-btn--active:hover {
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
+  color: var(--primary);
+}
+
 /* ── 2. Folder row ───────────────────────────────────────────────── */
 .folder-row {
   display: flex;

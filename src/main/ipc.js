@@ -1000,6 +1000,46 @@ function registerIpcHandlers() {
     }
   })
 
+  /* ── Untitled-buffer draft ──────────────────────────────────────────
+     A single file (not the rolling per-file snapshot scheme above, since
+     there's no real filePath to key off of and only ever one live untitled
+     buffer). Lives alongside the backups so it doesn't clutter the user's
+     workspace. Read once at launch, rewritten on every silentSave() of the
+     untitled buffer, deleted once it's saved-as or explicitly discarded.
+     ──────────────────────────────────────────────────────────────── */
+
+  const DRAFT_PATH = path.join(app.getPath('userData'), 'backups', 'untitled-draft.md')
+
+  ipcMain.handle('draft:read', async () => {
+    try {
+      const content = await fs.readFile(DRAFT_PATH, 'utf8')
+      return { ok: true, exists: true, content }
+    } catch (err) {
+      if (err.code === 'ENOENT') return { ok: true, exists: false, content: '' }
+      return { ok: false, exists: false, content: '', error: err.message }
+    }
+  })
+
+  ipcMain.handle('draft:write', async (_e, { content }) => {
+    try {
+      await fs.mkdir(path.dirname(DRAFT_PATH), { recursive: true })
+      await fs.writeFile(DRAFT_PATH, content ?? '', 'utf8')
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  ipcMain.handle('draft:clear', async () => {
+    try {
+      await fs.unlink(DRAFT_PATH)
+      return { ok: true }
+    } catch (err) {
+      if (err.code === 'ENOENT') return { ok: true }
+      return { ok: false, error: err.message }
+    }
+  })
+
   /* ── Ollama ──────────────────────────────────────────────────────────
      ollama:list-models — fetch the list of models from a running Ollama server.
      ──────────────────────────────────────────────────────────────── */

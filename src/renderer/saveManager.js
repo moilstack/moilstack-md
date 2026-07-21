@@ -17,27 +17,39 @@ const SaveManager = (() => {
   const AUTO_SAVE_DELAY = 30_000;
   let _autoSaveTimer    = null;
 
-  /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ── */
+  /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ──
+     Persisted to a single file — <userData>/backups/untitled-draft.md — via
+     the main process (see ipc.js draft:read/write/clear), not localStorage.
+     getDraft()/hasDraft() are called synchronously from many places
+     (recentsPanel.render() fires on nearly every file action), so the file
+     is read once into this in-memory cache at startup (initDraft(), awaited
+     by index.js before anything reads it) and kept in sync on every write/
+     clear; the disk round-trip itself is fire-and-forget from the caller's
+     perspective, same as the existing beforeunload silentSave() pattern. ── */
 
-  const DRAFT_KEY        = 'untitledDraft';
-  const DRAFT_EXISTS_KEY = 'untitledDraftExists';
+  let _draftCache = { content: '', exists: false };
 
-  function getDraft() { return localStorage.getItem(DRAFT_KEY) || ''; }
+  async function initDraft() {
+    const result = await window.electronAPI?.draft?.read?.();
+    if (result?.ok) _draftCache = { content: result.content, exists: result.exists };
+  }
+
+  function getDraft() { return _draftCache.content; }
 
   // Distinct from getDraft() being non-empty: an untitled buffer that was
   // switched away from before anything was typed still needs to be
   // reachable from Recent Files, so its "slot" is tracked even when the
   // persisted content is an empty string.
-  function hasDraft() { return localStorage.getItem(DRAFT_EXISTS_KEY) === '1'; }
+  function hasDraft() { return _draftCache.exists; }
 
   function _setDraft(content) {
-    localStorage.setItem(DRAFT_KEY, content);
-    localStorage.setItem(DRAFT_EXISTS_KEY, '1');
+    _draftCache = { content, exists: true };
+    window.electronAPI?.draft?.write?.(content);
   }
 
   function clearDraft() {
-    localStorage.removeItem(DRAFT_KEY);
-    localStorage.removeItem(DRAFT_EXISTS_KEY);
+    _draftCache = { content: '', exists: false };
+    window.electronAPI?.draft?.clear?.();
   }
 
   /**
@@ -397,6 +409,7 @@ const SaveManager = (() => {
     saveFile,
     exportFile,
     extractFirstLine: _extractFirstLine,
+    initDraft,
     getDraft,
     hasDraft,
     clearDraft,

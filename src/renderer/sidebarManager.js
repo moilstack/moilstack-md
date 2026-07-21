@@ -15,13 +15,15 @@ const SidebarManager = (() => {
     }
   }
 
-  function setAIVisible(visible) {
+  function setAIVisible(visible, persist = true) {
     const sidebar = document.querySelector('.right-sidebar');
     const btn     = document.getElementById('btn-toggle-ai');
     if (!sidebar) return;
     sidebar.classList.toggle('right-sidebar--hidden', !visible);
     if (btn) btn.classList.toggle('sidebar-toggle-btn--active', visible);
-    localStorage.setItem('sidebar-ai', visible ? 'visible' : 'hidden');
+    if (persist) {
+      localStorage.setItem('sidebar-ai', visible ? 'visible' : 'hidden');
+    }
   }
 
   function initSidebarToggles() {

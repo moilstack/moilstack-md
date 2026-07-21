@@ -68,6 +68,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   listBackups: (filePath)   => ipcRenderer.invoke('backup:list', { filePath }),
   readBackup:  (backupPath) => ipcRenderer.invoke('backup:read', { backupPath }),
 
+  // ── Untitled-buffer draft ──────────────────────────────────────────
+  // Single file at <userData>/backups/untitled-draft.md — not localStorage.
+  draft: {
+    read:  ()        => ipcRenderer.invoke('draft:read'),
+    write: (content) => ipcRenderer.invoke('draft:write', { content }),
+    clear: ()        => ipcRenderer.invoke('draft:clear'),
+  },
+
   // ── Pinned Files ────────────────────────────────────────────────────
   // Stored in <userData>/pinned-files.json — no localStorage, no size limit.
   pins: {

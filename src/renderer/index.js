@@ -57,6 +57,49 @@ if (toggleEditBtn)    toggleEditBtn.addEventListener('click',    () => setMode('
 if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', () => setMode('preview'));
 if (toggleSplitBtn)   toggleSplitBtn.addEventListener('click',   () => setMode('split'));
 
+/* ── Focus mode: hide both sidebars, maximize, force Split view ────── */
+
+const focusModeBtn = document.getElementById('btn-focus-split');
+// Snapshot of what to restore on exit — null while not in focus mode.
+let _focusModeRestore = null;
+
+async function toggleFocusMode() {
+  if (!_focusModeRestore) {
+    const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
+    const aiVisible       = !document.querySelector('.right-sidebar')?.classList.contains('right-sidebar--hidden');
+    const wasMaximized    = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
+
+    _focusModeRestore = { explorerVisible, aiVisible, prevMode: currentMode, wasMaximized };
+
+    SidebarManager.setExplorerVisible(false, false);
+    SidebarManager.setAIVisible(false, false);
+    setMode('split');
+    if (!wasMaximized) window.electronAPI?.window?.toggleMaximize?.();
+
+    focusModeBtn?.classList.add('icon-btn--active');
+    focusModeBtn?.setAttribute('aria-pressed', 'true');
+  } else {
+    const { explorerVisible, aiVisible, prevMode, wasMaximized } = _focusModeRestore;
+
+    SidebarManager.setExplorerVisible(explorerVisible, false);
+    SidebarManager.setAIVisible(aiVisible, false);
+    setMode(prevMode);
+
+    // Only undo the maximize *we* triggered. If the user already restored
+    // the window manually while in focus mode, it's no longer maximized —
+    // toggling again would re-maximize it, so check current state fresh
+    // rather than trusting the entry-time snapshot.
+    const isMaximizedNow = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
+    if (!wasMaximized && isMaximizedNow) window.electronAPI?.window?.toggleMaximize?.();
+
+    _focusModeRestore = null;
+    focusModeBtn?.classList.remove('icon-btn--active');
+    focusModeBtn?.setAttribute('aria-pressed', 'false');
+  }
+}
+
+if (focusModeBtn) focusModeBtn.addEventListener('click', () => toggleFocusMode());
+
 /* ── Status bar / file selection ──────────────────────────────────── */
 
 /**
@@ -247,7 +290,6 @@ async function restoreDraftFile() {
 
   WelcomeScreen.hideWelcomeScreen();
   ChatPanel.clearChat();
-  setMode('edit');
   RecentsPanel.render();
 }
 
@@ -557,6 +599,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   const launchBehavior = localStorage.getItem('launchBehavior') || 'untitled';
+  // Draft cache lives in memory (see saveManager.js) — load it from disk once
+  // before anything reads getDraft()/hasDraft().
+  await SaveManager.initDraft();
   // An unsaved draft from a previous session outranks both the Recents screen
   // and the "start blank" preference — there's real work to hand back.
   const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();
@@ -640,14 +685,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   ChatPanel.updateTokenEstimate();
   ChatPanel.updateFileSizeWarning();
 
-  // A restored draft always opens in edit mode (newUntitledFile already set
-  // this) — you're mid-thought, picking up where you left off. Every other
-  // "On Launch" outcome (untitled, first-file, recents/existing file) defers
-  // to the Startup Mode preference.
-  if (_openFileParam || !_pendingDraft) {
-    const startupMode = localStorage.getItem('startupMode') || 'preview';
-    setMode(startupMode);
-  }
+  // Startup Mode applies to every launch outcome above — restored draft,
+  // fresh untitled, first-file, or an existing file — so it stays consistent
+  // regardless of which "On Launch" path was taken.
+  const startupMode = localStorage.getItem('startupMode') || 'preview';
+  setMode(startupMode);
 
   // ── IPC: Save-and-close (user clicked "Save" in unsaved-changes dialog)
   window.electronAPI?.onSaveAndClose?.(async () => {
