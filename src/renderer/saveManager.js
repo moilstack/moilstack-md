@@ -29,9 +29,27 @@ const SaveManager = (() => {
 
   let _draftCache = { content: '', exists: false };
 
+  // One-time migration from the pre-file-backed draft storage (localStorage
+  // keys 'untitledDraft'/'untitledDraftExists'). Only runs when the new
+  // file has nothing yet, so it can't clobber a draft already migrated or
+  // written since. Legacy keys are removed either way so this never re-runs.
+  async function _migrateLegacyLocalStorageDraft() {
+    const legacyExists = localStorage.getItem('untitledDraftExists') === '1';
+    const legacyContent = localStorage.getItem('untitledDraft') || '';
+
+    if (legacyExists && !_draftCache.exists) {
+      _draftCache = { content: legacyContent, exists: true };
+      await window.electronAPI?.draft?.write?.(legacyContent);
+    }
+
+    localStorage.removeItem('untitledDraft');
+    localStorage.removeItem('untitledDraftExists');
+  }
+
   async function initDraft() {
     const result = await window.electronAPI?.draft?.read?.();
     if (result?.ok) _draftCache = { content: result.content, exists: result.exists };
+    await _migrateLegacyLocalStorageDraft();
   }
 
   function getDraft() { return _draftCache.content; }
