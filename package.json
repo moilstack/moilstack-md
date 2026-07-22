@@ -39,7 +39,7 @@
         "zip"
       ],
       "icon": "src/assets/icon.ico",
-      "artifactName": "moilstack-md.${ext}"
+      "artifactName": "moilstack-md-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
