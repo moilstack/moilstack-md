@@ -2094,6 +2094,32 @@ body {
   outline-offset: 1px;
 }
 
+/* ── "Update available" header button — alternative to the release-notice
+   toast, sits directly in front of Toggle Explorer. ──────────────────── */
+.update-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  margin-right: 6px;
+  border: 1px solid color-mix(in srgb, #6366f1 40%, transparent);
+  border-radius: 5px;
+  background: color-mix(in srgb, #6366f1 12%, transparent);
+  color: #6366f1;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.update-btn:hover {
+  background: color-mix(in srgb, #6366f1 20%, transparent);
+}
+
+.update-btn.hidden {
+  display: none;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    AI Chat Panel — Right Sidebar
    ═══════════════════════════════════════════════════════════════════ */
@@ -4230,8 +4256,8 @@ select.form-input {
    ──────────────────────────────────────────────────────────────────── */
 .release-notice {
   position: fixed;
-  top: 12px;
-  right: 12px;
+  bottom: 48px;
+  left: 50%;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -4246,14 +4272,14 @@ select.form-input {
   max-width: calc(100vw - 32px);
   z-index: 9999;
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateX(-50%) translateY(6px);
   transition: opacity 0.18s ease, transform 0.18s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .release-notice--visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 
 .release-notice button {

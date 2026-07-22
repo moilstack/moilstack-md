@@ -316,11 +316,12 @@ const FileTreeManager = (() => {
     restoreActiveItem();
   }
 
-  function touchFile(filePath, firstLine) {
+  function touchFile(filePath, firstLine, tags) {
     const file = _collectFiles(_cachedTree ?? []).find(f => f.path === filePath);
     if (file) {
       file.modified = Date.now();
       if (firstLine !== undefined) file.firstLine = firstLine;
+      if (tags !== undefined) file.tags = tags;
       renderFileTree();
       restoreActiveItem();
     }

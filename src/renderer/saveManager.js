@@ -151,6 +151,36 @@ const SaveManager = (() => {
     return '';
   }
 
+  // Mirrors _extractTags in src/main/ipc.js (same recognized shapes: inline
+  // array or YAML list) — kept in sync so the sidebar's tag badges match
+  // what a fresh folder read would show, without waiting for one.
+  function _extractTags(content) {
+    if (!content.startsWith('---')) return [];
+    const fmEnd = content.indexOf('\n---', 3);
+    if (fmEnd === -1) return [];
+
+    const fm = content.slice(3, fmEnd);
+    if (!_looksLikeYaml(fm)) return [];
+    const tags = new Set();
+    const inlineMatch = fm.match(/^tags:\s*\[([^\]]+)\]/m);
+    if (inlineMatch) {
+      for (const t of inlineMatch[1].split(',')) {
+        const tag = t.trim().replace(/^['"]|['"]$/g, '');
+        if (tag) tags.add(tag);
+      }
+    }
+    if (tags.size === 0) {
+      const listMatch = fm.match(/^tags:\s*\n((?:[ \t]*-[ \t]+.+\n?)+)/m);
+      if (listMatch) {
+        for (const line of listMatch[1].split('\n')) {
+          const tag = line.replace(/^[ \t]*-[ \t]+/, '').replace(/^['"]|['"]$/g, '').trim();
+          if (tag) tags.add(tag);
+        }
+      }
+    }
+    return [...tags].slice(0, 5);
+  }
+
   function _updateSidebarPreview(filePath, content) {
     const list = document.getElementById('file-list');
     if (!list) return;
@@ -213,7 +243,7 @@ const SaveManager = (() => {
       if (!result?.ok) throw new Error(result?.error || 'write failed');
       markClean();
       _updateSidebarPreview(filePath, content);
-      FileTreeManager.touchFile(filePath, _extractFirstLine(content));
+      FileTreeManager.touchFile(filePath, _extractFirstLine(content), _extractTags(content));
       return true;
     } catch (err) {
       console.warn('[silentSave]', err.message);
@@ -266,7 +296,7 @@ const SaveManager = (() => {
 
       markClean();
       _updateSidebarPreview(filePath, content);
-      FileTreeManager.touchFile(filePath, _extractFirstLine(content));
+      FileTreeManager.touchFile(filePath, _extractFirstLine(content), _extractTags(content));
       btn.innerHTML = FLOPPY_SVG;
       btn.title     = 'Saved';
       StatusBar.showToast(`Saved "${currentFile.name}" successfully.`);
