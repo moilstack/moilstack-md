@@ -7,13 +7,17 @@ All notable new features and critical fixes for MoilStack .md.
 ## [Unreleased]
 
 ### Added
-- **Version History panel** — right-click any file → "Version History…" for a two-pane view: every backup snapshot listed by date/time on the left, raw text of the selected one on the right, with a **Restore This Version** action (confirm step, backs up current content first). A pinned **Current** entry shows the file's live content for comparison and is selected by default when the panel opens. Panel width/height scale with the window instead of being fixed. Empty or duplicate-content snapshots are skipped rather than filling up the rolling 10-per-file store.
+- **Version History panel** — right-click any file → "Version History…" to browse and restore prior backup snapshots.
+- **"Update" indicator in the header** — an "Update" button next to Toggle Explorer/AI Assistant appears when a newer GitHub release is published.
 
 ### Changed
-- **Automatic backups now cover every save, not just AI edits** — a snapshot of the on-disk content is taken before manual saves (`Ctrl+S`) and autosave overwrite it too, so accidental edits/deletions during normal editing are recoverable, not just unwanted AI changes. Same rolling 10-per-file store under `<userData>/backups/`.
+- **Automatic backups now cover every save, not just AI edits** — manual saves and autosave both snapshot the prior content first.
+- **New-release toast repositioned and auto-hides** — moved to bottom-center and now fades out on its own after a few seconds.
 
 ### Fixed
-- **File preview stripping non-frontmatter text** — the sidebar/Explorer content preview and tag extraction treated any leading `---` … `---` block as YAML frontmatter and discarded it, even when it was just two horizontal rules with ordinary prose between them (no actual `key: value` YAML). The block is now only treated as frontmatter if it actually contains YAML.
+- **File preview stripping non-frontmatter text** — a leading `---`…`---` block is now only treated as YAML frontmatter if it actually contains YAML.
+- **Explorer tag pills not updating immediately after save** — saving now refreshes the sidebar's `#tag` pills right away instead of requiring a minimize/restore.
+- **Pre-update untitled drafts orphaned by the new file-backed draft storage** — a one-time migration recovers any draft left behind in `localStorage` from before the update.
 
 ---
 
