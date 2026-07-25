@@ -4,6 +4,27 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [1.1.1] - 2026-07-25
+
+### Added
+- **Split view with synchronized scrolling** — a new Split mode sits between Edit and Preview; `Ctrl+\`` now cycles Edit → Split → Preview, and scrolling either pane scrolls the other to the matching line.
+- **Focus mode** — a new header button hides both sidebars, maximizes the window, and switches to Split view for distraction-free writing; toggling it off restores the previous layout.
+- **"Open first file in Explorer" launch option** — Settings → Editor → On Launch adds a third choice that opens the top-most file in the active Explorer folder on startup (falls back to the Recents screen if none is open).
+- **Persisted untitled draft** — the untitled buffer is now continuously saved to `<userData>/backups/untitled-draft.md` instead of only being recovered after a crash, so it's restored exactly as left even after a normal close.
+- **Version History panel** — right-click any file → "Version History…" to browse and restore prior backup snapshots.
+- **"Update" indicator in the header** — an "Update" button next to Toggle Explorer/AI Assistant appears when a newer GitHub release is published.
+
+### Changed
+- **Automatic backups now cover every save, not just AI edits** — manual saves and autosave both snapshot the prior content first.
+- **New-release toast repositioned and auto-hides** — moved to bottom-center and now fades out on its own after a few seconds.
+
+### Fixed
+- **File preview stripping non-frontmatter text** — a leading `---`…`---` block is now only treated as YAML frontmatter if it actually contains YAML.
+- **Explorer tag pills not updating immediately after save** — saving now refreshes the sidebar's `#tag` pills right away instead of requiring a minimize/restore.
+- **Pre-update untitled drafts orphaned by the new file-backed draft storage** — a one-time migration recovers any draft left behind in `localStorage` from before the update.
+
+---
+
 ## [1.1.0] - 2026-07-18
 
 ### Added

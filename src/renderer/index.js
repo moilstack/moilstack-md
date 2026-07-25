@@ -18,17 +18,22 @@ var currentMode    = 'edit';
 
 const toggleEditBtn    = document.getElementById('editBtn');
 const togglePreviewBtn = document.getElementById('previewBtn');
+const toggleSplitBtn   = document.getElementById('splitBtn');
 
 function setMode(mode) {
   currentMode = mode;
   const editorPane  = document.getElementById('editorPane');
   const previewPane = document.getElementById('previewPane');
+  const editorArea  = document.getElementById('editorArea');
+
+  editorArea.setAttribute('data-view', mode);
+  toggleEditBtn.classList.toggle('active',    mode === 'edit');
+  togglePreviewBtn.classList.toggle('active', mode === 'preview');
+  toggleSplitBtn.classList.toggle('active',   mode === 'split');
 
   if (mode === 'edit') {
     editorPane.classList.remove('hidden');
     previewPane.classList.add('hidden');
-    toggleEditBtn.classList.add('active');
-    togglePreviewBtn.classList.remove('active');
     if (mdEditor) {
       mdEditor.focus();
       requestAnimationFrame(() => {
@@ -36,17 +41,64 @@ function setMode(mode) {
         mdEditor.setSelectionRange(0, 0);
       });
     }
+  } else if (mode === 'split') {
+    editorPane.classList.remove('hidden');
+    previewPane.classList.remove('hidden');
+    EditorCore.renderMarkdown();
+    if (mdEditor) mdEditor.focus();
   } else {
     editorPane.classList.add('hidden');
     previewPane.classList.remove('hidden');
-    toggleEditBtn.classList.remove('active');
-    togglePreviewBtn.classList.add('active');
     EditorCore.renderMarkdown();
   }
 }
 
 if (toggleEditBtn)    toggleEditBtn.addEventListener('click',    () => setMode('edit'));
 if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', () => setMode('preview'));
+if (toggleSplitBtn)   toggleSplitBtn.addEventListener('click',   () => setMode('split'));
+
+/* ── Focus mode: hide both sidebars, maximize, force Split view ────── */
+
+const focusModeBtn = document.getElementById('btn-focus-split');
+// Snapshot of what to restore on exit — null while not in focus mode.
+let _focusModeRestore = null;
+
+async function toggleFocusMode() {
+  if (!_focusModeRestore) {
+    const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
+    const aiVisible       = !document.querySelector('.right-sidebar')?.classList.contains('right-sidebar--hidden');
+    const wasMaximized    = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
+
+    _focusModeRestore = { explorerVisible, aiVisible, prevMode: currentMode, wasMaximized };
+
+    SidebarManager.setExplorerVisible(false, false);
+    SidebarManager.setAIVisible(false, false);
+    setMode('split');
+    if (!wasMaximized) window.electronAPI?.window?.toggleMaximize?.();
+
+    focusModeBtn?.classList.add('icon-btn--active');
+    focusModeBtn?.setAttribute('aria-pressed', 'true');
+  } else {
+    const { explorerVisible, aiVisible, prevMode, wasMaximized } = _focusModeRestore;
+
+    SidebarManager.setExplorerVisible(explorerVisible, false);
+    SidebarManager.setAIVisible(aiVisible, false);
+    setMode(prevMode);
+
+    // Only undo the maximize *we* triggered. If the user already restored
+    // the window manually while in focus mode, it's no longer maximized —
+    // toggling again would re-maximize it, so check current state fresh
+    // rather than trusting the entry-time snapshot.
+    const isMaximizedNow = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
+    if (!wasMaximized && isMaximizedNow) window.electronAPI?.window?.toggleMaximize?.();
+
+    _focusModeRestore = null;
+    focusModeBtn?.classList.remove('icon-btn--active');
+    focusModeBtn?.setAttribute('aria-pressed', 'false');
+  }
+}
+
+if (focusModeBtn) focusModeBtn.addEventListener('click', () => toggleFocusMode());
 
 /* ── Status bar / file selection ──────────────────────────────────── */
 
@@ -238,7 +290,6 @@ async function restoreDraftFile() {
 
   WelcomeScreen.hideWelcomeScreen();
   ChatPanel.clearChat();
-  setMode('edit');
   RecentsPanel.render();
 }
 
@@ -390,11 +441,12 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); SaveManager.saveFile(); }
 });
 
-// Ctrl+` — toggle edit / preview
+// Ctrl+` — cycle edit → split → preview
 document.addEventListener('keydown', e => {
   if (e.key === '`' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
-    setMode(currentMode === 'edit' ? 'preview' : 'edit');
+    const next = { edit: 'split', split: 'preview', preview: 'edit' };
+    setMode(next[currentMode] || 'edit');
   }
 });
 
@@ -547,11 +599,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   const launchBehavior = localStorage.getItem('launchBehavior') || 'untitled';
+  // Draft cache lives in memory (see saveManager.js) — load it from disk once
+  // before anything reads getDraft()/hasDraft().
+  await SaveManager.initDraft();
   // An unsaved draft from a previous session outranks both the Recents screen
   // and the "start blank" preference — there's real work to hand back.
   const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();
 
-  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled') {
+  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled' && launchBehavior !== 'first-file') {
     WelcomeScreen.showWelcomeScreen();
   }
 
@@ -613,6 +668,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     StatusBar.showToast('Restored unsaved draft from your last session.');
   } else if (launchBehavior === 'untitled') {
     await newUntitledFile();
+  } else if (launchBehavior === 'first-file') {
+    // "Open first file in Explorer" — take the top-most file row as shown in
+    // the sidebar (pinned files first, then the active folder's tree/list),
+    // same order the user sees, not a re-derived alphabetical walk.
+    const firstItem = document.querySelector('#file-list .file-item');
+    if (firstItem?.dataset.path) {
+      await openFileByPath(firstItem.dataset.path);
+    } else {
+      WelcomeScreen.showWelcomeScreen();
+    }
   }
 
   if (!_openFileParam) ChatPanel.clearChat();
@@ -620,13 +685,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   ChatPanel.updateTokenEstimate();
   ChatPanel.updateFileSizeWarning();
 
-  // A fresh untitled launch or a restored draft always opens in edit mode
-  // (newUntitledFile already set this) — the Startup Mode preference only
-  // applies when an existing file was opened.
-  if (_openFileParam || (!_pendingDraft && launchBehavior !== 'untitled')) {
-    const startupMode = localStorage.getItem('startupMode') || 'preview';
-    setMode(startupMode);
-  }
+  // Startup Mode applies to every launch outcome above — restored draft,
+  // fresh untitled, first-file, or an existing file — so it stays consistent
+  // regardless of which "On Launch" path was taken.
+  const startupMode = localStorage.getItem('startupMode') || 'preview';
+  setMode(startupMode);
 
   // ── IPC: Save-and-close (user clicked "Save" in unsaved-changes dialog)
   window.electronAPI?.onSaveAndClose?.(async () => {

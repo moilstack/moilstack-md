@@ -143,6 +143,14 @@
 
       <!-- Sidebar toggle buttons -->
       <div class="sidebar-toggles">
+        <button id="btn-update-available" class="update-btn hidden" title="A new version is available">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 20V4M12 4l-6 6M12 4l6 6" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Update</span>
+        </button>
         <button id="btn-toggle-explorer" class="sidebar-toggle-btn" title="Toggle Explorer">
           <!-- Left-panel layout icon -->
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
@@ -406,6 +414,15 @@
                       stroke-linecap="round"/>
               </svg>
             </button>
+            <button class="icon-btn icon-btn--lg" id="btn-focus-split" title="Focus mode: hide sidebars, maximize, and switch to Split view" aria-label="Toggle focus mode" aria-pressed="false">
+              <!-- Expand-to-corners SVG 18×18 -->
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
 
           <div class="toggle-group">
@@ -429,6 +446,16 @@
                 <circle cx="6" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/>
               </svg>
               Preview
+            </button>
+            <button id="splitBtn" data-mode="split" title="Split mode (Ctrl+`)">
+              <!-- Split-columns SVG 12×12 -->
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="1" y="1.5" width="10" height="9" rx="1.2"
+                      stroke="currentColor" stroke-width="1.2"/>
+                <line x1="6" y1="1.5" x2="6" y2="10.5" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              Split
             </button>
           </div>
 
@@ -777,6 +804,13 @@
       Open in New Window
     </button>
     <div class="file-ctx-divider"></div>
+    <button class="file-ctx-item" data-file-action="version-history">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M7 4.5V7.5L9.2 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Version History…
+    </button>
     <button class="file-ctx-item" data-file-action="label">
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M2 2h5.5l4.5 4.5-5.5 5.5L2 7.5V2Z"
@@ -1032,6 +1066,7 @@
                 <select id="startupMode" class="form-input settings-select">
                   <option value="preview">Preview</option>
                   <option value="edit">Edit</option>
+                  <option value="split">Split</option>
                 </select>
               </div>
             </div>
@@ -1046,6 +1081,7 @@
                 <select id="launchBehavior" class="form-input settings-select">
                   <option value="recents">Show Recents</option>
                   <option value="untitled">Start a new untitled file</option>
+                  <option value="first-file">Open first file in Explorer</option>
                 </select>
               </div>
             </div>
@@ -1284,6 +1320,49 @@
     </div>
   </div>
 
+  <!-- ── Version History Modal ────────────────────────────────────────── -->
+  <div id="versionHistoryOverlay" class="settings-overlay hidden"
+       role="dialog" aria-modal="true" aria-labelledby="versionHistoryTitle">
+    <div class="settings-panel settings-panel--wide vh-panel">
+      <div class="settings-panel-header">
+        <span id="versionHistoryTitle" class="settings-panel-title">Version History</span>
+        <button id="btnCloseVersionHistory" class="settings-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="settings-panel-body vh-split">
+
+        <!-- Left: list of {status} {date} rows -->
+        <div class="vh-sidebar">
+          <div class="vh-list" id="vhList"></div>
+          <p class="vh-empty hidden" id="vhEmpty">No backups yet for this file.</p>
+        </div>
+
+        <!-- Right: selected snapshot's text + restore actions -->
+        <div class="vh-main">
+          <p class="vh-placeholder" id="vhPlaceholder">Select a version on the left to preview it.</p>
+
+          <div id="vhDetail" class="hidden">
+            <p class="vh-preview-meta" id="vhPreviewMeta"></p>
+            <pre class="vh-preview-content" id="vhPreviewContent"></pre>
+
+            <div class="modal-actions vh-restore-actions" id="vhRestoreActions">
+              <button id="btnVhRestore" class="btn btn-primary btn-sm">Restore This Version</button>
+            </div>
+            <div class="modal-actions vh-restore-confirm hidden" id="vhRestoreConfirm">
+              <span class="vh-restore-confirm-text">Replace current content with this version?</span>
+              <button id="btnVhRestoreCancel" class="btn btn-outline btn-sm">Cancel</button>
+              <button id="btnVhRestoreConfirm" class="btn btn-danger btn-sm">Yes, Restore</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- ── Table Builder Modal ──────────────────────────────────────────── -->
   <div id="tableBuilderOverlay" class="settings-overlay hidden"
        role="dialog" aria-modal="true" aria-label="Insert table">
@@ -1329,6 +1408,7 @@
   <script src="findReplaceWidget.js"></script>
   <script src="contextMenus.js"></script>
   <script src="tagModal.js"></script>
+  <script src="versionHistoryModal.js"></script>
   <script src="fileOperations.js"></script>
   <script src="fileTreeManager.js"></script>
   <script src="recentsPanel.js"></script>

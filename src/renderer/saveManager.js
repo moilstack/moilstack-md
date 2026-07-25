@@ -17,27 +17,57 @@ const SaveManager = (() => {
   const AUTO_SAVE_DELAY = 30_000;
   let _autoSaveTimer    = null;
 
-  /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ── */
+  /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ──
+     Persisted to a single file — <userData>/backups/untitled-draft.md — via
+     the main process (see ipc.js draft:read/write/clear), not localStorage.
+     getDraft()/hasDraft() are called synchronously from many places
+     (recentsPanel.render() fires on nearly every file action), so the file
+     is read once into this in-memory cache at startup (initDraft(), awaited
+     by index.js before anything reads it) and kept in sync on every write/
+     clear; the disk round-trip itself is fire-and-forget from the caller's
+     perspective, same as the existing beforeunload silentSave() pattern. ── */
 
-  const DRAFT_KEY        = 'untitledDraft';
-  const DRAFT_EXISTS_KEY = 'untitledDraftExists';
+  let _draftCache = { content: '', exists: false };
 
-  function getDraft() { return localStorage.getItem(DRAFT_KEY) || ''; }
+  // One-time migration from the pre-file-backed draft storage (localStorage
+  // keys 'untitledDraft'/'untitledDraftExists'). Only runs when the new
+  // file has nothing yet, so it can't clobber a draft already migrated or
+  // written since. Legacy keys are removed either way so this never re-runs.
+  async function _migrateLegacyLocalStorageDraft() {
+    const legacyExists = localStorage.getItem('untitledDraftExists') === '1';
+    const legacyContent = localStorage.getItem('untitledDraft') || '';
+
+    if (legacyExists && !_draftCache.exists) {
+      _draftCache = { content: legacyContent, exists: true };
+      await window.electronAPI?.draft?.write?.(legacyContent);
+    }
+
+    localStorage.removeItem('untitledDraft');
+    localStorage.removeItem('untitledDraftExists');
+  }
+
+  async function initDraft() {
+    const result = await window.electronAPI?.draft?.read?.();
+    if (result?.ok) _draftCache = { content: result.content, exists: result.exists };
+    await _migrateLegacyLocalStorageDraft();
+  }
+
+  function getDraft() { return _draftCache.content; }
 
   // Distinct from getDraft() being non-empty: an untitled buffer that was
   // switched away from before anything was typed still needs to be
   // reachable from Recent Files, so its "slot" is tracked even when the
   // persisted content is an empty string.
-  function hasDraft() { return localStorage.getItem(DRAFT_EXISTS_KEY) === '1'; }
+  function hasDraft() { return _draftCache.exists; }
 
   function _setDraft(content) {
-    localStorage.setItem(DRAFT_KEY, content);
-    localStorage.setItem(DRAFT_EXISTS_KEY, '1');
+    _draftCache = { content, exists: true };
+    window.electronAPI?.draft?.write?.(content);
   }
 
   function clearDraft() {
-    localStorage.removeItem(DRAFT_KEY);
-    localStorage.removeItem(DRAFT_EXISTS_KEY);
+    _draftCache = { content: '', exists: false };
+    window.electronAPI?.draft?.clear?.();
   }
 
   /**
@@ -101,17 +131,54 @@ const SaveManager = (() => {
 
   /* ── Sidebar preview update ───────────────────────────────────────── */
 
+  // Only treat a leading `---`…`---` block as frontmatter to skip if it
+  // actually contains YAML (`key: value`) — otherwise it's just two
+  // horizontal rules with ordinary prose between them.
+  function _looksLikeYaml(fmText) {
+    return /^[ \t]*[A-Za-z0-9_-]+:([ \t]|$)/m.test(fmText);
+  }
+
   function _extractFirstLine(content) {
     let text = content;
     if (text.startsWith('---')) {
       const fmEnd = text.indexOf('\n---', 3);
-      if (fmEnd !== -1) text = text.slice(fmEnd + 4);
+      if (fmEnd !== -1 && _looksLikeYaml(text.slice(3, fmEnd))) text = text.slice(fmEnd + 4);
     }
     for (const line of text.split('\n')) {
       const stripped = line.replace(/^#+\s*/, '').replace(/[*_`]/g, '').trim();
       if (stripped) return stripped.slice(0, 100);
     }
     return '';
+  }
+
+  // Mirrors _extractTags in src/main/ipc.js (same recognized shapes: inline
+  // array or YAML list) — kept in sync so the sidebar's tag badges match
+  // what a fresh folder read would show, without waiting for one.
+  function _extractTags(content) {
+    if (!content.startsWith('---')) return [];
+    const fmEnd = content.indexOf('\n---', 3);
+    if (fmEnd === -1) return [];
+
+    const fm = content.slice(3, fmEnd);
+    if (!_looksLikeYaml(fm)) return [];
+    const tags = new Set();
+    const inlineMatch = fm.match(/^tags:\s*\[([^\]]+)\]/m);
+    if (inlineMatch) {
+      for (const t of inlineMatch[1].split(',')) {
+        const tag = t.trim().replace(/^['"]|['"]$/g, '');
+        if (tag) tags.add(tag);
+      }
+    }
+    if (tags.size === 0) {
+      const listMatch = fm.match(/^tags:\s*\n((?:[ \t]*-[ \t]+.+\n?)+)/m);
+      if (listMatch) {
+        for (const line of listMatch[1].split('\n')) {
+          const tag = line.replace(/^[ \t]*-[ \t]+/, '').replace(/^['"]|['"]$/g, '').trim();
+          if (tag) tags.add(tag);
+        }
+      }
+    }
+    return [...tags].slice(0, 5);
   }
 
   function _updateSidebarPreview(filePath, content) {
@@ -140,6 +207,20 @@ const SaveManager = (() => {
     previewSpan.textContent = firstLine;
   }
 
+  /* ── Backup-before-overwrite ─────────────────────────────────────────
+     Snapshots whatever is currently on disk (not yet the new content)
+     into the same rolling backup store used for AI edits, so a plain
+     save/autosave also leaves a recovery point. ──────────────────── */
+
+  async function _backupBeforeOverwrite(filePath) {
+    try {
+      const existing = await window.electronAPI.readFile(filePath);
+      if (existing?.content !== undefined) {
+        await window.electronAPI.writeBackup(filePath, existing.content);
+      }
+    } catch { /* no existing file or backup write failed — nothing to snapshot */ }
+  }
+
   /* ── Silent save ──────────────────────────────────────────────────── */
 
   async function silentSave() {
@@ -157,11 +238,12 @@ const SaveManager = (() => {
     const content = mdEditor ? mdEditor.value : '';
 
     try {
+      await _backupBeforeOverwrite(filePath);
       const result = await window.electronAPI.writeFile(filePath, content);
       if (!result?.ok) throw new Error(result?.error || 'write failed');
       markClean();
       _updateSidebarPreview(filePath, content);
-      FileTreeManager.touchFile(filePath, _extractFirstLine(content));
+      FileTreeManager.touchFile(filePath, _extractFirstLine(content), _extractTags(content));
       return true;
     } catch (err) {
       console.warn('[silentSave]', err.message);
@@ -208,12 +290,13 @@ const SaveManager = (() => {
     btn.title          = 'Saving…';
 
     try {
+      await _backupBeforeOverwrite(filePath);
       const result = await window.electronAPI.writeFile(filePath, content);
       if (!result?.ok) throw new Error(result?.error || 'Unknown write error');
 
       markClean();
       _updateSidebarPreview(filePath, content);
-      FileTreeManager.touchFile(filePath, _extractFirstLine(content));
+      FileTreeManager.touchFile(filePath, _extractFirstLine(content), _extractTags(content));
       btn.innerHTML = FLOPPY_SVG;
       btn.title     = 'Saved';
       StatusBar.showToast(`Saved "${currentFile.name}" successfully.`);
@@ -374,6 +457,7 @@ const SaveManager = (() => {
     saveFile,
     exportFile,
     extractFirstLine: _extractFirstLine,
+    initDraft,
     getDraft,
     hasDraft,
     clearDraft,
