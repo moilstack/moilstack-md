@@ -7,6 +7,10 @@ All notable new features and critical fixes for MoilStack .md.
 ## [Unreleased]
 
 ### Added
+- **Split view with synchronized scrolling** — a new Split mode sits between Edit and Preview; `Ctrl+\`` now cycles Edit → Split → Preview, and scrolling either pane scrolls the other to the matching line.
+- **Focus mode** — a new header button hides both sidebars, maximizes the window, and switches to Split view for distraction-free writing; toggling it off restores the previous layout.
+- **"Open first file in Explorer" launch option** — Settings → Editor → On Launch adds a third choice that opens the top-most file in the active Explorer folder on startup (falls back to the Recents screen if none is open).
+- **Persisted untitled draft** — the untitled buffer is now continuously saved to `<userData>/backups/untitled-draft.md` instead of only being recovered after a crash, so it's restored exactly as left even after a normal close.
 - **Version History panel** — right-click any file → "Version History…" to browse and restore prior backup snapshots.
 - **"Update" indicator in the header** — an "Update" button next to Toggle Explorer/AI Assistant appears when a newer GitHub release is published.
 

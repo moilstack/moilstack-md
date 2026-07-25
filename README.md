@@ -8,7 +8,7 @@ An open-source desktop **Markdown AI editor** and standalone markdown viewer bui
 
 
 
-![MoilStack .md](assets/screenshot-editor.png)
+![MoilStack .md](assets/01_moilstack-md_Split.png)
 
 ## Download
 
@@ -22,7 +22,8 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 
 ## Features
 
-- **Dual-pane editor** — syntax-highlighted editor with Markdown preview (`Ctrl+\`` to toggle)
+- **Edit, Split, and Preview modes** — syntax-highlighted editor, side-by-side split view with synchronized scrolling, and a clean preview pane, cycled with `Ctrl+\``
+- **Focus mode** — one click hides both sidebars, maximizes the window, and switches to Split view for distraction-free writing
 - **File explorer** — browse, create, rename, and open `.md` files from a folder, with Multi-level, Root-only, and Custom (no-folder) sidebar modes
 - **Global search** — find filenames and in-file content across the open folder (`Ctrl+Shift+F`), with tag search via `#tag` or `tag:name`
 - **AI Assistant** — ask the AI to edit your document, answer questions, or improve your writing
@@ -30,17 +31,23 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 - **Undo AI edits** — every AI document change is reversible with the Undo button or `Ctrl+Z`
 - **Visual table builder** — insert Markdown tables with a point-and-click grid editor
 - **File labels & tags** — colour-tag files in the explorer for quick navigation, or add searchable tags stored in YAML frontmatter
-- **File backups** — automatic snapshots to the app's user data folder before every AI edit
+- **File backups & Version History** — every save (manual, autosave, or AI edit) is snapshotted to the app's user data folder; right-click a file → "Version History…" to browse and restore prior versions
 - **File trash** — delete files to the OS Recycle Bin from the context menu
 - **Multi-model support** — connect any OpenAI-compatible API (Groq, OpenAI, Mistral, Together AI) or run Ollama locally
 - **Export to PDF** — one-click export via native save dialog
 - **Dark / light theme** — persisted across sessions
 - **Configurable editor** — font size and font family settings
+- **Update notifications** — an "Update" button appears in the header when a newer release is available
 
 ## Screens
-![AI assistant editing](assets/screenshot-preview.png)
-![AI assistant editing](assets/screenshot-ai-edit.png)
-![Table builder](assets/screenshot-table-builder.png)
+### 01 - Explorer with treeview mode
+![Explorer with treeview](assets/02_moilstack-md_Tree.png)
+### 02 - Ask / Edit using AI 
+![AI assistant](assets/03_moilstack-md_AI.png)
+### 03 - Add Tags / Search with Tag
+![Search](assets/04_moilstack-md_Search.png)
+### 04 - Markdown edit options
+![Edit Options](assets/05_moilstack-md_Edit.png)
 
 
 ## Getting Started
@@ -135,7 +142,7 @@ When the AI assistant processes an edit, changes are applied silently and instan
 |---|---|
 | `Ctrl+S` | Save file |
 | `Ctrl+Z` | Undo (AI edits first, then native undo) |
-| `Ctrl+\`` | Toggle Edit / Preview mode |
+| `Ctrl+\`` | Cycle Edit → Split → Preview mode |
 | `Ctrl+O` | Open folder picker |
 | `Ctrl+N` | New untitled file (in-memory) |
 | `Ctrl+Shift+N` | New file on disk in Explorer's active folder |
