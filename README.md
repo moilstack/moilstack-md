@@ -1,4 +1,4 @@
-# MoilStack .md (markdown) — Privacy-First Markdown AI Editor & Viewer
+# MoilStack .md (markdown) — AI-Powered Markdown Editor with Split View & Version History
 
 [![Version](https://img.shields.io/github/v/release/moilstack/moilstack-md?label=version&include_prereleases)](https://github.com/moilstack/moilstack-md/releases)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20(soon)-blue)
@@ -8,7 +8,7 @@ An open-source desktop **Markdown AI editor** and standalone markdown viewer bui
 
 
 
-![MoilStack .md](assets/01_moilstack-md_Split.png)
+![MoilStack .md — Split view with synchronized scrolling](assets/01_moilstack-md_Split.png)
 
 ## Download
 
@@ -44,9 +44,9 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 ![Explorer with treeview](assets/02_moilstack-md_Tree.png)
 ### 02 - Ask / Edit using AI 
 ![AI assistant](assets/03_moilstack-md_AI.png)
-### 03 - Add Tags / Search with Tag
+### 03 - Global search with tag filtering
 ![Search](assets/04_moilstack-md_Search.png)
-### 04 - Markdown edit options
+### 04 - Formatting menu with Add Tags
 ![Edit Options](assets/05_moilstack-md_Edit.png)
 
 
@@ -154,17 +154,9 @@ When the AI assistant processes an edit, changes are applied silently and instan
 
 ## File Backups & Version History
 
-Every time your document is written to disk — an AI edit, `Ctrl+S`, or autosave — MoilStack .md saves a backup to the app's user data directory, keyed to your file's parent folder — not inside your workspace:
+Every time your document is written to disk — an AI edit, `Ctrl+S`, or autosave — MoilStack .md automatically stores a version, keeping the last **10 backups per file**. Empty or duplicate-content snapshots are skipped so the 10 slots aren't wasted.
 
-```
-<app userData>/backups/<folder-name>-<folder-hash>/
-```
-
-On Windows this is typically under `%APPDATA%`, on macOS under `~/Library/Application Support`, and on Linux under `~/.config`.
-
-Files are named `<filename>_<timestamp>.md` and the last **10 backups per file** are kept automatically. Empty or duplicate-content snapshots are skipped so the 10 slots aren't wasted. Use these to recover from unwanted AI changes or accidental edits/deletions during normal editing.
-
-No need to dig through that folder by hand — right-click any file in the Explorer and choose **Version History…** to browse it:
+Right-click any file in the Explorer and choose **Version History…** to view and restore past versions:
 
 * A two-pane view lists every snapshot by date/time on the left; click one to see its raw text on the right.
 * A pinned **Current** entry always shows the file's live content for comparison, and is selected by default when the panel opens.

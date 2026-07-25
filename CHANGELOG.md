@@ -4,7 +4,7 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
-## [Unreleased]
+## [1.1.1] - 2026-07-25
 
 ### Added
 - **Split view with synchronized scrolling** — a new Split mode sits between Edit and Preview; `Ctrl+\`` now cycles Edit → Split → Preview, and scrolling either pane scrolls the other to the matching line.
