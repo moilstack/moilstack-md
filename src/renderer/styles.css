@@ -1200,8 +1200,8 @@ body {
   color: var(--primary);
 }
 [data-theme="dim"] .file-item .file-tag {
-  background: color-mix(in srgb, var(--primary) 20%, transparent);
-  color: var(--primary);
+  background: color-mix(in srgb, #d19bec 20%, transparent);
+  color: #d19bec;
 }
 
 .file-item__preview {
