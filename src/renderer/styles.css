@@ -8,9 +8,9 @@
 /* ─── Design tokens — Light theme (default) ──────────────────────── */
 :root {
   /* Layout (not theme-dependent) */
-  --sidebar-width:     20%;
+  --sidebar-width:     25%;
   --sidebar-min-width: 160px;
-  --sidebar-max-width: none;
+  --sidebar-max-width: 500px;
 
   /* Editor typography — overridden at runtime by the Font settings panel */
   --editor-font-size: 13px;
@@ -898,6 +898,10 @@ body {
 [data-theme="dark"] .welcome-recent-item .icon-file--md {
   color: #a78bfa;
 }
+[data-theme="dim"] .file-item .icon-file--md,
+[data-theme="dim"] .welcome-recent-item .icon-file--md {
+  color: #d19bec;
+}
 
 /* Plain-text file icon — teal */
 .file-item .icon-file--txt,
@@ -907,6 +911,10 @@ body {
 [data-theme="dark"] .file-item .icon-file--txt,
 [data-theme="dark"] .welcome-recent-item .icon-file--txt {
   color: #2dd4bf;
+}
+[data-theme="dim"] .file-item .icon-file--txt,
+[data-theme="dim"] .welcome-recent-item .icon-file--txt {
+  color: #7fd3de;
 }
 
 /* Folder icon — amber light, darker amber dark */
@@ -919,6 +927,11 @@ body {
 [data-theme="dark"] .file-item .icon-folder,
 [data-theme="dark"] .welcome-recent-item .icon-folder {
   color: #e5c07b;
+}
+[data-theme="dim"] .folder-row .icon-folder,
+[data-theme="dim"] .file-item .icon-folder,
+[data-theme="dim"] .welcome-recent-item .icon-folder {
+  color: #f0cf94;
 }
 
 .file-item span {
@@ -1184,6 +1197,10 @@ body {
 
 [data-theme="dark"] .file-item .file-tag {
   background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--primary);
+}
+[data-theme="dim"] .file-item .file-tag {
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
   color: var(--primary);
 }
 
