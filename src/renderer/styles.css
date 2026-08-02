@@ -109,8 +109,8 @@
   --primary:           #61afef;
 
   --bg:                #3b414c;
-  --surface:           #41474f;
-  --sidebar-bg:        #33383f;
+  --surface:           #3b414c;
+  --sidebar-bg:        #3b414c;
   --input-bg:          #3b414c;
   --editor-bg:         #3b414c;
   --preview-bg:        #3b414c;
@@ -120,20 +120,20 @@
   --section-header:    #7a8290;
 
   --border:            #4c525c;
-  --hover-bg:          #41474f;
+  --hover-bg:          #454b55;
   --active-file-bg:    #31465f;
   --active-file-text:  #7fc0ff;
 
-  --statusbar-bg:      #2c3138;
+  --statusbar-bg:      #3b414c;
   --statusbar-text:    #a8b0bd;
 
-  --toggle-btn-bg:     #41474f;
+  --toggle-btn-bg:     #3b414c;
   --toggle-btn-border: #4c525c;
   --toggle-btn-text:   #e3e7ee;
 
   --chat-user-bg:      #61afef;
   --chat-user-text:    #1c1f26;
-  --chat-ai-bg:        #41474f;
+  --chat-ai-bg:        #454b55;
   --chat-ai-text:      #e3e7ee;
 
   --restore-btn-bg:    #4a3a16;
@@ -1752,6 +1752,13 @@ body {
 [data-theme="dark"] #editor-highlight .hl-h5 { color: #e5c07b; }
 [data-theme="dark"] #editor-highlight .hl-h6 { color: #e06c75; }
 
+[data-theme="dim"] #editor-highlight .hl-h1 { color: #d19bec; }
+[data-theme="dim"] #editor-highlight .hl-h2 { color: #7fc0ff; }
+[data-theme="dim"] #editor-highlight .hl-h3 { color: #7fd3de; }
+[data-theme="dim"] #editor-highlight .hl-h4 { color: #b0d99b; }
+[data-theme="dim"] #editor-highlight .hl-h5 { color: #f0cf94; }
+[data-theme="dim"] #editor-highlight .hl-h6 { color: #ec9aa1; }
+
 /* ── Selection ghost — dimmed highlight when editor loses focus ────── */
 /* Sits behind #editor-highlight so syntax colours remain readable.    */
 /* JS sets `top` and `height`; the ghost is hidden by default.         */
@@ -1881,6 +1888,13 @@ body {
 [data-theme="dark"] .preview-content h4 { color: #98c379; }
 [data-theme="dark"] .preview-content h5 { color: #e5c07b; }
 [data-theme="dark"] .preview-content h6 { color: #e06c75; }
+
+[data-theme="dim"] .preview-content h1 { color: #d19bec; }
+[data-theme="dim"] .preview-content h2 { color: #7fc0ff; }
+[data-theme="dim"] .preview-content h3 { color: #7fd3de; }
+[data-theme="dim"] .preview-content h4 { color: #b0d99b; }
+[data-theme="dim"] .preview-content h5 { color: #f0cf94; }
+[data-theme="dim"] .preview-content h6 { color: #ec9aa1; }
 
 .preview-content p  { margin: 1.1em 0; }
 .preview-content hr { border: none; border-top: 2px solid var(--border); margin: 1.5em 0; }
