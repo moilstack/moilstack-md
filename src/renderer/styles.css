@@ -104,6 +104,47 @@
   --scrollbar-track:   transparent;
 }
 
+/* ─── Design tokens — Dim theme (PowerShell "One Half Dark", Slate) ─ */
+[data-theme="dim"] {
+  --primary:           #61afef;
+
+  --bg:                #3b414c;
+  --surface:           #41474f;
+  --sidebar-bg:        #33383f;
+  --input-bg:          #3b414c;
+  --editor-bg:         #3b414c;
+  --preview-bg:        #3b414c;
+
+  --text-primary:      #e3e7ee;
+  --text-secondary:    #a8b0bd;
+  --section-header:    #7a8290;
+
+  --border:            #4c525c;
+  --hover-bg:          #41474f;
+  --active-file-bg:    #31465f;
+  --active-file-text:  #7fc0ff;
+
+  --statusbar-bg:      #2c3138;
+  --statusbar-text:    #a8b0bd;
+
+  --toggle-btn-bg:     #41474f;
+  --toggle-btn-border: #4c525c;
+  --toggle-btn-text:   #e3e7ee;
+
+  --chat-user-bg:      #61afef;
+  --chat-user-text:    #1c1f26;
+  --chat-ai-bg:        #41474f;
+  --chat-ai-text:      #e3e7ee;
+
+  --restore-btn-bg:    #4a3a16;
+  --restore-btn-text:  #e5c07b;
+  --restore-btn-border:#8a6a28;
+
+  --scrollbar-thumb:   #4c525c;
+  --scrollbar-thumb-hover: #7a8290;
+  --scrollbar-track:   transparent;
+}
+
 
 /* ─── Theme transition — applied briefly on every theme toggle ───── */
 /* Forces ALL elements to fade smoothly; removed after 250 ms via JS  */
