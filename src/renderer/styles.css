@@ -5,7 +5,7 @@
   padding: 0;
 }
 
-/* ─── Design tokens — Light theme (default) ──────────────────────── */
+/* ─── Design tokens — Light theme (Claude Warm) ───────────────────── */
 :root {
   /* Layout (not theme-dependent) */
   --sidebar-width:     25%;
@@ -16,50 +16,50 @@
   --editor-font-size: 13px;
 
   /* Accent */
-  --primary:           #2563eb;
+  --primary:           #d97757;
 
   /* Backgrounds */
-  --bg:                #ffffff;
-  --surface:           #f8fafc;
-  --sidebar-bg:        #f8fafc;
-  --input-bg:          #ffffff;
-  --editor-bg:         #ffffff;
-  --preview-bg:        #ffffff;
+  --bg:                #faf9f5;
+  --surface:           #f0eee6;
+  --sidebar-bg:        #f0eee6;
+  --input-bg:          #faf9f5;
+  --editor-bg:         #faf9f5;
+  --preview-bg:        #faf9f5;
 
   /* Text */
-  --text-primary:      #1e293b;
-  --text-secondary:    #64748b;
-  --section-header:    #94a3b8;
+  --text-primary:      #3d3929;
+  --text-secondary:    #83827d;
+  --section-header:    #a8a6a0;
 
   /* Borders & interactions */
-  --border:            #e2e8f0;
-  --hover-bg:          #f1f5f9;
-  --active-file-bg:    #dbeafe;
-  --active-file-text:  #2563eb;
+  --border:            #e5e4df;
+  --hover-bg:          #ece9df;
+  --active-file-bg:    #f3e3da;
+  --active-file-text:  #c2531f;
 
   /* Status bar */
-  --statusbar-bg:      #e2e8f0;
-  --statusbar-text:    #64748b;
+  --statusbar-bg:      #e5e4df;
+  --statusbar-text:    #83827d;
 
   /* Theme toggle button */
-  --toggle-btn-bg:     #f1f5f9;
-  --toggle-btn-border: #e2e8f0;
-  --toggle-btn-text:   #1e293b;
+  --toggle-btn-bg:     #ece9df;
+  --toggle-btn-border: #e5e4df;
+  --toggle-btn-text:   #3d3929;
 
   /* Chat bubbles */
-  --chat-user-bg:      #2563eb;
+  --chat-user-bg:      #d97757;
   --chat-user-text:    #ffffff;
-  --chat-ai-bg:        #e2e8f0;
-  --chat-ai-text:      #1e293b;
+  --chat-ai-bg:        #e5e4df;
+  --chat-ai-text:      #3d3929;
 
   /* Restore button */
-  --restore-btn-bg:    #fef3c7;
+  --restore-btn-bg:    #fbeed3;
   --restore-btn-text:  #92400e;
-  --restore-btn-border:#fcd34d;
+  --restore-btn-border:#eecea1;
 
   /* Scrollbar */
-  --scrollbar-thumb:   #cbd5e1;
-  --scrollbar-thumb-hover: #94a3b8;
+  --scrollbar-thumb:   #ddd9cd;
+  --scrollbar-thumb-hover: #a8a6a0;
   --scrollbar-track:   transparent;
 }
 
@@ -1187,18 +1187,14 @@ body {
   font-size: 10px;
   padding: 1px 5px;
   border-radius: 3px;
-  background: var(--hover-bg);
-  color: var(--text-secondary);
+  background: color-mix(in srgb, #d97757 18%, transparent);
+  color: #c2531f;
   white-space: nowrap;
   flex: none;
   overflow: visible;
   text-overflow: clip;
 }
 
-[data-theme="dark"] .file-item .file-tag {
-  background: color-mix(in srgb, var(--primary) 15%, transparent);
-  color: var(--primary);
-}
 [data-theme="dim"] .file-item .file-tag {
   background: color-mix(in srgb, #d19bec 20%, transparent);
   color: #d19bec;
