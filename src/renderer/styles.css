@@ -66,14 +66,14 @@
 /* ─── Design tokens — Light2 theme (flat, single-tone) ────────────── */
 /* Same palette as Light, but every background section uses --preview-bg */
 [data-theme="light2"] {
-  --primary:           #3b82f6;
+  --primary:           #4f46e5;
 
-  --bg:                #ffffff;
-  --surface:           #ffffff;
-  --sidebar-bg:        #ffffff;
-  --input-bg:          #ffffff;
-  --editor-bg:         #ffffff;
-  --preview-bg:        #ffffff;
+  --bg:                #fafafa;
+  --surface:           #fafafa;
+  --sidebar-bg:        #fafafa;
+  --input-bg:          #fafafa;
+  --editor-bg:         #fafafa;
+  --preview-bg:        #fafafa;
 
   --text-primary:      #3d3929;
   --text-secondary:    #83827d;
@@ -81,17 +81,17 @@
 
   --border:            #e5e4df;
   --hover-bg:          #ece9df;
-  --active-file-bg:    #dbe7fc;
-  --active-file-text:  #2563eb;
+  --active-file-bg:    #e0e7ff;
+  --active-file-text:  #3730a3;
 
-  --statusbar-bg:      #ffffff;
+  --statusbar-bg:      #fafafa;
   --statusbar-text:    #83827d;
 
-  --toggle-btn-bg:     #ece9df;
-  --toggle-btn-border: #e5e4df;
-  --toggle-btn-text:   #3d3929;
+  --toggle-btn-bg:     #eef2ff;
+  --toggle-btn-border: #e0e7ff;
+  --toggle-btn-text:   #3730a3;
 
-  --chat-user-bg:      #3b82f6;
+  --chat-user-bg:      #4f46e5;
   --chat-user-text:    #ffffff;
   --chat-ai-bg:        #e5e4df;
   --chat-ai-text:      #3d3929;
@@ -1243,8 +1243,8 @@ body {
 }
 
 [data-theme="light2"] .file-item .file-tag {
-  background: color-mix(in srgb, #3b82f6 18%, transparent);
-  color: #2563eb;
+  background: color-mix(in srgb, #4f46e5 18%, transparent);
+  color: #3730a3;
 }
 
 .file-item__preview {
