@@ -68,12 +68,12 @@
 [data-theme="light2"] {
   --primary:           #3b82f6;
 
-  --bg:                #faf9f5;
-  --surface:           #faf9f5;
-  --sidebar-bg:        #faf9f5;
-  --input-bg:          #faf9f5;
-  --editor-bg:         #faf9f5;
-  --preview-bg:        #faf9f5;
+  --bg:                #ffffff;
+  --surface:           #ffffff;
+  --sidebar-bg:        #ffffff;
+  --input-bg:          #ffffff;
+  --editor-bg:         #ffffff;
+  --preview-bg:        #ffffff;
 
   --text-primary:      #3d3929;
   --text-secondary:    #83827d;
@@ -84,7 +84,7 @@
   --active-file-bg:    #dbe7fc;
   --active-file-text:  #2563eb;
 
-  --statusbar-bg:      #e5e4df;
+  --statusbar-bg:      #ffffff;
   --statusbar-text:    #83827d;
 
   --toggle-btn-bg:     #ece9df;
