@@ -63,6 +63,48 @@
   --scrollbar-track:   transparent;
 }
 
+/* ─── Design tokens — Light2 theme (flat, single-tone) ────────────── */
+/* Same palette as Light, but every background section uses --preview-bg */
+[data-theme="light2"] {
+  --primary:           #3b82f6;
+
+  --bg:                #faf9f5;
+  --surface:           #faf9f5;
+  --sidebar-bg:        #faf9f5;
+  --input-bg:          #faf9f5;
+  --editor-bg:         #faf9f5;
+  --preview-bg:        #faf9f5;
+
+  --text-primary:      #3d3929;
+  --text-secondary:    #83827d;
+  --section-header:    #a8a6a0;
+
+  --border:            #e5e4df;
+  --hover-bg:          #ece9df;
+  --active-file-bg:    #dbe7fc;
+  --active-file-text:  #2563eb;
+
+  --statusbar-bg:      #e5e4df;
+  --statusbar-text:    #83827d;
+
+  --toggle-btn-bg:     #ece9df;
+  --toggle-btn-border: #e5e4df;
+  --toggle-btn-text:   #3d3929;
+
+  --chat-user-bg:      #3b82f6;
+  --chat-user-text:    #ffffff;
+  --chat-ai-bg:        #e5e4df;
+  --chat-ai-text:      #3d3929;
+
+  --restore-btn-bg:    #fbeed3;
+  --restore-btn-text:  #92400e;
+  --restore-btn-border:#eecea1;
+
+  --scrollbar-thumb:   #ddd9cd;
+  --scrollbar-thumb-hover: #a8a6a0;
+  --scrollbar-track:   transparent;
+}
+
 /* ─── Design tokens — Dark theme (One Half Dark — Amethyst) ─────── */
 [data-theme="dark"] {
   --primary:           #c678dd;
@@ -1198,6 +1240,11 @@ body {
 [data-theme="dim"] .file-item .file-tag {
   background: color-mix(in srgb, #d19bec 20%, transparent);
   color: #d19bec;
+}
+
+[data-theme="light2"] .file-item .file-tag {
+  background: color-mix(in srgb, #3b82f6 18%, transparent);
+  color: #2563eb;
 }
 
 .file-item__preview {

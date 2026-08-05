@@ -4,6 +4,17 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [1.1.2] - 2026-08-05
+
+### Added
+- **Light 2 theme** — a flatter light variant with a blue accent instead of orange; the theme toggle now cycles Light → Light 2 → Dim → Dark.
+
+### Changed
+- **Light 2 uses a single flat background** — sidebar, editor, and preview all share the same `--preview-bg` tone instead of the tiered surface/sidebar shades used by Light.
+- **Light 2 accent tuned lighter** — the blue used for selections, active states, buttons, and sidebar `#tag` pills was lightened a step for better contrast against the flat background.
+
+---
+
 ## [1.1.1] - 2026-07-25
 
 ### Added
