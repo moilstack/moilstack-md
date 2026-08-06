@@ -5,7 +5,7 @@
   padding: 0;
 }
 
-/* ─── Design tokens — Light theme (Claude Warm) ───────────────────── */
+/* ─── Design tokens — Light theme (indigo, subtle depth) ───────────── */
 :root {
   /* Layout (not theme-dependent) */
   --sidebar-width:     25%;
@@ -16,15 +16,15 @@
   --editor-font-size: 13px;
 
   /* Accent */
-  --primary:           #d97757;
+  --primary:           #4f46e5;
 
   /* Backgrounds */
-  --bg:                #faf9f5;
-  --surface:           #f0eee6;
-  --sidebar-bg:        #f0eee6;
-  --input-bg:          #faf9f5;
-  --editor-bg:         #faf9f5;
-  --preview-bg:        #faf9f5;
+  --bg:                #fefefa;
+  --surface:           #f7f6fc;
+  --sidebar-bg:        #f7f6fc;
+  --input-bg:          #fefefa;
+  --editor-bg:         #fefefa;
+  --preview-bg:        #fefefa;
 
   /* Text */
   --text-primary:      #3d3929;
@@ -32,22 +32,22 @@
   --section-header:    #a8a6a0;
 
   /* Borders & interactions */
-  --border:            #e5e4df;
-  --hover-bg:          #ece9df;
-  --active-file-bg:    #f3e3da;
-  --active-file-text:  #c2531f;
+  --border:            #e5e2f0;
+  --hover-bg:          #efeef8;
+  --active-file-bg:    #ecebf7;
+  --active-file-text:  #5b5aa0;
 
   /* Status bar */
-  --statusbar-bg:      #e5e4df;
+  --statusbar-bg:      #f2f0fa;
   --statusbar-text:    #83827d;
 
   /* Theme toggle button */
-  --toggle-btn-bg:     #ece9df;
-  --toggle-btn-border: #e5e4df;
-  --toggle-btn-text:   #3d3929;
+  --toggle-btn-bg:     #efeef8;
+  --toggle-btn-border: #e2e0f0;
+  --toggle-btn-text:   #5b5aa0;
 
   /* Chat bubbles */
-  --chat-user-bg:      #d97757;
+  --chat-user-bg:      #4f46e5;
   --chat-user-text:    #ffffff;
   --chat-ai-bg:        #e5e4df;
   --chat-ai-text:      #3d3929;
@@ -1245,6 +1245,7 @@ body {
   color: #d19bec;
 }
 
+[data-theme="light"] .file-item .file-tag,
 [data-theme="light2"] .file-item .file-tag {
   background: #e8e6f5;
   color: #34315f;
@@ -1713,6 +1714,7 @@ body {
   color: #ffffff;
 }
 
+[data-theme="light"] .toggle-group button.active,
 [data-theme="light2"] .toggle-group button.active {
   background: #5b5aa0;
 }
