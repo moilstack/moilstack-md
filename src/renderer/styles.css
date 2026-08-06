@@ -5,7 +5,7 @@
   padding: 0;
 }
 
-/* ─── Design tokens — Light theme (indigo, subtle depth) ───────────── */
+/* ─── Design tokens — Light theme (Snow White) ─────────────────────── */
 :root {
   /* Layout (not theme-dependent) */
   --sidebar-width:     25%;
@@ -19,12 +19,12 @@
   --primary:           #4f46e5;
 
   /* Backgrounds */
-  --bg:                #fefefa;
-  --surface:           #f7f6fc;
-  --sidebar-bg:        #f7f6fc;
-  --input-bg:          #fefefa;
-  --editor-bg:         #fefefa;
-  --preview-bg:        #fefefa;
+  --bg:                #ffffff;
+  --surface:           #f8f9fb;
+  --sidebar-bg:        #f8f9fb;
+  --input-bg:          #ffffff;
+  --editor-bg:         #ffffff;
+  --preview-bg:        #ffffff;
 
   /* Text */
   --text-primary:      #3d3929;
@@ -32,24 +32,24 @@
   --section-header:    #a8a6a0;
 
   /* Borders & interactions */
-  --border:            #e5e2f0;
-  --hover-bg:          #efeef8;
+  --border:            #e8eaed;
+  --hover-bg:          #f0f1f5;
   --active-file-bg:    #ecebf7;
   --active-file-text:  #5b5aa0;
 
   /* Status bar */
-  --statusbar-bg:      #f2f0fa;
+  --statusbar-bg:      #f4f5f7;
   --statusbar-text:    #83827d;
 
   /* Theme toggle button */
-  --toggle-btn-bg:     #efeef8;
-  --toggle-btn-border: #e2e0f0;
-  --toggle-btn-text:   #5b5aa0;
+  --toggle-btn-bg:     #f0f1f5;
+  --toggle-btn-border: #e5e7eb;
+  --toggle-btn-text:   #4b5563;
 
   /* Chat bubbles */
   --chat-user-bg:      #4f46e5;
   --chat-user-text:    #ffffff;
-  --chat-ai-bg:        #e5e4df;
+  --chat-ai-bg:        #ecebf7;
   --chat-ai-text:      #3d3929;
 
   /* Restore button */
@@ -1714,10 +1714,16 @@ body {
   color: #ffffff;
 }
 
-[data-theme="light"] .toggle-group button.active,
-[data-theme="light2"] .toggle-group button.active {
-  background: #5b5aa0;
+[data-theme="light"] .toggle-group button.active {
+  background: #475569;
 }
+
+[data-theme="light2"] .toggle-group button.active {
+  background: #4f46e5;
+}
+
+
+
 
 /* ─── Editor Area ────────────────────────────────────────────────── */
 .editor-area {
@@ -2698,6 +2704,10 @@ body {
   cursor: pointer;
   flex-shrink: 0;
   transition: opacity 150ms ease;
+}
+
+[data-theme="light"] .send-btn {
+  background: #5b5aa0;
 }
 
 .send-btn:hover {
