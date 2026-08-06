@@ -720,6 +720,17 @@ const EditorCore = (() => {
       editor.setSelectionRange(start + 4, start + 4 + selected.length);
       triggerUpdate();
     },
+    sectionblock: () => {
+      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      if (!editor) return;
+      const start    = editor.selectionStart;
+      const end      = editor.selectionEnd;
+      const selected = editor.value.slice(start, end) || '# Section title\n\nSection content here';
+      const insertion = '```markdown\n' + selected + '\n```';
+      replaceRangeNative(start, end, insertion);
+      editor.setSelectionRange(start + 12, start + 12 + selected.length);
+      triggerUpdate();
+    },
     hr: () => {
       const editor = _deps.getEditor ? _deps.getEditor() : null;
       if (!editor) return;

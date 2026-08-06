@@ -67,7 +67,7 @@ const RecentsPanel = (() => {
   }
 
   function _isCustomMode() {
-    return (localStorage.getItem('explorerMode') || 'multi-level') === 'custom';
+    return (localStorage.getItem('explorerMode') || 'root-only') === 'custom';
   }
 
   /**

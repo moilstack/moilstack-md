@@ -68,12 +68,12 @@
 [data-theme="light2"] {
   --primary:           #4f46e5;
 
-  --bg:                #fafafa;
-  --surface:           #fafafa;
-  --sidebar-bg:        #fafafa;
-  --input-bg:          #fafafa;
-  --editor-bg:         #fafafa;
-  --preview-bg:        #fafafa;
+  --bg:                #fefefa;
+  --surface:           #fefefa;
+  --sidebar-bg:        #fefefa;
+  --input-bg:          #fefefa;
+  --editor-bg:         #fefefa;
+  --preview-bg:        #fefefa;
 
   --text-primary:      #3d3929;
   --text-secondary:    #83827d;
@@ -81,15 +81,15 @@
 
   --border:            #e5e4df;
   --hover-bg:          #ece9df;
-  --active-file-bg:    #e0e7ff;
-  --active-file-text:  #3730a3;
+  --active-file-bg:    #ecebf7;
+  --active-file-text:  #5b5aa0;
 
-  --statusbar-bg:      #fafafa;
+  --statusbar-bg:      #f7f2e9;
   --statusbar-text:    #83827d;
 
-  --toggle-btn-bg:     #eef2ff;
-  --toggle-btn-border: #e0e7ff;
-  --toggle-btn-text:   #3730a3;
+  --toggle-btn-bg:     #efeef8;
+  --toggle-btn-border: #e2e0f0;
+  --toggle-btn-text:   #5b5aa0;
 
   --chat-user-bg:      #4f46e5;
   --chat-user-text:    #ffffff;
@@ -1204,6 +1204,9 @@ body {
   overflow: hidden;
   white-space: nowrap;
   min-width: 0;
+  /* Reserve the pin button's height (18px) even while it's hidden (display:none),
+     so revealing it on hover doesn't stretch this row and shift the list below it. */
+  min-height: 18px;
 }
 
 .file-item__name {
@@ -1243,8 +1246,8 @@ body {
 }
 
 [data-theme="light2"] .file-item .file-tag {
-  background: color-mix(in srgb, #4f46e5 18%, transparent);
-  color: #3730a3;
+  background: #e8e6f5;
+  color: #34315f;
 }
 
 .file-item__preview {
@@ -1710,6 +1713,10 @@ body {
   color: #ffffff;
 }
 
+[data-theme="light2"] .toggle-group button.active {
+  background: #5b5aa0;
+}
+
 /* ─── Editor Area ────────────────────────────────────────────────── */
 .editor-area {
   flex: 1;
@@ -1996,6 +2003,16 @@ body {
   color: var(--text-primary);
   border: none;
 }
+
+.preview-content .markdown-embed {
+  margin: 1em 0;
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.preview-content .markdown-embed > *:first-child { margin-top: 0; }
+.preview-content .markdown-embed > *:last-child { margin-bottom: 0; }
 
 .preview-content blockquote {
   margin: 1.25em 0;

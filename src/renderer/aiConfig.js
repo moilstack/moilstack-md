@@ -455,8 +455,8 @@ const AIConfigManager = (() => {
     const startupModeSel   = document.getElementById('startupMode')
     if (startupModeSel) startupModeSel.value = savedStartupMode
 
-    // Seed the explorer-mode selector with the saved preference (default: multi-level)
-    const savedExplorerMode = localStorage.getItem('explorerMode') || 'multi-level'
+    // Seed the explorer-mode selector with the saved preference (default: root-only)
+    const savedExplorerMode = localStorage.getItem('explorerMode') || 'root-only'
     const explorerModeSel   = document.getElementById('explorerMode')
     if (explorerModeSel) explorerModeSel.value = savedExplorerMode
 

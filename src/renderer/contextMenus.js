@@ -51,7 +51,7 @@ const ContextMenus = (() => {
   function showFileCtxMenu(filePath, x, y) {
     if (!fileCtxMenu) return;
     _fileCtxTarget = filePath;
-    const isRootOnly = (localStorage.getItem('explorerMode') || 'multi-level') === 'root-only';
+    const isRootOnly = (localStorage.getItem('explorerMode') || 'root-only') === 'root-only';
     const labelBtn   = fileCtxMenu.querySelector('[data-file-action="label"]');
     const labelDivider = labelBtn?.previousElementSibling;
     if (labelBtn)   labelBtn.style.display   = isRootOnly ? '' : 'none';

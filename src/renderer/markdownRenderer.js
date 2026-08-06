@@ -230,6 +230,19 @@ const MarkdownRenderer = (() => {
           i++;
         }
         i++; // consume closing ```
+
+        // ```markdown / ```md fences render their contents as an actual
+        // nested Markdown section (in a bordered box) instead of a plain
+        // code listing. Recursing is safe: parseMarkdown always escapes raw
+        // text before wrapping it in tags, so nothing here can break out of
+        // the wrapper div, and each recursive call only strips one fence
+        // layer, so accidental self-nesting terminates instead of looping.
+        if (lang === 'markdown' || lang === 'md') {
+          const inner = parseMarkdown(codeLines.join('\n'), blockLine + 1);
+          out.push(`<div class="markdown-embed" data-line="${blockLine}">${inner}</div>`);
+          continue;
+        }
+
         const langAttr = lang ? ` class="language-${escapeHtml(lang)}"` : '';
         out.push(`<pre data-line="${blockLine}"><code${langAttr}>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
         continue;
