@@ -4,14 +4,16 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
-## [1.1.2] - 2026-08-05
+## [1.1.2] - 2026-08-06
 
 ### Added
 - **Light 2 theme** — a flatter light variant with a blue accent instead of orange; the theme toggle now cycles Light → Light 2 → Dim → Dark.
+- **Section block insertion** — a new editor action wraps the current selection (or a placeholder heading/body) in a fenced ` ```markdown ` block; the preview renders these fences as a nested, bordered Markdown section instead of a plain code listing.
 
 ### Changed
-- **Light 2 uses a single flat background** — sidebar, editor, and preview all share the same `--preview-bg` tone instead of the tiered surface/sidebar shades used by Light.
-- **Light 2 accent tuned lighter** — the blue used for selections, active states, buttons, and sidebar `#tag` pills was lightened a step for better contrast against the flat background.
+- **Light 2 uses a single flat background** with a lighter blue accent for selections, active states, buttons, and sidebar `#tag` pills.
+- **Light theme redesigned around an indigo accent ("Snow White")** — replaces the orange "Claude Warm" palette with a crisp white background, cool-neutral panels, and its own toggle/chat bubble colors distinct from Light 2.
+- **Explorer Mode now defaults to "Root folder only"** for new installs, listed first in the Settings dropdown; "Custom (no folder)" is renamed to "Recent Only (no folder)".
 
 ---
 
