@@ -1151,6 +1151,12 @@
             <label class="type-radio-label">
               <input type="radio" name="modelType" value="ollama"> Ollama
             </label>
+            <label class="type-radio-label">
+              <input type="radio" name="modelType" value="anthropic"> Anthropic
+            </label>
+            <label class="type-radio-label">
+              <input type="radio" name="modelType" value="cli"> CLI
+            </label>
           </div>
           <p id="modelTypeHint" class="form-type-hint"></p>
         </div>
@@ -1184,6 +1190,21 @@
               the structured output format reliably.
             </p>
           </div>
+          <div class="form-group">
+            <label class="form-label" for="modelOllamaApiKey">API Key <span class="form-label-optional">(optional — for Ollama Cloud)</span></label>
+            <div class="api-key-row">
+              <input type="password" id="modelOllamaApiKey" class="form-input"
+                     placeholder="Only needed for Ollama Cloud" autocomplete="off">
+              <button type="button" id="btnToggleOllamaApiKey" class="btn btn-outline btn-sm" title="Show / hide key">
+                <svg id="ollamaApiKeyEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M1 12C1 12 5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12Z"
+                        stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- API fields -->
@@ -1212,6 +1233,68 @@
                 </svg>
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- Anthropic fields -->
+        <div id="anthropicFields" class="hidden">
+          <div class="form-group">
+            <label class="form-label" for="modelAnthropicBaseUrl">Base URL</label>
+            <input type="text" id="modelAnthropicBaseUrl" class="form-input"
+                   placeholder="https://api.anthropic.com" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modelAnthropicModelName">Model Name</label>
+            <input type="text" id="modelAnthropicModelName" class="form-input"
+                   placeholder="e.g. claude-sonnet-4-5" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modelAnthropicApiKey">API Key</label>
+            <div class="api-key-row">
+              <input type="password" id="modelAnthropicApiKey" class="form-input"
+                     placeholder="sk-ant-..." autocomplete="off">
+              <button type="button" id="btnToggleAnthropicApiKey" class="btn btn-outline btn-sm" title="Show / hide key">
+                <svg id="anthropicApiKeyEyeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M1 12C1 12 5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12Z"
+                        stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLI fields -->
+        <div id="cliFields" class="hidden">
+          <div class="form-group">
+            <label class="form-label" for="modelCliExecutable">Executable</label>
+            <input type="text" id="modelCliExecutable" class="form-input" list="cliExecutablePresets"
+                   placeholder="e.g. claude" autocomplete="off">
+            <datalist id="cliExecutablePresets">
+              <option value="claude">
+              <option value="agy">
+            </datalist>
+            <p class="form-field-hint">
+              Command must already be installed and on your PATH, and already
+              authenticated — MoilStack does not manage CLI login. Run
+              <strong>claude</strong> / <strong>agy</strong> login separately first.
+            </p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modelCliModelName">Model Name <span class="form-label-optional">(optional)</span></label>
+            <input type="text" id="modelCliModelName" class="form-input"
+                   placeholder="e.g. claude-sonnet-4-5" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="modelCliFlags">Flags <span class="form-label-optional">(advanced, optional)</span></label>
+            <input type="text" id="modelCliFlags" class="form-input"
+                   placeholder="--print --output-format stream-json --include-partial-messages --model {{model}}" autocomplete="off">
+            <p class="form-field-hint">
+              Template tokens: <code>{{model}}</code>, <code>{{prompt}}</code>,
+              <code>{{prompt_file}}</code>. Leave blank to use the built-in
+              default for this executable.
+            </p>
           </div>
         </div>
 

@@ -76,6 +76,56 @@ async function writeConfig(config) {
 }
 
 /**
+ * Ensure a starter set of model configs exists, so a new user opens the app
+ * to a populated list instead of an empty one. Runs on every launch (like
+ * loxiaflow's migrations.js) and upserts each default individually by
+ * (label, type) — any seed the user doesn't already have is added; existing
+ * models (including ones the user has edited or renamed away from a seed
+ * label) are left untouched. No API keys are ever seeded — the CLI entries
+ * need no key at all, and the Anthropic/Ollama Cloud entries just need the
+ * user to paste one in.
+ */
+async function seedDefaultModels() {
+  const config = await readConfig()
+  config.models = config.models || []
+
+  const CLAUDE_FLAGS = `--model {{model}} 'Follow the instructions in the attached file exactly and respond accordingly. @{{prompt_file}}' --disallowedTools "Read,Glob,Grep,Bash,Write,Edit,WebFetch,WebSearch,Task,NotebookEdit"`
+  const AGY_FLAGS    = `--sandbox --add-dir "{{cwd}}" -p "{{prompt}}" --model "{{model}}"`
+
+  const seeds = [
+    { label: 'Claude Haiku',              type: 'cli',       executable: 'claude', flags: CLAUDE_FLAGS, model_name: 'claude-haiku-4-5',              wantsDefault: true  },
+    { label: 'Agy — Gemini Flash Medium', type: 'cli',       executable: 'agy',    flags: AGY_FLAGS,    model_name: 'Gemini 3.5 Flash (Medium)',      wantsDefault: false },
+    { label: 'Anthropic Haiku',           type: 'anthropic',                                            model_name: 'claude-haiku-4-5', base_url: null, wantsDefault: false },
+    { label: 'Ollama Local',              type: 'ollama',    base_url: 'http://localhost:11434',        model_name: null,               wantsDefault: false },
+    { label: 'Ollama Cloud',              type: 'ollama',    base_url: 'https://ollama.com',            model_name: null,               wantsDefault: false },
+  ]
+
+  let changed = false
+  for (const seed of seeds) {
+    const exists = config.models.some(m => m.label === seed.label && m.type === seed.type)
+    if (exists) continue
+
+    const hasDefault = config.models.some(m => m.is_default)
+    const id = crypto.randomUUID()
+    await saveModelKey(id, null) // no-op; kept for consistency with ai-config:create
+    config.models.push({
+      id,
+      label:      seed.label,
+      type:       seed.type,
+      base_url:   seed.base_url   || null,
+      model_name: seed.model_name || null,
+      executable: seed.executable || null,
+      flags:      seed.flags      || null,
+      is_default: !!(seed.wantsDefault && !hasDefault), // never steal an existing default
+      created_at: new Date().toISOString(),
+    })
+    changed = true
+  }
+
+  if (changed) await writeConfig(config)
+}
+
+/**
  * HTTP/HTTPS POST that streams response body chunks to onChunk(Buffer).
  * Returns a Promise that resolves when the response stream ends.
  * Used for Ollama NDJSON and OpenAI-compatible SSE streaming.
@@ -746,6 +796,8 @@ function registerIpcHandlers() {
       type:       data.type || 'api',
       base_url:   data.base_url   || null,
       model_name: data.model_name || null,
+      executable: data.executable || null,   // 'cli' type only
+      flags:      data.flags      || null,   // 'cli' type only
       // api_key intentionally omitted — stored encrypted in key-<id>.bin
       is_default: !!data.is_default,
       created_at: new Date().toISOString(),
@@ -781,6 +833,8 @@ function registerIpcHandlers() {
       label:      data.label,
       base_url:   data.base_url   || null,
       model_name: data.model_name || null,
+      executable: data.executable || null,   // 'cli' type only
+      flags:      data.flags      || null,   // 'cli' type only
       // api_key intentionally omitted — stored encrypted in key-<id>.bin
       is_default: !!data.is_default,
       updated_at: new Date().toISOString(),
@@ -1053,9 +1107,11 @@ function registerIpcHandlers() {
 
   /* ── AI: ask ──────────────────────────────────────────────────────────
      Dispatch to the correct backend and stream tokens back to the renderer.
-     Payload: { model: ModelConfig, messages: Array<{role, content}> }
+     Payload: { model: ModelConfig, messages: Array<{role, content}>, cwd }
+     `cwd` is the renderer's currently-open project folder (if any) — only
+     consumed by CLI-type models via the {{cwd}} flags token.
      ──────────────────────────────────────────────────────────────────── */
-  ipcMain.handle('ai:ask', async (event, { model, messages }) => {
+  ipcMain.handle('ai:ask', async (event, { model, messages, cwd }) => {
     // Guard: don't send to a destroyed webContents (window may close mid-stream)
     const send = (channel, data) => {
       if (!event.sender.isDestroyed()) event.sender.send(channel, data)
@@ -1066,6 +1122,10 @@ function registerIpcHandlers() {
         await _handleOllama(model, messages, send)
       } else if (model.type === 'api') {
         await _handleApi(model, messages, send)
+      } else if (model.type === 'anthropic') {
+        await _handleAnthropic(model, messages, send)
+      } else if (model.type === 'cli') {
+        await _handleCli(model, messages, send, cwd)
       } else {
         throw new Error(`Model type "${model.type}" is not supported in this version`)
       }
@@ -1095,9 +1155,14 @@ async function _handleOllama(model, messages, send) {
     stream:   true,
   })
 
+  // Ollama Cloud uses the same native protocol as local Ollama, just with an
+  // API key. Local Ollama has no auth, so this header is only added when set.
+  const extraHeaders = {}
+  if (model.api_key) extraHeaders['Authorization'] = `Bearer ${model.api_key}`
+
   let buffer = ''
 
-  await postStream(url, body, {}, (chunk) => {
+  await postStream(url, body, extraHeaders, (chunk) => {
     buffer += chunk.toString('utf8')
     const lines = buffer.split('\n')
     // Retain any incomplete trailing fragment for the next chunk
@@ -1164,6 +1229,205 @@ async function _handleApi(model, messages, send) {
   })
 }
 
+/**
+ * Stream a response from Anthropic's native Messages API.
+ * Uses /v1/messages with stream:true — SSE, but a different event shape than
+ * the OpenAI-compatible `_handleApi` (content_block_delta / text_delta, and
+ * `system` is a top-level field rather than a message with role:'system').
+ */
+async function _handleAnthropic(model, messages, send) {
+  const base = (model.base_url || 'https://api.anthropic.com').replace(/\/$/, '')
+  const url  = base + '/v1/messages'
+
+  const systemMsgs = messages.filter(m => m.role === 'system')
+  const chatMsgs   = messages.filter(m => m.role !== 'system')
+  const system     = systemMsgs.map(m => m.content).join('\n\n')
+
+  const payload = {
+    model:      model.model_name,
+    messages:   chatMsgs,
+    stream:     true,
+    max_tokens: 4096,
+  }
+  if (system) payload.system = system
+
+  const body = JSON.stringify(payload)
+  const extraHeaders = {
+    'x-api-key':         model.api_key || '',
+    'anthropic-version': '2023-06-01',
+  }
+
+  let buffer = ''
+
+  await postStream(url, body, extraHeaders, (chunk) => {
+    buffer += chunk.toString('utf8')
+    const lines = buffer.split('\n')
+    buffer = lines.pop()
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed || !trimmed.startsWith('data: ')) continue
+      let json
+      try {
+        json = JSON.parse(trimmed.slice(6))
+      } catch {
+        continue // partial SSE line — skip
+      }
+      // content_block_delta / text_delta carries streamed text tokens
+      if (json.type === 'content_block_delta' && json.delta?.type === 'text_delta') {
+        if (json.delta.text) send('ai:token', json.delta.text)
+      } else if (json.type === 'error') {
+        // Anthropic can emit an error event mid-stream on an otherwise-2xx response
+        throw new Error(json.error?.message || 'Anthropic API error')
+      }
+    }
+  })
+}
+
+/**
+ * Stream a response from a locally installed CLI tool (e.g. Claude Code's
+ * `claude`, or `agy`), spawned as a child process — not an HTTP call.
+ *
+ * The CLI is expected to already be installed, on PATH, and authenticated by
+ * the user outside this app (its own login/OAuth session) — no API key is
+ * ever stored or injected for this model type.
+ *
+ * Spawned with shell:false and an argv array: this is the injection defense.
+ * Since there is no shell parsing the command, metacharacters in the prompt
+ * or in a user-configured `flags` template can never be interpreted specially.
+ */
+const DEFAULT_CLI_FLAGS = {
+  claude: '--print --output-format stream-json --include-partial-messages --model {{model}}',
+  agy:    '-p {{prompt}}',
+}
+
+/** Flatten the stateless messages array into one plain-text prompt block. */
+function _serializeMessagesToPrompt(messages) {
+  return messages.map(m => {
+    if (m.role === 'system') return `[System]\n${m.content}`
+    if (m.role === 'user')   return `[User]\n${m.content}`
+    return `[Assistant]\n${m.content}`
+  }).join('\n\n')
+}
+
+/**
+ * Split a flags template into argv tokens, honoring single/double quotes so a
+ * quoted multi-word span (e.g. a quoted sentence, or a "{{model}}" value that
+ * itself contains spaces) survives as one token. This is OUR OWN parser, not
+ * a shell — spawn() is still called with shell:false, so this only changes
+ * how one JS string becomes an array; it adds no injection surface.
+ */
+function _tokenizeFlags(str) {
+  const tokens = []
+  let current   = ''
+  let quoteChar = null
+  for (const ch of str) {
+    if (quoteChar) {
+      if (ch === quoteChar) quoteChar = null
+      else current += ch
+    } else if (ch === '"' || ch === "'") {
+      quoteChar = ch
+    } else if (/\s/.test(ch)) {
+      if (current) { tokens.push(current); current = '' }
+    } else {
+      current += ch
+    }
+  }
+  if (current) tokens.push(current)
+  return tokens
+}
+
+async function _handleCli(model, messages, send, cwd) {
+  const { spawn } = require('child_process')
+
+  const exe            = model.executable || 'claude'
+  const flagsTemplate  = model.flags || DEFAULT_CLI_FLAGS[exe] || '{{prompt}}'
+  const prompt         = _serializeMessagesToPrompt(messages)
+  const needsFile       = flagsTemplate.includes('{{prompt_file}}')
+  const promptIsArgToken = flagsTemplate.includes('{{prompt}}')
+
+  let tmpFile = null
+  if (needsFile) {
+    tmpFile = path.join(os.tmpdir(), `moilstack-ai-${crypto.randomUUID()}.txt`)
+    await fs.writeFile(tmpFile, prompt, 'utf8')
+  }
+
+  const args = _tokenizeFlags(
+    flagsTemplate
+      .replace(/\{\{model\}\}/g, model.model_name || '')
+      .replace(/\{\{prompt_file\}\}/g, tmpFile || '')
+      .replace(/\{\{cwd\}\}/g, cwd || '')
+  ).map(tok => (tok === '{{prompt}}' ? prompt : tok)) // whole-token substitution keeps the prompt as one argv element
+
+  try {
+    await new Promise((resolve, reject) => {
+      const child = spawn(exe, args, {
+        shell:       false,
+        windowsHide: true,
+        cwd:         cwd || undefined,
+        env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' },
+      })
+
+      let stderrBuf     = ''
+      let jsonBuffer     = ''
+      const useStreamJson = exe === 'claude' && flagsTemplate.includes('stream-json')
+
+      child.stdout.on('data', (chunk) => {
+        if (!useStreamJson) {
+          send('ai:token', chunk.toString('utf8'))
+          return
+        }
+        jsonBuffer += chunk.toString('utf8')
+        const lines = jsonBuffer.split('\n')
+        jsonBuffer = lines.pop()
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+          try {
+            const evt = JSON.parse(trimmed)
+            if (evt.type === 'stream_event' &&
+                evt.event?.type === 'content_block_delta' &&
+                evt.event.delta?.type === 'text_delta') {
+              if (evt.event.delta.text) send('ai:token', evt.event.delta.text)
+            } else if (evt.type === 'result' && evt.subtype === 'error') {
+              stderrBuf += (evt.error || evt.result || 'CLI reported an error') + '\n'
+            }
+          } catch {
+            // partial NDJSON line — wait for more data
+          }
+        }
+      })
+
+      child.stderr.on('data', (chunk) => { stderrBuf += chunk.toString('utf8') })
+
+      child.on('error', (err) => {
+        if (err.code === 'ENOENT') {
+          reject(new Error(`"${exe}" was not found. Is it installed and on your PATH?`))
+        } else {
+          reject(err)
+        }
+      })
+
+      child.on('close', (code) => {
+        if (code !== 0 && code !== null) {
+          reject(new Error(stderrBuf.trim() || `${exe} exited with code ${code}`))
+        } else {
+          resolve()
+        }
+      })
+
+      // Feed the prompt via stdin unless it was already passed as an argv
+      // token ({{prompt}}) or written to a temp file ({{prompt_file}}).
+      if (!needsFile && !promptIsArgToken) {
+        child.stdin.write(prompt)
+      }
+      child.stdin.end()
+    })
+  } finally {
+    if (tmpFile) await fs.unlink(tmpFile).catch(() => {})
+  }
+}
+
 /* ── Windows Jump List ───────────────────────────────────────────────────────
    Adds a "New Instance" task to the taskbar icon right-click menu.
    ──────────────────────────────────────────────────────────────────────── */
@@ -1190,4 +1454,4 @@ function updateJumpList() {
   }])
 }
 
-module.exports = { registerIpcHandlers, updateJumpList }
+module.exports = { registerIpcHandlers, updateJumpList, seedDefaultModels }

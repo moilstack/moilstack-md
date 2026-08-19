@@ -3268,6 +3268,14 @@ body {
   background: #2e1065;
   color: #a78bfa;
 }
+.type-badge--anthropic {
+  background: #fef3c7;
+  color: #b45309;
+}
+[data-theme="dark"] .type-badge--anthropic {
+  background: #451a03;
+  color: #fbbf24;
+}
 
 /* ── Contextual hint below type radio / inside field groups ───────────── */
 .form-type-hint {
@@ -3301,6 +3309,30 @@ body {
   background: #14532d;
   border-color: #166534;
 }
+.form-type-hint--anthropic {
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+[data-theme="dark"] .form-type-hint--anthropic {
+  color: #fbbf24;
+  background: #451a03;
+  border-color: #78350f;
+}
+.form-type-hint--cli {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+[data-theme="dark"] .form-type-hint--cli {
+  color: #60a5fa;
+  background: #1e3a5f;
+  border-color: #1e40af;
+}
 
 /* ── Inline field hint (below a specific input) ────────────────────────── */
 .form-field-hint {
@@ -3311,6 +3343,19 @@ body {
 }
 .form-field-hint strong {
   color: var(--text-primary);
+}
+.form-field-hint code {
+  background: var(--bg-secondary, rgba(127,127,127,0.15));
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ── Optional-field marker next to a form label ───────────────────────── */
+.form-label-optional {
+  font-weight: 400;
+  color: var(--text-secondary);
+  font-size: 11px;
 }
 
 /* ── API key row: input + show/hide button ─────────────────────────── */
