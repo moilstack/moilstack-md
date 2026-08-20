@@ -882,8 +882,24 @@ const ChatPanel = (() => {
     const messages    = buildMessages(text, currentFile.name, editorContent, capturedSelection);
 
     // 6. Guard: no model configured
+    // Uses addSystemBubble (no Restore/Copy actions) — this is a guard
+    // notice, not an AI response, so those action buttons don't apply.
     if (!model) {
-      addAIBubble('No AI model configured. Open Settings (⚙) to add one.');
+      addSystemBubble('⚠ No AI model configured. Open Settings (⚙) to add one.');
+      messageCount += 2;
+      updateChatCount();
+      scrollChatToBottom();
+      _reenableInput();
+      return;
+    }
+
+    // 6b. Guard: model configured but missing required fields. Without this,
+    // each provider fails differently once the request actually goes out —
+    // Ollama times out unreachable, Anthropic/API return a 401, CLI throws
+    // ENOENT — so surface one consistent message before even trying, rather
+    // than a different raw error per provider type.
+    if (AIConfigManager.validateModel(model).length > 0) {
+      addSystemBubble('⚠ The model you selected is not configured completely, go to settings and update the required fields.');
       messageCount += 2;
       updateChatCount();
       scrollChatToBottom();

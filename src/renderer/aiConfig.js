@@ -791,6 +791,7 @@ const AIConfigManager = (() => {
     setDefault,
     selectModel,
     getActiveModel,
+    validateModel: _validateModel,
   }
 
 })()
