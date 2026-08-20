@@ -12,7 +12,7 @@
     "postinstall": "patch-package"
   },
   "build": {
-    "appId": "com.moilstack.markdown",
+    "appId": "com.moilstack.moilstack-md",
     "productName": "moilstack-md",
     "icon": "build/icons",
     "copyright": "Copyright © 2026 MoilStack",
@@ -60,10 +60,19 @@
       ]
     },
     "mac": {
+      "category": "public.app-category.productivity",
       "target": [
         "dmg",
         "zip"
-      ]
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
+      "notarize": true
+    },
+    "dmg": {
+      "sign": false
     },
     "linux": {
       "target": [
