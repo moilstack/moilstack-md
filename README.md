@@ -117,7 +117,7 @@ MoilStack .md relies on the standard OpenAI Chat Completions API architectural d
 ### Flexible Deployment Options
 * **Fully Offline & Private:** Protect sensitive information by running local text operations straight on your machine through **Ollama**.
 * **High-Speed Cloud API Infrastructure:** Connect native accounts from **Google Gemini**, **Groq**, **OpenAI**, **Mistral**, **Together AI**, or **Anthropic**'s own API.
-* **Local CLI Tools:** Route requests through an already-installed, already-authenticated command-line tool — **Claude Code** (`claude`) or **Agy** (`agy`) — spawned directly as a subprocess, no API key stored in the app.
+* **Local CLI Tools:** Route requests through an already-installed, already-authenticated command-line tool — **Claude Code** (`claude`) or **Agy** (`agy`) — spawned directly as a subprocess, no API key stored in the app. If you're already logged into either CLI, its starter model works immediately with zero setup in the app.
 * **Ollama Cloud:** Point the existing Ollama connection type at a cloud/remote host with an API key instead of (or alongside) a local install.
 
 A handful of ready-to-use starter models (Claude Haiku CLI, Agy CLI, Anthropic Haiku, Ollama Local, Ollama Cloud) are added automatically on first launch — just paste in an API key (or install/log in the relevant CLI) and go.

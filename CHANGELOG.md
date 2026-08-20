@@ -4,38 +4,26 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
-## [Unreleased]
+## [1.1.2] - 2026-08-20
 
 ### Added
-- **Four new AI provider types** — CLI, Anthropic, and Ollama Cloud support alongside the existing Ollama/OpenAI-compatible types:
-  - **CLI** — spawns a locally installed, already-authenticated command-line tool (e.g. Claude Code's `claude`, or `agy`) as a subprocess instead of making an HTTP call; no API key is stored for these, since the tool manages its own login. Supports an advanced Flags template with `{{model}}`, `{{prompt}}`, `{{prompt_file}}`, and `{{cwd}}` tokens for customizing the invocation.
-  - **Anthropic** — connects directly to Anthropic's native Messages API (`x-api-key` auth, not the OpenAI-compatible format the existing "API" type uses).
-  - **Ollama Cloud** — the existing Ollama type now accepts an optional API key, so a Base URL pointed at a cloud/remote host authenticates correctly; local Ollama continues to need no key.
-- **Starter AI models on launch** — five ready-to-use model configs (Claude Haiku, Agy — Gemini Flash Medium, Anthropic Haiku, Ollama Local, Ollama Cloud) are added automatically whenever they're missing, so a new install opens with a populated model list instead of an empty one; any model you've already added yourself is left untouched. Claude Haiku is set as the default the first time this runs (on a fresh install with no models yet) — an existing default is never overridden.
-- **Incomplete-config warning** — a model missing a field its provider needs (API key, model name, base URL, executable) now shows a "⚠ Incomplete" badge on its card in Settings, a ⚠ next to it in the model picker, and ⚠ on the chat-header badge when it's the active model — each with a tooltip listing exactly what's missing.
-- **Suggested-prompt chips in the chat greeting** — the welcome message now shows clickable Dev and Writer prompt chips scoped to what the chat can actually see (the current document), e.g. "Add a code example that illustrates this section" or "Fix grammar and tone." Clicking one fills the chat input so it can still be reviewed/edited before sending.
-- **Heading anchors in the preview** — headings now get GitHub-style `id` attributes, so a hand-written table of contents (`[Section](#section)`) actually navigates to that section when clicked.
+- **Light 2 theme** — a flatter light variant with a blue accent instead of orange.
+- **Section block insertion** — wrap the current selection in a fenced Markdown block that renders as a nested, bordered section in the preview.
+- **Three new AI provider types** — CLI (run a locally installed, logged-in tool like `claude` or `agy`), Anthropic (native Messages API), and Ollama Cloud (Ollama with an optional API key for remote hosts).
+- **Starter AI models on launch** — five ready-to-use models are added automatically on a fresh install, with Claude Haiku set as the default.
+- **Incomplete-config warning** — models missing a required field (API key, model name, etc.) now show a "⚠ Incomplete" badge with a tooltip explaining what's missing.
+- **Suggested-prompt chips in the chat greeting** — clickable prompt suggestions scoped to the current document.
+- **Heading anchors in the preview** — headings now get proper `id`s so a hand-written table of contents can link to them.
 
 ### Changed
-- **Chat now defaults to Edit mode** instead of Ask mode — since the default AI model (Claude Haiku) is ready to use out of the box, most users will want to start editing immediately rather than switching modes first.
+- **Light theme redesigned** around an indigo accent ("Snow White"), replacing the orange "Claude Warm" palette.
+- **Explorer Mode now defaults to "Root folder only"** for new installs.
+- **Chat now defaults to Edit mode** instead of Ask mode.
 
 ### Fixed
-- **Model-picker dropdown no longer gets clipped** — it was being cut off at the bottom of the chat header because it inherited `overflow: hidden` from its parent sidebar; it's now positioned relative to the viewport instead.
-- **Copy button on AI edit bubbles now copies the actual response**, not the "✓ Document updated" badge text that happened to be visible in the bubble — it now reads from the same underlying value the Re-apply/Restore buttons already used.
-- **Split view scroll sync** — switched from heading-anchored sync (which could leave the preview a few pixels short of matching the editor, especially noticeable when the editor was scrolled all the way to the top) to proportional sync, which is exact at both the top and bottom by construction. Also switched from instant jumps to smooth, animated scrolling.
-
----
-
-## [1.1.2] - 2026-08-06
-
-### Added
-- **Light 2 theme** — a flatter light variant with a blue accent instead of orange; the theme toggle now cycles Light → Light 2 → Dim → Dark.
-- **Section block insertion** — a new editor action wraps the current selection (or a placeholder heading/body) in a fenced ` ```markdown ` block; the preview renders these fences as a nested, bordered Markdown section instead of a plain code listing.
-
-### Changed
-- **Light 2 uses a single flat background** with a lighter blue accent for selections, active states, buttons, and sidebar `#tag` pills.
-- **Light theme redesigned around an indigo accent ("Snow White")** — replaces the orange "Claude Warm" palette with a crisp white background, cool-neutral panels, and its own toggle/chat bubble colors distinct from Light 2.
-- **Explorer Mode now defaults to "Root folder only"** for new installs, listed first in the Settings dropdown; "Custom (no folder)" is renamed to "Recent Only (no folder)".
+- **Model-picker dropdown no longer gets clipped** at the bottom of the chat header.
+- **Copy button on AI edit bubbles now copies the actual response** instead of placeholder badge text.
+- **Split view scroll sync** is now exact at both ends and animates smoothly instead of jumping.
 
 ---
 
