@@ -29,9 +29,9 @@ const ChatPanel = (() => {
    * When true the AI replies conversationally only — <DOC_EDIT> / <BLOCK_EDIT>
    * instructions are omitted from the system prompt so no accidental edits occur.
    * When false the AI may rewrite the document or selected block.
-   * Defaults to Ask (safe) mode.
+   * Defaults to Edit mode.
    */
-  let isAskMode = true;
+  let isAskMode = false;
 
   /**
    * Snapshot history of editor content — captured before each AI edit so
@@ -83,10 +83,27 @@ const ChatPanel = (() => {
    */
   const MAX_HISTORY_TURNS = 10;
 
-  /** Greeting text shown automatically when the panel first loads. */
+  /** Intro line shown automatically when the panel first loads. */
   const CHAT_GREETING =
     "👋 Hi! I'm your writing assistant. I can help you improve your markdown, " +
-    "suggest edits, fix formatting, or summarize content. What would you like help with?";
+    "suggest edits, fix formatting, or summarize the current document.";
+
+  /**
+   * Suggested prompts shown as clickable chips under the greeting.
+   * Scoped to what this chat can actually see — the open document's text —
+   * not the wider project/repo, so no "generate a README" / "add a changelog
+   * entry" style prompts that imply access beyond the current file.
+   */
+  const DEV_PROMPTS = [
+    'Add a code example that illustrates this section',
+    'Generate a table of contents for this document',
+    'Check this doc for technical accuracy',
+  ];
+  const WRITER_PROMPTS = [
+    'Improve the flow of this paragraph',
+    'Make this more concise',
+    'Fix grammar and tone',
+  ];
 
   /* ═══════════════════════════════════════════════════════════════════
      Token estimation
@@ -614,6 +631,54 @@ const ChatPanel = (() => {
   }
 
   /**
+   * Insert the welcome greeting bubble: intro text plus clickable suggested-
+   * prompt chips (Dev / Writer groups). Clicking a chip fills the chat
+   * textarea with that prompt so the user can review or edit before sending.
+   */
+  function addGreetingBubble() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+
+    // Built with DOM APIs rather than an indented template literal: .bubble.ai
+    // uses `white-space: pre-wrap` to preserve newlines in normal AI replies,
+    // which would otherwise render the whitespace between innerHTML lines as
+    // visible blank gaps between the intro text and each chip group.
+    const buildGroup = (label, prompts) => {
+      const group = document.createElement('div');
+      group.className = 'chat-prompt-group';
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'chat-prompt-group-label';
+      labelEl.textContent = label;
+      group.appendChild(labelEl);
+
+      const chips = document.createElement('div');
+      chips.className = 'chat-prompt-chips';
+      prompts.forEach(p => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chat-prompt-chip';
+        chip.dataset.prompt = p;
+        chip.textContent = p;
+        chips.appendChild(chip);
+      });
+      group.appendChild(chips);
+      return group;
+    };
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble ai';
+    bubble.appendChild(document.createTextNode(CHAT_GREETING));
+    bubble.appendChild(buildGroup('🧑‍💻 For developers', DEV_PROMPTS));
+    bubble.appendChild(buildGroup('✍️ For writers', WRITER_PROMPTS));
+
+    const row     = document.createElement('div');
+    row.className = 'bubble-row ai';
+    row.appendChild(bubble);
+    chatMessages.appendChild(row);
+  }
+
+  /**
    * Append a user bubble to the chat messages container.
    * @param {string} text  Raw text typed by the user.
    */
@@ -720,14 +785,22 @@ const ChatPanel = (() => {
   }
 
   /**
-   * "Copy" — copy the AI bubble text to the system clipboard.
+   * "Copy" — copy the AI response to the system clipboard.
+   * Reads row.dataset.aiText (the same source Re-apply/Restore use) rather
+   * than the bubble's rendered text — for a document/block edit the bubble
+   * only shows a "✓ Document updated" badge and short preview, not the full
+   * content, so copying the DOM text would copy that badge instead of the
+   * actual response.
    * If the Clipboard API is unavailable, this is a no-op (with a warning);
    * `execCommand('copy')` is no longer a reliable fallback in Electron.
    * @param {HTMLButtonElement} btn  The clicked copy button.
    */
   async function copyResponse(btn) {
-    const bubble = btn.closest('.bubble-row').querySelector('.bubble.ai');
-    const text   = bubble.innerText || bubble.textContent;
+    const row    = btn.closest('.bubble-row');
+    const bubble = row.querySelector('.bubble.ai');
+    const text   = (row.dataset.aiText !== undefined && row.dataset.aiText !== '')
+      ? row.dataset.aiText
+      : (bubble.innerText || bubble.textContent);
     try {
       await navigator.clipboard.writeText(text);
       const origHTML = btn.innerHTML;
@@ -1086,7 +1159,7 @@ const ChatPanel = (() => {
 
     // Reset count, re-add greeting (no Restore/Copy buttons on a greeting)
     messageCount = 0;
-    addSystemBubble(CHAT_GREETING);
+    addGreetingBubble();
     updateTokenEstimate(); // history cleared — badge should drop back to baseline
     messageCount = 1;
     updateChatCount();
@@ -1127,6 +1200,10 @@ const ChatPanel = (() => {
   function init(deps) {
     _deps = deps;
 
+    // Reflect isAskMode's default (Edit) in the toggle buttons/placeholder,
+    // rather than relying on the HTML's static markup to match it.
+    _syncModeUI();
+
     // Ask / Edit mode toggle
     document.getElementById('btn-mode-ask')?.addEventListener('click', () => {
       if (!isAskMode) { isAskMode = true; _syncModeUI(); }
@@ -1163,10 +1240,27 @@ const ChatPanel = (() => {
         const undoBtn    = e.target.closest('.undo-btn');
         const restoreBtn = e.target.closest('.restore-btn');
         const copyBtn    = e.target.closest('.copy-btn');
+        const promptChip = e.target.closest('.chat-prompt-chip');
         if (undoBtn)         undoAIEdit(undoBtn);
         else if (restoreBtn) restoreContent(restoreBtn);
         else if (copyBtn)    copyResponse(copyBtn);
+        else if (promptChip) _useSuggestedPrompt(promptChip.dataset.prompt);
       });
+  }
+
+  /**
+   * Fill the chat textarea with a suggested prompt (from a greeting chip)
+   * and focus it — the user reviews/edits before sending, same as if they'd
+   * typed it themselves.
+   * @param {string} prompt
+   */
+  function _useSuggestedPrompt(prompt) {
+    const input = document.getElementById('chatInput');
+    if (!input || !prompt) return;
+    input.value = prompt;
+    input.dispatchEvent(new Event('input')); // resize + token estimate
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
   }
 
   /* ── Public API ────────────────────────────────────────────────────── */

@@ -69,7 +69,16 @@ const AIConfigManager = (() => {
 
     // Update the model badge text in the chat header
     const label = document.getElementById('activeModelLabel')
-    if (label) label.textContent = model ? model.label : 'No model'
+    if (label) {
+      if (model) {
+        const missing = _validateModel(model)
+        label.textContent = model.label + (missing.length ? ' ⚠' : '')
+        label.title = missing.length ? `Missing: ${missing.join(', ')}` : ''
+      } else {
+        label.textContent = 'No model'
+        label.title = ''
+      }
+    }
 
     // Show the welcome / no-model screen when nothing is configured
     _applyWelcomeScreen()
@@ -121,13 +130,19 @@ const AIConfigManager = (() => {
       return
     }
 
-    list.innerHTML = models.map(m => `
-      <div class="model-card">
+    list.innerHTML = models.map(m => {
+      const missing     = _validateModel(m)
+      const incomplete  = missing.length > 0
+      const missingText = `Missing: ${missing.join(', ')}`
+
+      return `
+      <div class="model-card${incomplete ? ' model-card--incomplete' : ''}">
         <div class="model-card-top">
           <div class="model-card-info">
             <span class="model-card-label">${esc(m.label)}</span>
             <span class="type-badge type-badge--${esc(m.type)}">${m.type.toUpperCase()}</span>
             ${m.is_default ? '<span class="default-badge">default</span>' : ''}
+            ${incomplete ? `<span class="config-warning-badge" title="${esc(missingText)}">⚠ Incomplete</span>` : ''}
           </div>
           <div class="model-card-actions">
             ${!m.is_default
@@ -138,8 +153,34 @@ const AIConfigManager = (() => {
           </div>
         </div>
         <div class="model-card-detail">${_modelDetail(m)}</div>
+        ${incomplete ? `<div class="model-card-warning">${esc(missingText)}</div>` : ''}
       </div>
-    `).join('')
+    `
+    }).join('')
+  }
+
+  /**
+   * Check whether a model config has everything it needs to actually work,
+   * given the fields each type's request handler in ipc.js reads from.
+   * @param {object} m  A model config (as returned by ai-config:list).
+   * @returns {string[]} Human-readable list of missing pieces; empty = OK.
+   */
+  function _validateModel(m) {
+    const missing = []
+    if (m.type === 'ollama') {
+      if (!m.model_name) missing.push('Model name (click Detect while editing)')
+    } else if (m.type === 'api') {
+      if (!m.base_url)   missing.push('Base URL')
+      if (!m.model_name) missing.push('Model name')
+      if (!m.api_key)    missing.push('API key')
+    } else if (m.type === 'anthropic') {
+      if (!m.model_name) missing.push('Model name')
+      if (!m.api_key)    missing.push('Anthropic API key')
+    } else if (m.type === 'cli') {
+      if (!m.executable) missing.push('Executable name')
+      if (!m.model_name) missing.push('Model name')
+    }
+    return missing
   }
 
   /** One-line summary of the model's key property (base URL / model name). */
@@ -435,9 +476,17 @@ const AIConfigManager = (() => {
 
   function toggleModelPicker() {
     const dropdown = document.getElementById('modelPickerDropdown')
+    const trigger  = document.getElementById('btnModelPicker')
     if (!dropdown) return
     if (dropdown.classList.contains('hidden')) {
       _renderPickerList()
+      // Position with fixed coords (relative to the viewport) so the dropdown
+      // isn't clipped by the .right-sidebar's `overflow: hidden`.
+      if (trigger) {
+        const rect = trigger.getBoundingClientRect()
+        dropdown.style.top   = `${rect.bottom + 6}px`
+        dropdown.style.right = `${window.innerWidth - rect.right}px`
+      }
       dropdown.classList.remove('hidden')
     } else {
       dropdown.classList.add('hidden')
@@ -459,13 +508,17 @@ const AIConfigManager = (() => {
       return
     }
 
-    list.innerHTML = models.map(m => `
+    list.innerHTML = models.map(m => {
+      const missing = _validateModel(m)
+      return `
       <div class="picker-item ${active && active.id === m.id ? 'picker-item--active' : ''}"
            data-picker-id="${esc(m.id)}">
         <span class="picker-item-label">${esc(m.label)}</span>
+        ${missing.length ? `<span class="picker-item-warning" title="${esc('Missing: ' + missing.join(', '))}">⚠</span>` : ''}
         <span class="type-badge type-badge--${esc(m.type)}">${m.type.toUpperCase()}</span>
       </div>
-    `).join('')
+    `
+    }).join('')
   }
 
   function selectModel(id) {

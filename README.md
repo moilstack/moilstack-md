@@ -20,6 +20,8 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 | Linux | AppImage, DEB |
 | macOS | DMG, ZIP (coming soon) |
 
+> **Note (Windows):** the NSIS/ZIP installer above isn't code-signed, so Windows SmartScreen may show a "Windows protected your PC" warning when you run it. This is normal for an open-source project without a paid code-signing certificate — click **More info → Run anyway** to proceed. If you'd rather avoid unsigned-binary warnings altogether, install from the [Microsoft Store](https://apps.microsoft.com/detail/9pp0mrt5lrk5?hl=en-US&gl=AZ) instead.
+
 ## Features
 
 - **Edit, Split, and Preview modes** — syntax-highlighted editor, side-by-side split view with synchronized scrolling, and a clean preview pane, cycled with `Ctrl+\``
@@ -33,7 +35,8 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 - **File labels & tags** — colour-tag files in the explorer for quick navigation, or add searchable tags stored in YAML frontmatter
 - **File backups & Version History** — every save (manual, autosave, or AI edit) is snapshotted to the app's user data folder; right-click a file → "Version History…" to browse and restore prior versions
 - **File trash** — delete files to the OS Recycle Bin from the context menu
-- **Multi-model support** — connect any OpenAI-compatible API (Groq, OpenAI, Mistral, Together AI) or run Ollama locally
+- **Multi-model support** — connect any OpenAI-compatible API (Groq, OpenAI, Mistral, Together AI), Anthropic's native API, Ollama (local or Cloud), or a locally installed CLI tool (Claude Code, Agy); a "⚠ Incomplete" indicator flags any model missing required setup (API key, model name, etc.)
+- **Suggested prompts** — the AI chat opens with clickable Dev/Writer prompt chips scoped to the current document
 - **Export to PDF** — one-click export via native save dialog
 - **Dark / light theme** — persisted across sessions
 - **Configurable editor** — font size and font family settings
@@ -113,7 +116,11 @@ MoilStack .md relies on the standard OpenAI Chat Completions API architectural d
 
 ### Flexible Deployment Options
 * **Fully Offline & Private:** Protect sensitive information by running local text operations straight on your machine through **Ollama**.
-* **High-Speed Cloud API Infrastructure:** Connect native accounts from **Google Gemini**, **Groq**, **OpenAI**, **Mistral**, or **Together AI**.
+* **High-Speed Cloud API Infrastructure:** Connect native accounts from **Google Gemini**, **Groq**, **OpenAI**, **Mistral**, **Together AI**, or **Anthropic**'s own API.
+* **Local CLI Tools:** Route requests through an already-installed, already-authenticated command-line tool — **Claude Code** (`claude`) or **Agy** (`agy`) — spawned directly as a subprocess, no API key stored in the app.
+* **Ollama Cloud:** Point the existing Ollama connection type at a cloud/remote host with an API key instead of (or alongside) a local install.
+
+A handful of ready-to-use starter models (Claude Haiku CLI, Agy CLI, Anthropic Haiku, Ollama Local, Ollama Cloud) are added automatically on first launch — just paste in an API key (or install/log in the relevant CLI) and go.
 
 For definitive step-by-step setup guides, free tier account endpoint links, local model terminal scripts, and detailed performance matrices, see our dedicated [AI Configuration & Model Setup Guide](AI_SETUP.md).
 

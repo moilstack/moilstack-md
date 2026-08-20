@@ -364,73 +364,84 @@ const EditorCore = (() => {
 
   /* ═══════════════════════════════════════════════════════════════════
      Split-mode scroll sync
+
+     Proportional, not per-heading: previewPane.scrollTop always tracks
+     editor.scrollTop as the same fraction of each pane's own scroll range
+     (0 → 0, max → max, by construction). An earlier version anchored to the
+     nearest rendered heading's offsetTop instead, which is inherently
+     approximate — a raw "# Heading" source line and the ~40px block it
+     renders as don't correspond 1:1 in pixels, and the preview's own
+     padding/margins meant even the "top" case landed a few px short. That
+     approach also isn't fixable by patching harder: no per-line rendered
+     height a Markdown renderer produces will ever line up pixel-for-pixel
+     with the raw source, so pixel-perfect boundaries are needed instead —
+     which fractional matching provides for free at both ends.
      ═══════════════════════════════════════════════════════════════════ */
 
-  // Set while a sync-triggered scroll is in flight, so the resulting 'scroll'
-  // event on the *other* pane doesn't bounce back and fight this one.
-  let _scrollSyncing = false;
+  // How long to ignore a pane's own 'scroll' events after WE scroll it
+  // programmatically, so the echo doesn't bounce back and fight the sync
+  // that caused it. Needs to cover the native smooth-scroll animation
+  // (browser-timed, not fixed), not just one frame.
+  const SYNC_ECHO_COOLDOWN_MS = 400;
+
+  let _ignoreEditorEchoUntil  = 0; // set when WE scroll the editor (from preview)
+  let _ignorePreviewEchoUntil = 0; // set when WE scroll the preview (from editor)
+
+  // Coalesce bursts of 'scroll' events (fast wheel/trackpad scrolling can fire
+  // many per frame) into at most one sync computation per animation frame,
+  // always using the freshest scroll position at the time the frame runs.
+  let _previewSyncRAF = null;
+  let _editorSyncRAF  = null;
 
   function _isSplitMode() {
     const area = document.getElementById('editorArea');
     return !!area && area.getAttribute('data-view') === 'split';
   }
 
-  /** Last [data-line] element at or before targetLine, within container. */
-  function _closestLineEl(container, targetLine) {
-    const els = container.querySelectorAll('[data-line]');
-    let best = null;
-    for (const el of els) {
-      if (+el.getAttribute('data-line') <= targetLine) best = el;
-      else break;
-    }
-    return best || els[0] || null;
-  }
-
   /** Scroll the preview pane to track the editor's current scroll position. */
   function syncPreviewScrollFromEditor() {
-    if (_scrollSyncing || !_isSplitMode()) return;
+    if (performance.now() < _ignoreEditorEchoUntil) return; // echo of our own preview→editor scroll
+    if (!_isSplitMode() || _previewSyncRAF) return;
+    _previewSyncRAF = requestAnimationFrame(() => {
+      _previewSyncRAF = null;
+      _syncPreviewScrollFromEditorNow();
+    });
+  }
+
+  function _syncPreviewScrollFromEditorNow() {
     const editor      = _deps.getEditor ? _deps.getEditor() : null;
-    const preview     = _deps.getPreviewContent ? _deps.getPreviewContent() : null;
     const previewPane = document.getElementById('previewPane');
-    if (!editor || !preview || !previewPane) return;
+    if (!editor || !previewPane) return;
 
-    const totalLines = editor.value.split('\n').length;
-    const maxScroll   = Math.max(1, editor.scrollHeight - editor.clientHeight);
-    const targetLine  = (editor.scrollTop / maxScroll) * (totalLines - 1);
+    const maxScroll = editor.scrollHeight - editor.clientHeight;
+    const paneMax   = previewPane.scrollHeight - previewPane.clientHeight;
+    const ratio     = maxScroll > 0 ? editor.scrollTop / maxScroll : 0;
 
-    const el = _closestLineEl(preview, targetLine);
-    if (!el) return;
-
-    const paneMax = Math.max(1, previewPane.scrollHeight - previewPane.clientHeight);
-    previewPane.scrollTop = Math.min(paneMax, Math.max(0, el.offsetTop - 8));
-
-    _scrollSyncing = true;
-    requestAnimationFrame(() => { _scrollSyncing = false; });
+    _ignorePreviewEchoUntil = performance.now() + SYNC_ECHO_COOLDOWN_MS;
+    previewPane.scrollTo({ top: Math.round(ratio * Math.max(0, paneMax)), behavior: 'smooth' });
   }
 
   /** Scroll the editor to track the preview pane's current scroll position. */
   function syncEditorScrollFromPreview() {
-    if (_scrollSyncing || !_isSplitMode()) return;
+    if (performance.now() < _ignorePreviewEchoUntil) return; // echo of our own editor→preview scroll
+    if (!_isSplitMode() || _editorSyncRAF) return;
+    _editorSyncRAF = requestAnimationFrame(() => {
+      _editorSyncRAF = null;
+      _syncEditorScrollFromPreviewNow();
+    });
+  }
+
+  function _syncEditorScrollFromPreviewNow() {
     const editor      = _deps.getEditor ? _deps.getEditor() : null;
-    const preview     = _deps.getPreviewContent ? _deps.getPreviewContent() : null;
     const previewPane = document.getElementById('previewPane');
-    if (!editor || !preview || !previewPane) return;
+    if (!editor || !previewPane) return;
 
-    const els = preview.querySelectorAll('[data-line]');
-    if (!els.length) return;
-    let best = els[0];
-    for (const el of els) {
-      if (el.offsetTop <= previewPane.scrollTop + 4) best = el;
-      else break;
-    }
+    const paneMax   = previewPane.scrollHeight - previewPane.clientHeight;
+    const maxScroll = editor.scrollHeight - editor.clientHeight;
+    const ratio     = paneMax > 0 ? previewPane.scrollTop / paneMax : 0;
 
-    const line       = +best.getAttribute('data-line');
-    const totalLines = editor.value.split('\n').length;
-    const maxScroll  = Math.max(1, editor.scrollHeight - editor.clientHeight);
-    editor.scrollTop = Math.min(maxScroll, Math.max(0, (line / Math.max(1, totalLines - 1)) * maxScroll));
-
-    _scrollSyncing = true;
-    requestAnimationFrame(() => { _scrollSyncing = false; });
+    _ignoreEditorEchoUntil = performance.now() + SYNC_ECHO_COOLDOWN_MS;
+    editor.scrollTo({ top: Math.round(ratio * Math.max(0, maxScroll)), behavior: 'smooth' });
   }
 
   /** Re-render preview and update status bar (debounced). */

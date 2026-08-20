@@ -519,7 +519,14 @@ if (previewContent) {
     e.preventDefault();
 
     const href = anchor.getAttribute('href');
-    if (/^https?:\/\//i.test(href)) {
+    if (href.startsWith('#')) {
+      // In-document link (e.g. a table of contents entry) — scroll the
+      // matching heading into view instead of doing nothing, since the
+      // preview pane isn't a real page the browser can navigate within.
+      const targetId = href.slice(1);
+      const target = targetId && previewContent.querySelector(`#${CSS.escape(targetId)}`);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else if (/^https?:\/\//i.test(href)) {
       await window.electronAPI.openExternal(href);
     } else if (/\.(md|markdown|txt)$/i.test(href)) {
       const currentPath = currentFile.path;
