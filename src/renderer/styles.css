@@ -5,61 +5,103 @@
   padding: 0;
 }
 
-/* ─── Design tokens — Light theme (default) ──────────────────────── */
+/* ─── Design tokens — Light theme (Snow White) ─────────────────────── */
 :root {
   /* Layout (not theme-dependent) */
-  --sidebar-width:     20%;
+  --sidebar-width:     25%;
   --sidebar-min-width: 160px;
-  --sidebar-max-width: none;
+  --sidebar-max-width: 500px;
 
   /* Editor typography — overridden at runtime by the Font settings panel */
   --editor-font-size: 13px;
 
   /* Accent */
-  --primary:           #2563eb;
+  --primary:           #4f46e5;
 
   /* Backgrounds */
   --bg:                #ffffff;
-  --surface:           #f8fafc;
-  --sidebar-bg:        #f8fafc;
+  --surface:           #f8f9fb;
+  --sidebar-bg:        #f8f9fb;
   --input-bg:          #ffffff;
   --editor-bg:         #ffffff;
   --preview-bg:        #ffffff;
 
   /* Text */
-  --text-primary:      #1e293b;
-  --text-secondary:    #64748b;
-  --section-header:    #94a3b8;
+  --text-primary:      #3d3929;
+  --text-secondary:    #83827d;
+  --section-header:    #a8a6a0;
 
   /* Borders & interactions */
-  --border:            #e2e8f0;
-  --hover-bg:          #f1f5f9;
-  --active-file-bg:    #dbeafe;
-  --active-file-text:  #2563eb;
+  --border:            #e8eaed;
+  --hover-bg:          #f0f1f5;
+  --active-file-bg:    #ecebf7;
+  --active-file-text:  #5b5aa0;
 
   /* Status bar */
-  --statusbar-bg:      #e2e8f0;
-  --statusbar-text:    #64748b;
+  --statusbar-bg:      #f4f5f7;
+  --statusbar-text:    #83827d;
 
   /* Theme toggle button */
-  --toggle-btn-bg:     #f1f5f9;
-  --toggle-btn-border: #e2e8f0;
-  --toggle-btn-text:   #1e293b;
+  --toggle-btn-bg:     #f0f1f5;
+  --toggle-btn-border: #e5e7eb;
+  --toggle-btn-text:   #4b5563;
 
   /* Chat bubbles */
-  --chat-user-bg:      #2563eb;
+  --chat-user-bg:      #4f46e5;
   --chat-user-text:    #ffffff;
-  --chat-ai-bg:        #e2e8f0;
-  --chat-ai-text:      #1e293b;
+  --chat-ai-bg:        #ecebf7;
+  --chat-ai-text:      #3d3929;
 
   /* Restore button */
-  --restore-btn-bg:    #fef3c7;
+  --restore-btn-bg:    #fbeed3;
   --restore-btn-text:  #92400e;
-  --restore-btn-border:#fcd34d;
+  --restore-btn-border:#eecea1;
 
   /* Scrollbar */
-  --scrollbar-thumb:   #cbd5e1;
-  --scrollbar-thumb-hover: #94a3b8;
+  --scrollbar-thumb:   #ddd9cd;
+  --scrollbar-thumb-hover: #a8a6a0;
+  --scrollbar-track:   transparent;
+}
+
+/* ─── Design tokens — Light2 theme (flat, single-tone) ────────────── */
+/* Same palette as Light, but every background section uses --preview-bg */
+[data-theme="light2"] {
+  --primary:           #4f46e5;
+
+  --bg:                #fefefa;
+  --surface:           #fefefa;
+  --sidebar-bg:        #fefefa;
+  --input-bg:          #fefefa;
+  --editor-bg:         #fefefa;
+  --preview-bg:        #fefefa;
+
+  --text-primary:      #3d3929;
+  --text-secondary:    #83827d;
+  --section-header:    #a8a6a0;
+
+  --border:            #e5e4df;
+  --hover-bg:          #ece9df;
+  --active-file-bg:    #ecebf7;
+  --active-file-text:  #5b5aa0;
+
+  --statusbar-bg:      #f7f2e9;
+  --statusbar-text:    #83827d;
+
+  --toggle-btn-bg:     #efeef8;
+  --toggle-btn-border: #e2e0f0;
+  --toggle-btn-text:   #5b5aa0;
+
+  --chat-user-bg:      #4f46e5;
+  --chat-user-text:    #ffffff;
+  --chat-ai-bg:        #e5e4df;
+  --chat-ai-text:      #3d3929;
+
+  --restore-btn-bg:    #fbeed3;
+  --restore-btn-text:  #92400e;
+  --restore-btn-border:#eecea1;
+
+  --scrollbar-thumb:   #ddd9cd;
+  --scrollbar-thumb-hover: #a8a6a0;
   --scrollbar-track:   transparent;
 }
 
@@ -101,6 +143,47 @@
 
   --scrollbar-thumb:   #3e4451;
   --scrollbar-thumb-hover: #5c6370;
+  --scrollbar-track:   transparent;
+}
+
+/* ─── Design tokens — Dim theme (PowerShell "One Half Dark", Slate) ─ */
+[data-theme="dim"] {
+  --primary:           #61afef;
+
+  --bg:                #3b414c;
+  --surface:           #3b414c;
+  --sidebar-bg:        #3b414c;
+  --input-bg:          #3b414c;
+  --editor-bg:         #3b414c;
+  --preview-bg:        #3b414c;
+
+  --text-primary:      #e3e7ee;
+  --text-secondary:    #a8b0bd;
+  --section-header:    #7a8290;
+
+  --border:            #4c525c;
+  --hover-bg:          #454b55;
+  --active-file-bg:    #31465f;
+  --active-file-text:  #7fc0ff;
+
+  --statusbar-bg:      #3b414c;
+  --statusbar-text:    #a8b0bd;
+
+  --toggle-btn-bg:     #3b414c;
+  --toggle-btn-border: #4c525c;
+  --toggle-btn-text:   #e3e7ee;
+
+  --chat-user-bg:      #61afef;
+  --chat-user-text:    #1c1f26;
+  --chat-ai-bg:        #454b55;
+  --chat-ai-text:      #e3e7ee;
+
+  --restore-btn-bg:    #4a3a16;
+  --restore-btn-text:  #e5c07b;
+  --restore-btn-border:#8a6a28;
+
+  --scrollbar-thumb:   #4c525c;
+  --scrollbar-thumb-hover: #7a8290;
   --scrollbar-track:   transparent;
 }
 
@@ -857,6 +940,10 @@ body {
 [data-theme="dark"] .welcome-recent-item .icon-file--md {
   color: #a78bfa;
 }
+[data-theme="dim"] .file-item .icon-file--md,
+[data-theme="dim"] .welcome-recent-item .icon-file--md {
+  color: #d19bec;
+}
 
 /* Plain-text file icon — teal */
 .file-item .icon-file--txt,
@@ -866,6 +953,10 @@ body {
 [data-theme="dark"] .file-item .icon-file--txt,
 [data-theme="dark"] .welcome-recent-item .icon-file--txt {
   color: #2dd4bf;
+}
+[data-theme="dim"] .file-item .icon-file--txt,
+[data-theme="dim"] .welcome-recent-item .icon-file--txt {
+  color: #7fd3de;
 }
 
 /* Folder icon — amber light, darker amber dark */
@@ -878,6 +969,11 @@ body {
 [data-theme="dark"] .file-item .icon-folder,
 [data-theme="dark"] .welcome-recent-item .icon-folder {
   color: #e5c07b;
+}
+[data-theme="dim"] .folder-row .icon-folder,
+[data-theme="dim"] .file-item .icon-folder,
+[data-theme="dim"] .welcome-recent-item .icon-folder {
+  color: #f0cf94;
 }
 
 .file-item span {
@@ -1108,6 +1204,9 @@ body {
   overflow: hidden;
   white-space: nowrap;
   min-width: 0;
+  /* Reserve the pin button's height (18px) even while it's hidden (display:none),
+     so revealing it on hover doesn't stretch this row and shift the list below it. */
+  min-height: 18px;
 }
 
 .file-item__name {
@@ -1133,17 +1232,23 @@ body {
   font-size: 10px;
   padding: 1px 5px;
   border-radius: 3px;
-  background: var(--hover-bg);
-  color: var(--text-secondary);
+  background: color-mix(in srgb, #d97757 18%, transparent);
+  color: #c2531f;
   white-space: nowrap;
   flex: none;
   overflow: visible;
   text-overflow: clip;
 }
 
-[data-theme="dark"] .file-item .file-tag {
-  background: color-mix(in srgb, var(--primary) 15%, transparent);
-  color: var(--primary);
+[data-theme="dim"] .file-item .file-tag {
+  background: color-mix(in srgb, #d19bec 20%, transparent);
+  color: #d19bec;
+}
+
+[data-theme="light"] .file-item .file-tag,
+[data-theme="light2"] .file-item .file-tag {
+  background: #e8e6f5;
+  color: #34315f;
 }
 
 .file-item__preview {
@@ -1609,6 +1714,17 @@ body {
   color: #ffffff;
 }
 
+[data-theme="light"] .toggle-group button.active {
+  background: #475569;
+}
+
+[data-theme="light2"] .toggle-group button.active {
+  background: #4f46e5;
+}
+
+
+
+
 /* ─── Editor Area ────────────────────────────────────────────────── */
 .editor-area {
   flex: 1;
@@ -1710,6 +1826,13 @@ body {
 [data-theme="dark"] #editor-highlight .hl-h4 { color: #98c379; }
 [data-theme="dark"] #editor-highlight .hl-h5 { color: #e5c07b; }
 [data-theme="dark"] #editor-highlight .hl-h6 { color: #e06c75; }
+
+[data-theme="dim"] #editor-highlight .hl-h1 { color: #d19bec; }
+[data-theme="dim"] #editor-highlight .hl-h2 { color: #7fc0ff; }
+[data-theme="dim"] #editor-highlight .hl-h3 { color: #7fd3de; }
+[data-theme="dim"] #editor-highlight .hl-h4 { color: #b0d99b; }
+[data-theme="dim"] #editor-highlight .hl-h5 { color: #f0cf94; }
+[data-theme="dim"] #editor-highlight .hl-h6 { color: #ec9aa1; }
 
 /* ── Selection ghost — dimmed highlight when editor loses focus ────── */
 /* Sits behind #editor-highlight so syntax colours remain readable.    */
@@ -1841,6 +1964,13 @@ body {
 [data-theme="dark"] .preview-content h5 { color: #e5c07b; }
 [data-theme="dark"] .preview-content h6 { color: #e06c75; }
 
+[data-theme="dim"] .preview-content h1 { color: #d19bec; }
+[data-theme="dim"] .preview-content h2 { color: #7fc0ff; }
+[data-theme="dim"] .preview-content h3 { color: #7fd3de; }
+[data-theme="dim"] .preview-content h4 { color: #b0d99b; }
+[data-theme="dim"] .preview-content h5 { color: #f0cf94; }
+[data-theme="dim"] .preview-content h6 { color: #ec9aa1; }
+
 .preview-content p  { margin: 1.1em 0; }
 .preview-content hr { border: none; border-top: 2px solid var(--border); margin: 1.5em 0; }
 
@@ -1881,6 +2011,16 @@ body {
   color: var(--text-primary);
   border: none;
 }
+
+.preview-content .markdown-embed {
+  margin: 1em 0;
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.preview-content .markdown-embed > *:first-child { margin-top: 0; }
+.preview-content .markdown-embed > *:last-child { margin-bottom: 0; }
 
 .preview-content blockquote {
   margin: 1.25em 0;
@@ -2463,6 +2603,48 @@ body {
   outline-offset: 1px;
 }
 
+/* ─── Suggested-prompt chips (greeting bubble) ────────────────────── */
+.chat-prompt-group {
+  margin-top: 10px;
+}
+
+.chat-prompt-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+.chat-prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chat-prompt-chip {
+  font-size: 11.5px;
+  line-height: 1.4;
+  padding: 5px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.chat-prompt-chip:hover {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  color: var(--primary);
+}
+
+.chat-prompt-chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
@@ -2564,6 +2746,10 @@ body {
   cursor: pointer;
   flex-shrink: 0;
   transition: opacity 150ms ease;
+}
+
+[data-theme="light"] .send-btn {
+  background: #5b5aa0;
 }
 
 .send-btn:hover {
@@ -2789,11 +2975,11 @@ body {
   max-width: 100px;
 }
 
-/* The dropdown panel */
+/* The dropdown panel — positioned via JS (fixed) so it can escape the
+   .right-sidebar's `overflow: hidden` instead of being clipped to the
+   chat header section. */
 .model-picker-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
+  position: fixed;
   min-width: 200px;
   max-width: 260px;
   background: var(--surface);
@@ -3124,6 +3310,14 @@ body {
   background: #2e1065;
   color: #a78bfa;
 }
+.type-badge--anthropic {
+  background: #fef3c7;
+  color: #b45309;
+}
+[data-theme="dark"] .type-badge--anthropic {
+  background: #451a03;
+  color: #fbbf24;
+}
 
 /* ── Contextual hint below type radio / inside field groups ───────────── */
 .form-type-hint {
@@ -3157,6 +3351,30 @@ body {
   background: #14532d;
   border-color: #166534;
 }
+.form-type-hint--anthropic {
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+[data-theme="dark"] .form-type-hint--anthropic {
+  color: #fbbf24;
+  background: #451a03;
+  border-color: #78350f;
+}
+.form-type-hint--cli {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+[data-theme="dark"] .form-type-hint--cli {
+  color: #60a5fa;
+  background: #1e3a5f;
+  border-color: #1e40af;
+}
 
 /* ── Inline field hint (below a specific input) ────────────────────────── */
 .form-field-hint {
@@ -3167,6 +3385,19 @@ body {
 }
 .form-field-hint strong {
   color: var(--text-primary);
+}
+.form-field-hint code {
+  background: var(--bg-secondary, rgba(127,127,127,0.15));
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ── Optional-field marker next to a form label ───────────────────────── */
+.form-label-optional {
+  font-weight: 400;
+  color: var(--text-secondary);
+  font-size: 11px;
 }
 
 /* ── API key row: input + show/hide button ─────────────────────────── */
@@ -3179,6 +3410,51 @@ body {
   flex: 1;
   font-family: 'Courier New', Courier, monospace;
   letter-spacing: 0.05em;
+}
+
+/* ── Config-incomplete warning badge ──────────────────────────────────
+   Shown on model cards / picker items / the chat-header badge when a
+   model is missing a field its request handler (ipc.js) needs to run. */
+.model-card--incomplete {
+  border-color: #fcd34d;
+}
+[data-theme="dark"] .model-card--incomplete {
+  border-color: #78350f;
+}
+
+.config-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  flex-shrink: 0;
+  cursor: help;
+}
+[data-theme="dark"] .config-warning-badge {
+  background: #450a0a;
+  color: #f87171;
+  border-color: #7f1d1d;
+}
+
+.model-card-warning {
+  font-size: 11px;
+  color: #b91c1c;
+  margin-top: 4px;
+}
+[data-theme="dark"] .model-card-warning {
+  color: #f87171;
+}
+
+.picker-item-warning {
+  color: #f87171;
+  font-size: 12px;
+  cursor: help;
+  flex-shrink: 0;
 }
 
 /* ── Default badge ─────────────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net } = require('electron')
 const path = require('path')
 const fs   = require('fs')
-const { registerIpcHandlers, updateJumpList } = require('./ipc')
+const { registerIpcHandlers, updateJumpList, seedDefaultModels } = require('./ipc')
 const { startReleaseCheck } = require('./releaseCheck')
 
 // ── Window state persistence ───────────────────────────────────────────────
@@ -210,7 +210,7 @@ if (!gotLock) {
 
   // ── App lifecycle ───────────────────────────────────────────────────────────
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     // Serve local filesystem files via local-file:// so the renderer can load
     // images from arbitrary paths without being blocked by web security.
     // URL format: local-file:///D:/path/to/image.png
@@ -221,6 +221,10 @@ if (!gotLock) {
 
     Menu.setApplicationMenu(null)
     registerIpcHandlers()
+
+    // First-run only: populate a starter set of AI models so the renderer's
+    // first ai-config:list call (on window load) doesn't see an empty list.
+    await seedDefaultModels()
 
     // IPC: open a new window from the renderer (hamburger "New Instance" button,
     //      or "Open in New Window" from the file context menu).

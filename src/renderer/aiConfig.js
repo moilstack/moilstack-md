@@ -69,7 +69,16 @@ const AIConfigManager = (() => {
 
     // Update the model badge text in the chat header
     const label = document.getElementById('activeModelLabel')
-    if (label) label.textContent = model ? model.label : 'No model'
+    if (label) {
+      if (model) {
+        const missing = _validateModel(model)
+        label.textContent = model.label + (missing.length ? ' ⚠' : '')
+        label.title = missing.length ? `Missing: ${missing.join(', ')}` : ''
+      } else {
+        label.textContent = 'No model'
+        label.title = ''
+      }
+    }
 
     // Show the welcome / no-model screen when nothing is configured
     _applyWelcomeScreen()
@@ -121,13 +130,19 @@ const AIConfigManager = (() => {
       return
     }
 
-    list.innerHTML = models.map(m => `
-      <div class="model-card">
+    list.innerHTML = models.map(m => {
+      const missing     = _validateModel(m)
+      const incomplete  = missing.length > 0
+      const missingText = `Missing: ${missing.join(', ')}`
+
+      return `
+      <div class="model-card${incomplete ? ' model-card--incomplete' : ''}">
         <div class="model-card-top">
           <div class="model-card-info">
             <span class="model-card-label">${esc(m.label)}</span>
             <span class="type-badge type-badge--${esc(m.type)}">${m.type.toUpperCase()}</span>
             ${m.is_default ? '<span class="default-badge">default</span>' : ''}
+            ${incomplete ? `<span class="config-warning-badge" title="${esc(missingText)}">⚠ Incomplete</span>` : ''}
           </div>
           <div class="model-card-actions">
             ${!m.is_default
@@ -138,18 +153,44 @@ const AIConfigManager = (() => {
           </div>
         </div>
         <div class="model-card-detail">${_modelDetail(m)}</div>
+        ${incomplete ? `<div class="model-card-warning">${esc(missingText)}</div>` : ''}
       </div>
-    `).join('')
+    `
+    }).join('')
+  }
+
+  /**
+   * Check whether a model config has everything it needs to actually work,
+   * given the fields each type's request handler in ipc.js reads from.
+   * @param {object} m  A model config (as returned by ai-config:list).
+   * @returns {string[]} Human-readable list of missing pieces; empty = OK.
+   */
+  function _validateModel(m) {
+    const missing = []
+    if (m.type === 'ollama') {
+      if (!m.model_name) missing.push('Model name (click Detect while editing)')
+    } else if (m.type === 'api') {
+      if (!m.base_url)   missing.push('Base URL')
+      if (!m.model_name) missing.push('Model name')
+      if (!m.api_key)    missing.push('API key')
+    } else if (m.type === 'anthropic') {
+      if (!m.model_name) missing.push('Model name')
+      if (!m.api_key)    missing.push('Anthropic API key')
+    } else if (m.type === 'cli') {
+      if (!m.executable) missing.push('Executable name')
+      if (!m.model_name) missing.push('Model name')
+    }
+    return missing
   }
 
   /** One-line summary of the model's key property (base URL / model name). */
   function _modelDetail(m) {
-    if (m.type === 'ollama') {
+    if (m.type === 'ollama' || m.type === 'api' || m.type === 'anthropic') {
       const parts = [m.base_url, m.model_name].filter(Boolean)
       return parts.map(esc).join(' · ')
     }
-    if (m.type === 'api') {
-      const parts = [m.base_url, m.model_name].filter(Boolean)
+    if (m.type === 'cli') {
+      const parts = [m.executable, m.model_name].filter(Boolean)
       return parts.map(esc).join(' · ')
     }
     return ''
@@ -193,6 +234,7 @@ const AIConfigManager = (() => {
     if (model.type === 'ollama') {
       _showFields('ollama')
       document.getElementById('modelBaseUrl').value = model.base_url || 'http://localhost:11434'
+      document.getElementById('modelOllamaApiKey').value = model.api_key || ''
       const sel = document.getElementById('modelName')
       sel.innerHTML = ''
       if (model.model_name) {
@@ -208,6 +250,16 @@ const AIConfigManager = (() => {
       document.getElementById('modelApiBaseUrl').value    = model.base_url   || ''
       document.getElementById('modelApiModelName').value  = model.model_name || ''
       document.getElementById('modelApiKey').value        = model.api_key    || ''
+    } else if (model.type === 'anthropic') {
+      _showFields('anthropic')
+      document.getElementById('modelAnthropicBaseUrl').value   = model.base_url   || 'https://api.anthropic.com'
+      document.getElementById('modelAnthropicModelName').value = model.model_name || ''
+      document.getElementById('modelAnthropicApiKey').value    = model.api_key    || ''
+    } else if (model.type === 'cli') {
+      _showFields('cli')
+      document.getElementById('modelCliExecutable').value = model.executable || ''
+      document.getElementById('modelCliModelName').value  = model.model_name || ''
+      document.getElementById('modelCliFlags').value      = model.flags      || ''
     }
 
     document.getElementById('modelModalOverlay').classList.remove('hidden')
@@ -227,12 +279,21 @@ const AIConfigManager = (() => {
     document.getElementById('modelLabel').value         = ''
     document.getElementById('modelBaseUrl').value       = 'http://localhost:11434'
     document.getElementById('modelName').innerHTML      = '<option value="">— click Detect —</option>'
+    document.getElementById('modelOllamaApiKey').value  = ''
     document.getElementById('modelApiBaseUrl').value    = ''
     document.getElementById('modelApiModelName').value  = ''
     document.getElementById('modelApiKey').value        = ''
-    // Reset API key field to hidden (password) mode
-    const apiKeyInput = document.getElementById('modelApiKey')
-    if (apiKeyInput) apiKeyInput.type = 'password'
+    document.getElementById('modelAnthropicBaseUrl').value   = 'https://api.anthropic.com'
+    document.getElementById('modelAnthropicModelName').value = ''
+    document.getElementById('modelAnthropicApiKey').value    = ''
+    document.getElementById('modelCliExecutable').value = ''
+    document.getElementById('modelCliModelName').value  = ''
+    document.getElementById('modelCliFlags').value      = ''
+    // Reset password fields to hidden mode
+    ;['modelApiKey', 'modelOllamaApiKey', 'modelAnthropicApiKey'].forEach(id => {
+      const input = document.getElementById(id)
+      if (input) input.type = 'password'
+    })
     document.getElementById('modelIsDefault').checked = (models.length === 0)
     _showFields('api')
     _updateTypeHint('api')
@@ -240,8 +301,10 @@ const AIConfigManager = (() => {
 
   /** Show the fields section for the selected type; hide the others. */
   function _showFields(type) {
-    document.getElementById('ollamaFields').classList.toggle('hidden', type !== 'ollama')
-    document.getElementById('apiFields').classList.toggle('hidden',    type !== 'api')
+    document.getElementById('ollamaFields').classList.toggle('hidden',    type !== 'ollama')
+    document.getElementById('apiFields').classList.toggle('hidden',       type !== 'api')
+    document.getElementById('anthropicFields').classList.toggle('hidden', type !== 'anthropic')
+    document.getElementById('cliFields').classList.toggle('hidden',       type !== 'cli')
   }
 
   /** Update the contextual hint text below the type radio buttons. */
@@ -253,7 +316,13 @@ const AIConfigManager = (() => {
       hint.innerHTML = 'Compatible with any <strong>OpenAI-compatible API</strong> — Groq (free tier), OpenAI, Together AI, Mistral, and more. Set the Base URL to the provider\'s endpoint and paste your API key below.'
     } else if (type === 'ollama') {
       hint.className = 'form-type-hint form-type-hint--ollama'
-      hint.innerHTML = 'Runs locally — no API key needed. Requires <strong>Ollama</strong> to be installed and running.'
+      hint.innerHTML = 'Runs locally — no API key needed. Requires <strong>Ollama</strong> to be installed and running. To use Ollama Cloud instead, set the Base URL to your cloud endpoint and paste an API key.'
+    } else if (type === 'anthropic') {
+      hint.className = 'form-type-hint form-type-hint--anthropic'
+      hint.innerHTML = 'Connects directly to <strong>Anthropic\'s Messages API</strong>. Paste your Anthropic API key below.'
+    } else if (type === 'cli') {
+      hint.className = 'form-type-hint form-type-hint--cli'
+      hint.innerHTML = 'Spawns a locally installed CLI (<strong>Claude Code</strong> or <strong>Agy</strong>) as a subprocess. No API key is stored — the CLI must already be installed and logged in on this machine.'
     } else {
       hint.className = 'form-type-hint'
       hint.innerHTML = ''
@@ -283,6 +352,7 @@ const AIConfigManager = (() => {
     if (type === 'ollama') {
       data.base_url    = document.getElementById('modelBaseUrl').value.trim() || 'http://localhost:11434'
       data.model_name  = document.getElementById('modelName').value           || null
+      data.api_key     = document.getElementById('modelOllamaApiKey').value.trim() || null
     } else if (type === 'api') {
       const apiBase = document.getElementById('modelApiBaseUrl').value.trim()
       if (!apiBase) {
@@ -293,6 +363,25 @@ const AIConfigManager = (() => {
       data.base_url   = apiBase
       data.model_name = document.getElementById('modelApiModelName').value.trim() || null
       data.api_key    = document.getElementById('modelApiKey').value.trim()       || null
+    } else if (type === 'anthropic') {
+      data.base_url   = document.getElementById('modelAnthropicBaseUrl').value.trim() || 'https://api.anthropic.com'
+      data.model_name = document.getElementById('modelAnthropicModelName').value.trim() || null
+      data.api_key    = document.getElementById('modelAnthropicApiKey').value.trim() || null
+      if (!data.api_key) {
+        alert('Please enter an Anthropic API key.')
+        document.getElementById('modelAnthropicApiKey').focus()
+        return
+      }
+    } else if (type === 'cli') {
+      const exe = document.getElementById('modelCliExecutable').value.trim()
+      if (!exe) {
+        alert('Please enter an executable name (e.g. claude or agy).')
+        document.getElementById('modelCliExecutable').focus()
+        return
+      }
+      data.executable = exe
+      data.model_name = document.getElementById('modelCliModelName').value.trim() || null
+      data.flags      = document.getElementById('modelCliFlags').value.trim()     || null
     }
 
     const btn = document.getElementById('btnSaveModel')
@@ -387,9 +476,17 @@ const AIConfigManager = (() => {
 
   function toggleModelPicker() {
     const dropdown = document.getElementById('modelPickerDropdown')
+    const trigger  = document.getElementById('btnModelPicker')
     if (!dropdown) return
     if (dropdown.classList.contains('hidden')) {
       _renderPickerList()
+      // Position with fixed coords (relative to the viewport) so the dropdown
+      // isn't clipped by the .right-sidebar's `overflow: hidden`.
+      if (trigger) {
+        const rect = trigger.getBoundingClientRect()
+        dropdown.style.top   = `${rect.bottom + 6}px`
+        dropdown.style.right = `${window.innerWidth - rect.right}px`
+      }
       dropdown.classList.remove('hidden')
     } else {
       dropdown.classList.add('hidden')
@@ -411,13 +508,17 @@ const AIConfigManager = (() => {
       return
     }
 
-    list.innerHTML = models.map(m => `
+    list.innerHTML = models.map(m => {
+      const missing = _validateModel(m)
+      return `
       <div class="picker-item ${active && active.id === m.id ? 'picker-item--active' : ''}"
            data-picker-id="${esc(m.id)}">
         <span class="picker-item-label">${esc(m.label)}</span>
+        ${missing.length ? `<span class="picker-item-warning" title="${esc('Missing: ' + missing.join(', '))}">⚠</span>` : ''}
         <span class="type-badge type-badge--${esc(m.type)}">${m.type.toUpperCase()}</span>
       </div>
-    `).join('')
+    `
+    }).join('')
   }
 
   function selectModel(id) {
@@ -455,8 +556,8 @@ const AIConfigManager = (() => {
     const startupModeSel   = document.getElementById('startupMode')
     if (startupModeSel) startupModeSel.value = savedStartupMode
 
-    // Seed the explorer-mode selector with the saved preference (default: multi-level)
-    const savedExplorerMode = localStorage.getItem('explorerMode') || 'multi-level'
+    // Seed the explorer-mode selector with the saved preference (default: root-only)
+    const savedExplorerMode = localStorage.getItem('explorerMode') || 'root-only'
     const explorerModeSel   = document.getElementById('explorerMode')
     if (explorerModeSel) explorerModeSel.value = savedExplorerMode
 
@@ -560,25 +661,30 @@ const AIConfigManager = (() => {
     /* Ollama detect */
     document.getElementById('btnDetectOllama')?.addEventListener('click', detectOllamaModels)
 
-    /* API key show / hide toggle */
-    document.getElementById('btnToggleApiKey')?.addEventListener('click', () => {
-      const input = document.getElementById('modelApiKey')
-      const icon  = document.getElementById('apiKeyEyeIcon')
-      if (!input) return
-      const isHidden = input.type === 'password'
-      input.type = isHidden ? 'text' : 'password'
-      // Swap eye icon to eye-off when key is visible
-      icon.innerHTML = isHidden
-        ? `<path d="M17.94 17.94A10 10 0 0 1 12 20C5 20 1 12 1 12a18 18 0 0 1 5.06-5.94"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-           <path d="M9.9 4.24A9 9 0 0 1 12 4c7 0 11 8 11 8a18 18 0 0 1-2.16 3.19"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-           <line x1="1" y1="1" x2="23" y2="23"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`
-        : `<path d="M1 12C1 12 5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12Z"
-               stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-           <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>`
-    })
+    /* API key show / hide toggle — wired identically for every password-type key field */
+    function _wireApiKeyToggle(btnId, inputId, iconId) {
+      document.getElementById(btnId)?.addEventListener('click', () => {
+        const input = document.getElementById(inputId)
+        const icon  = document.getElementById(iconId)
+        if (!input) return
+        const isHidden = input.type === 'password'
+        input.type = isHidden ? 'text' : 'password'
+        // Swap eye icon to eye-off when key is visible
+        icon.innerHTML = isHidden
+          ? `<path d="M17.94 17.94A10 10 0 0 1 12 20C5 20 1 12 1 12a18 18 0 0 1 5.06-5.94"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+             <path d="M9.9 4.24A9 9 0 0 1 12 4c7 0 11 8 11 8a18 18 0 0 1-2.16 3.19"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+             <line x1="1" y1="1" x2="23" y2="23"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`
+          : `<path d="M1 12C1 12 5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12Z"
+                 stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+             <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>`
+      })
+    }
+    _wireApiKeyToggle('btnToggleApiKey',         'modelApiKey',         'apiKeyEyeIcon')
+    _wireApiKeyToggle('btnToggleOllamaApiKey',   'modelOllamaApiKey',   'ollamaApiKeyEyeIcon')
+    _wireApiKeyToggle('btnToggleAnthropicApiKey','modelAnthropicApiKey','anthropicApiKeyEyeIcon')
 
     /* Model card actions — delegated listener on the list container */
     document.getElementById('modelConfigList')?.addEventListener('click', e => {
@@ -685,6 +791,7 @@ const AIConfigManager = (() => {
     setDefault,
     selectModel,
     getActiveModel,
+    validateModel: _validateModel,
   }
 
 })()

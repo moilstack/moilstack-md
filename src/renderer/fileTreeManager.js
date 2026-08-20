@@ -191,7 +191,7 @@ const FileTreeManager = (() => {
   const MAX_FOLDER_DEPTH = 4; // 0-based: shows five levels (0 → 1 → 2 → 3 → 4)
 
   function _getExplorerMode() {
-    return localStorage.getItem('explorerMode') || 'multi-level';
+    return localStorage.getItem('explorerMode') || 'root-only';
   }
 
   /**

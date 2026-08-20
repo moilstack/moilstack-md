@@ -192,8 +192,34 @@ const MarkdownRenderer = (() => {
     return nextNewline === -1 ? '' : src.slice(nextNewline + 1);
   }
 
-  function parseMarkdown(src, startLine = 0) {
+  /**
+   * Turn a heading's raw text into a URL-safe id, GitHub-style, so that
+   * in-document links like `[Section](#section)` (e.g. a table of contents)
+   * resolve to an actual element. `slugs` tracks counts across the whole
+   * document (including recursive sub-parses) so repeated heading text gets
+   * `-1`, `-2`, … suffixes instead of colliding on the same id.
+   */
+  function _slugifyHeading(raw, slugs) {
+    let text = raw
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')  // image → alt text
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')   // link → link text
+      .replace(/[*_`~]/g, '')                     // emphasis/code/strike markers
+      .trim()
+      .toLowerCase()
+      .replace(/[^\wÀ-￿\- ]/g, '')      // strip punctuation, keep letters/digits/space/hyphen
+      .trim()
+      .replace(/\s+/g, '-');
+
+    if (!text) text = 'section';
+
+    const n = slugs.get(text) || 0;
+    slugs.set(text, n + 1);
+    return n === 0 ? text : `${text}-${n}`;
+  }
+
+  function parseMarkdown(src, startLine = 0, slugs = null) {
     if (!src || !src.trim()) return '';
+    slugs = slugs || new Map();
 
     const beforeStrip = src;
     src = _stripFrontmatter(src);
@@ -230,6 +256,19 @@ const MarkdownRenderer = (() => {
           i++;
         }
         i++; // consume closing ```
+
+        // ```markdown / ```md fences render their contents as an actual
+        // nested Markdown section (in a bordered box) instead of a plain
+        // code listing. Recursing is safe: parseMarkdown always escapes raw
+        // text before wrapping it in tags, so nothing here can break out of
+        // the wrapper div, and each recursive call only strips one fence
+        // layer, so accidental self-nesting terminates instead of looping.
+        if (lang === 'markdown' || lang === 'md') {
+          const inner = parseMarkdown(codeLines.join('\n'), blockLine + 1, slugs);
+          out.push(`<div class="markdown-embed" data-line="${blockLine}">${inner}</div>`);
+          continue;
+        }
+
         const langAttr = lang ? ` class="language-${escapeHtml(lang)}"` : '';
         out.push(`<pre data-line="${blockLine}"><code${langAttr}>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
         continue;
@@ -239,7 +278,8 @@ const MarkdownRenderer = (() => {
       const hm = trimmedLine.match(/^(#{1,6}) (.+)$/);
       if (hm) {
         const lvl = hm[1].length;
-        out.push(`<h${lvl} data-line="${blockLine}">${parseInlineMath(hm[2].trim())}</h${lvl}>`);
+        const id  = _slugifyHeading(hm[2].trim(), slugs);
+        out.push(`<h${lvl} id="${id}" data-line="${blockLine}">${parseInlineMath(hm[2].trim())}</h${lvl}>`);
         i++;
         continue;
       }
@@ -260,7 +300,7 @@ const MarkdownRenderer = (() => {
           i++;
         }
         // Recursively parse inner content for nested Markdown, preserving absolute line numbers
-        out.push(`<blockquote data-line="${quoteStartLine}">${parseMarkdown(quoteLines.join('\n'), quoteStartLine)}</blockquote>`);
+        out.push(`<blockquote data-line="${quoteStartLine}">${parseMarkdown(quoteLines.join('\n'), quoteStartLine, slugs)}</blockquote>`);
         continue;
       }
 

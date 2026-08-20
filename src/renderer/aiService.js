@@ -59,7 +59,10 @@ const aiService = {
       })
 
       // Fire the IPC call; catch synchronous invoke errors (e.g. serialisation failures)
-      window.electronAPI.askAI({ model, messages }).catch((err) => {
+      // `cwd` is the currently-open project folder (if any) — only consumed by
+      // CLI-type models via the {{cwd}} flags token (e.g. Agy's --add-dir).
+      const cwd = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('lastFolder')) || null
+      window.electronAPI.askAI({ model, messages, cwd }).catch((err) => {
         window.electronAPI.removeAIListeners()
         reject(err)
       })
