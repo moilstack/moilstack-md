@@ -1,7 +1,7 @@
 # MoilStack .md (markdown) — AI-Powered Markdown Editor with Split View & Version History
 
 [![Version](https://img.shields.io/github/v/release/moilstack/moilstack-md?label=version&include_prereleases)](https://github.com/moilstack/moilstack-md/releases)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20(soon)-blue)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 An open-source desktop **Markdown AI editor** and standalone markdown viewer built with Electron. Write, edit, and view Markdown files with syntax highlighting, live split-pane preview, and an integrated local AI assistant — all running privately on your machine.
@@ -18,7 +18,7 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 |---|---|
 | Windows | NSIS installer, portable ZIP |
 | Linux | AppImage, DEB |
-| macOS | DMG, ZIP (coming soon) |
+| macOS | DMG, ZIP |
 
 > **Note (Windows):** the NSIS/ZIP installer above isn't code-signed, so Windows SmartScreen may show a "Windows protected your PC" warning when you run it. This is normal for an open-source project without a paid code-signing certificate — click **More info → Run anyway** to proceed. If you'd rather avoid unsigned-binary warnings altogether, install from the [Microsoft Store](https://apps.microsoft.com/detail/9pp0mrt5lrk5?hl=en-US&gl=AZ) instead.
 
