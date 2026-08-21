@@ -9,6 +9,7 @@ module.exports = {
   productName: "moilstack-md",
   icon: "build/icons",
   copyright: "Copyright © 2026 MoilStack",
+  directories: {
     output: "dist",
   },
   publish: {
