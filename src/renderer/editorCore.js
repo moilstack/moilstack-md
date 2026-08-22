@@ -78,17 +78,64 @@ const EditorCore = (() => {
      ═══════════════════════════════════════════════════════════════════ */
 
   /**
+   * Apply inline Markdown styling (bold, italic, inline code, links) to a line of HTML-escaped text.
+   * Preserves all characters so the overlay coordinates line up 1:1 with the textarea.
+   */
+  function applyInlineFormatting(html) {
+    // 1. Inline code (using `...` backticks)
+    const codeSlots = [];
+    html = html.replace(/`([^`]+)`/g, (_, codeText) => {
+      const idx = codeSlots.length;
+      codeSlots.push(`<span class="hl-code"><span class="hl-syntax">\`</span>${codeText}<span class="hl-syntax">\`</span></span>`);
+      return `\x01C${idx}\x01`;
+    });
+
+    // Helper to format text inside links/bold/italic
+    function formatInner(text) {
+      // Bold
+      text = text.replace(/\*\*([^*]+)\*\*/g, '<span class="hl-bold"><span class="hl-syntax">**</span>$1<span class="hl-syntax">**</span></span>');
+      text = text.replace(/__([^_]+)__/g, '<span class="hl-bold"><span class="hl-syntax">__</span>$1<span class="hl-syntax">__</span></span>');
+
+      // Italic (use lookarounds to avoid matching parts of bold tags or span text)
+      text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<span class="hl-italic"><span class="hl-syntax">*</span>$1<span class="hl-syntax">*</span></span>');
+      text = text.replace(/(?<!_)_([^_]+)_(?!_)/g, '<span class="hl-italic"><span class="hl-syntax">_</span>$1<span class="hl-syntax">_</span></span>');
+
+      return text;
+    }
+
+    // 2. Links: [text](url)
+    const linkSlots = [];
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, linkText, url) => {
+      const idx = linkSlots.length;
+      const formattedText = formatInner(linkText);
+      linkSlots.push(`<span class="hl-link-text"><span class="hl-syntax">[</span>${formattedText}<span class="hl-syntax">]</span></span><span class="hl-link-url"><span class="hl-syntax">(</span>${url}<span class="hl-syntax">)</span></span>`);
+      return `\x02L${idx}\x02`;
+    });
+
+    // 3. Apply bold/italic formatting to the main text
+    html = formatInner(html);
+
+    // 4. Restore placeholders in reverse order
+    html = html.replace(/\x02L(\d+)\x02/g, (_, idx) => linkSlots[Number(idx)]);
+    html = html.replace(/\x01C(\d+)\x01/g, (_, idx) => codeSlots[Number(idx)]);
+
+    return html;
+  }
+
+  /**
    * Build inner HTML for the highlight div.
    * Each line is either a plain escaped string or a <span class="hl-hN"> wrapper.
    */
   function buildHighlight(text) {
     return text.split('\n').map(line => {
       const m = line.match(HEADING_RE);
+      const escaped = MarkdownRenderer.escapeHtml(line);
+      const styled = applyInlineFormatting(escaped);
       if (m) {
         const level = m[1].length;
-        return `<span class="hl-h${level}">${MarkdownRenderer.escapeHtml(line)}</span>`;
+        return `<span class="hl-h${level}">${styled}</span>`;
       }
-      return MarkdownRenderer.escapeHtml(line);
+      return styled;
     }).join('\n') + '\n'; // trailing \n prevents last-line height mismatch
   }
 
@@ -117,9 +164,10 @@ const EditorCore = (() => {
       if (lineMatches.length === 0) {
         // No match on this line — normal heading highlight path
         const hm = line.match(HEADING_RE);
+        const styled = applyInlineFormatting(MarkdownRenderer.escapeHtml(line));
         out.push(hm
-          ? `<span class="hl-h${hm[1].length}">${MarkdownRenderer.escapeHtml(line)}</span>`
-          : MarkdownRenderer.escapeHtml(line));
+          ? `<span class="hl-h${hm[1].length}">${styled}</span>`
+          : styled);
       } else {
         // Build HTML by walking through the line and injecting <mark> spans
         let html = '';
@@ -131,18 +179,22 @@ const EditorCore = (() => {
           const matchIdx = matches.indexOf(match);
 
           // Plain text before this match
-          if (pos < mStart) html += MarkdownRenderer.escapeHtml(text.slice(pos, mStart));
+          if (pos < mStart) {
+            html += applyInlineFormatting(MarkdownRenderer.escapeHtml(text.slice(pos, mStart)));
+          }
 
           // The match itself — active match gets a stronger style
           const cls = matchIdx === activeIndex
             ? 'find-match find-match--active'
             : 'find-match';
-          html += `<mark class="${cls}">${MarkdownRenderer.escapeHtml(text.slice(mStart, mEnd))}</mark>`;
+          html += `<mark class="${cls}">${applyInlineFormatting(MarkdownRenderer.escapeHtml(text.slice(mStart, mEnd)))}</mark>`;
           pos = mEnd;
         }
 
         // Remaining plain text on this line after the last match
-        if (pos < lineEnd) html += MarkdownRenderer.escapeHtml(text.slice(pos, lineEnd));
+        if (pos < lineEnd) {
+          html += applyInlineFormatting(MarkdownRenderer.escapeHtml(text.slice(pos, lineEnd)));
+        }
 
         // Wrap in a heading span if applicable
         const hm = line.match(HEADING_RE);
