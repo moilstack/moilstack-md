@@ -1,6 +1,6 @@
 {
   "name": "moilstack-md",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Markdown editor with AI assistance by MoilStack",
   "main": "src/main/index.js",
   "scripts": {
@@ -8,70 +8,8 @@
     "test": "jest",
     "make-app-icon": "node build/make-app-icon.js",
     "make-file-icon": "node build/make-file-icon.js",
-    "package": "electron-builder",
+    "package": "electron-builder --config electron-builder.config.js",
     "postinstall": "patch-package"
-  },
-  "build": {
-    "appId": "com.moilstack.markdown",
-    "productName": "moilstack-md",
-    "icon": "build/icons",
-    "copyright": "Copyright © 2026 MoilStack",
-    "directories": {
-      "output": "dist"
-    },
-    "publish": {
-      "provider": "github",
-      "releaseType": "release"
-    },
-    "fileAssociations": [
-      {
-        "ext": "md",
-        "name": "Markdown File",
-        "description": "Markdown Document",
-        "icon": "src/assets/file-icon-md",
-        "role": "Editor",
-        "mimeType": "text/markdown"
-      }
-    ],
-    "win": {
-      "target": [
-        "nsis",
-        "zip"
-      ],
-      "icon": "src/assets/icon.ico",
-      "artifactName": "moilstack-md-${version}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "moilstack-md",
-      "include": "build/installer.nsh"
-    },
-    "appx": {
-      "publisher": "CN=MoilStack",
-      "publisherDisplayName": "MoilStack",
-      "identityName": "MoilStack.Markdown",
-      "applicationId": "MoilStackMarkdown",
-      "backgroundColor": "#6366f1",
-      "languages": [
-        "en-US"
-      ]
-    },
-    "mac": {
-      "target": [
-        "dmg",
-        "zip"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "maintainer": "MoilStack <support@moilstack.com>"
-    }
   },
   "keywords": [
     "markdown",

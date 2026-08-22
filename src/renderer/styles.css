@@ -1834,6 +1834,43 @@ body {
 [data-theme="dim"] #editor-highlight .hl-h5 { color: #f0cf94; }
 [data-theme="dim"] #editor-highlight .hl-h6 { color: #ec9aa1; }
 
+/* Inline markdown syntax character styling */
+#editor-highlight .hl-syntax {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Bold text inside the editor highlight layer */
+#editor-highlight .hl-bold {
+  font-weight: bold;
+}
+
+/* Italic text inside the editor highlight layer */
+#editor-highlight .hl-italic {
+  font-style: italic;
+}
+
+/* Inline code styling in editor highlight layer */
+#editor-highlight .hl-code {
+  background: rgba(127, 127, 127, 0.15);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: #e06c75;
+}
+
+/* Link description styling */
+#editor-highlight .hl-link-text {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Link URL destination styling */
+#editor-highlight .hl-link-url {
+  color: var(--text-secondary);
+}
+
 /* ── Selection ghost — dimmed highlight when editor loses focus ────── */
 /* Sits behind #editor-highlight so syntax colours remain readable.    */
 /* JS sets `top` and `height`; the ghost is hidden by default.         */

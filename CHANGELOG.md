@@ -4,6 +4,13 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [1.1.3] - 2026-08-22
+
+### Added
+- **Inline syntax highlighting in the editor** — formatting syntax tags (like `**`, `_`, `` ` ``, and links) are now styled directly inside the editor highlight overlay. The formatting markup symbols themselves are partially muted, while the text inside is rendered bold, italic, code, or link styled, matching the visual focus of VS Code.
+
+---
+
 ## [1.1.2] - 2026-08-20
 
 ### Added
