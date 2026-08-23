@@ -66,23 +66,23 @@ let _focusModeRestore = null;
 async function toggleFocusMode() {
   if (!_focusModeRestore) {
     const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
-    const aiVisible       = !document.querySelector('.right-sidebar')?.classList.contains('right-sidebar--hidden');
+    const aiExpanded      = !document.querySelector('#aiBottomPanel')?.classList.contains('ai-bottom-panel--collapsed');
     const wasMaximized    = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
 
-    _focusModeRestore = { explorerVisible, aiVisible, prevMode: currentMode, wasMaximized };
+    _focusModeRestore = { explorerVisible, aiExpanded, prevMode: currentMode, wasMaximized };
 
     SidebarManager.setExplorerVisible(false, false);
-    SidebarManager.setAIVisible(false, false);
+    SidebarManager.setAIPanelExpanded(false, false);
     setMode('split');
     if (!wasMaximized) window.electronAPI?.window?.toggleMaximize?.();
 
     focusModeBtn?.classList.add('icon-btn--active');
     focusModeBtn?.setAttribute('aria-pressed', 'true');
   } else {
-    const { explorerVisible, aiVisible, prevMode, wasMaximized } = _focusModeRestore;
+    const { explorerVisible, aiExpanded, prevMode, wasMaximized } = _focusModeRestore;
 
     SidebarManager.setExplorerVisible(explorerVisible, false);
-    SidebarManager.setAIVisible(aiVisible, false);
+    SidebarManager.setAIPanelExpanded(aiExpanded, false);
     setMode(prevMode);
 
     // Only undo the maximize *we* triggered. If the user already restored

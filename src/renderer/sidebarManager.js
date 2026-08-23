@@ -1,5 +1,6 @@
 /**
- * sidebarManager.js — Explorer (left) and AI Assistant (right) sidebar toggles.
+ * sidebarManager.js — Explorer (left) sidebar toggle and AI Assistant
+ * (bottom panel) expand/collapse.
  */
 
 const SidebarManager = (() => {
@@ -15,23 +16,25 @@ const SidebarManager = (() => {
     }
   }
 
-  function setAIVisible(visible, persist = true) {
-    const sidebar = document.querySelector('.right-sidebar');
-    const btn     = document.getElementById('btn-toggle-ai');
-    if (!sidebar) return;
-    sidebar.classList.toggle('right-sidebar--hidden', !visible);
-    if (btn) btn.classList.toggle('sidebar-toggle-btn--active', visible);
+  function setAIPanelExpanded(expanded, persist = true) {
+    const panel  = document.getElementById('aiBottomPanel');
+    const btn    = document.getElementById('btn-toggle-ai');
+    const header = document.getElementById('chatHeader');
+    if (!panel) return;
+    panel.classList.toggle('ai-bottom-panel--collapsed', !expanded);
+    if (btn) btn.classList.toggle('sidebar-toggle-btn--active', expanded);
+    if (header) header.setAttribute('aria-expanded', String(expanded));
     if (persist) {
-      localStorage.setItem('sidebar-ai', visible ? 'visible' : 'hidden');
+      localStorage.setItem('aiPanelExpanded', expanded ? '1' : '0');
     }
   }
 
   function initSidebarToggles() {
     const explorerVisible = localStorage.getItem('sidebar-explorer') !== 'hidden';
-    const aiVisible       = localStorage.getItem('sidebar-ai')       !== 'hidden';
+    const aiExpanded      = localStorage.getItem('aiPanelExpanded') === '1';
 
     setExplorerVisible(explorerVisible, false);
-    setAIVisible(aiVisible);
+    setAIPanelExpanded(aiExpanded, false);
 
     document.getElementById('btn-toggle-explorer')?.addEventListener('click', () => {
       const sidebar = document.querySelector('.left-sidebar');
@@ -39,12 +42,18 @@ const SidebarManager = (() => {
     });
 
     document.getElementById('btn-toggle-ai')?.addEventListener('click', () => {
-      const sidebar = document.querySelector('.right-sidebar');
-      setAIVisible(sidebar?.classList.contains('right-sidebar--hidden') ?? false);
+      const panel = document.getElementById('aiBottomPanel');
+      setAIPanelExpanded(panel?.classList.contains('ai-bottom-panel--collapsed') ?? false);
+    });
+
+    document.getElementById('chatHeader')?.addEventListener('click', (e) => {
+      if (e.target.closest('#btnModelPicker, #modelPickerDropdown, #btn-clear-chat')) return;
+      const panel = document.getElementById('aiBottomPanel');
+      setAIPanelExpanded(panel?.classList.contains('ai-bottom-panel--collapsed') ?? false);
     });
   }
 
-  return { setExplorerVisible, setAIVisible, initSidebarToggles };
+  return { setExplorerVisible, setAIPanelExpanded, initSidebarToggles };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

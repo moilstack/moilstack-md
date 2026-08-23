@@ -1429,7 +1429,7 @@ body.platform-darwin #app-header {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 120px;
   overflow: hidden;
 }
 
@@ -2310,39 +2310,55 @@ body.platform-darwin #app-header {
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ─── Right Sidebar Shell ─────────────────────────────────────────── */
-.right-sidebar {
-  width: 25%;
-  min-width: 220px;
-  max-width: none;
-  height: 100%;
-  background: var(--sidebar-bg);
-  border-left: 1px solid var(--border);
+.ai-bottom-panel {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  width: 100%;
+  height: 320px;
+  max-height: 60vh;
+  background: var(--sidebar-bg);
+  border-top: 1px solid var(--border);
   overflow: hidden;
-  transition: background 0.2s, color 0.2s;
+  transition: height 0.18s ease, background 0.2s, color 0.2s;
 }
 
-/* Collapsed AI sidebar */
-.right-sidebar--hidden {
-  width: 0 !important;
-  min-width: 0 !important;
-  border-left: none;
-  overflow: hidden;
+/* Collapsed AI panel — only the header/tab stays visible */
+.ai-bottom-panel--collapsed {
+  height: 30px;
+}
+.ai-bottom-panel--collapsed .chat-messages,
+.ai-bottom-panel--collapsed .chat-input-area,
+.ai-bottom-panel--collapsed .chat-large-file-warn {
+  display: none;
 }
 
-/* ─── Chat Header ─────────────────────────────────────────────────── */
+.chat-header-chevron {
+  display: flex;
+  align-items: center;
+  transition: transform 0.15s ease;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.ai-bottom-panel--collapsed .chat-header-chevron {
+  transform: rotate(-90deg);
+}
+
+/* ─── Chat Header (also the collapsed-state click-to-expand tab) ────── */
 .chat-header {
-  height: 42px;
-  min-height: 42px;
+  height: 30px;
+  min-height: 30px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
   flex-shrink: 0;
+}
+.chat-header:hover {
+  background: var(--hover-bg);
 }
 
 .chat-header-title {
@@ -2707,26 +2723,34 @@ body.platform-darwin #app-header {
   flex-shrink: 0;
 }
 
-/* ─── Ask / Edit mode toggle ──────────────────────────────────────── */
-/* ─── Ask / Edit mode tab strip ───────────────────────────────────── */
+/* ─── Ask / Edit mode toggle — compact segmented control inline
+   with the textarea ──────────────────────────────────────────────── */
 .chat-mode-row {
   display: flex;
-  gap: 0;
-  margin-bottom: 4px;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  height: 36px;
+  box-sizing: border-box;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
 }
 
 .chat-mode-btn {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
-  padding: 2px 12px;
+  padding: 0 9px;
+  height: 100%;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
-  line-height: 1.4;
-  transition: color 120ms ease, border-color 120ms ease;
+  line-height: 1.2;
+  transition: color 120ms ease, background 120ms ease;
 }
 
 .chat-mode-btn:hover:not(.chat-mode-btn--active) {
@@ -2734,8 +2758,8 @@ body.platform-darwin #app-header {
 }
 
 .chat-mode-btn--active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: #ffffff;
+  background: var(--primary);
   font-weight: 600;
 }
 
@@ -2762,7 +2786,7 @@ body.platform-darwin #app-header {
   font-size: 13px;
   line-height: 1.5;
   padding: 8px 10px;
-  min-height: 60px;
+  min-height: 34px;
   max-height: 120px;
   overflow-y: auto;
   transition: border-color 150ms ease, background 0.2s, color 0.2s;
@@ -2779,7 +2803,7 @@ body.platform-darwin #app-header {
 
 .send-btn {
   width: 36px;
-  height: 36px;
+  height: 34px;
   min-width: 36px;
   border-radius: 8px;
   border: none;
@@ -2806,47 +2830,10 @@ body.platform-darwin #app-header {
   outline-offset: 2px;
 }
 
-.chat-hint {
-  margin-top: 6px;
-  font-size: 11px;
-  color: var(--text-secondary);
-  user-select: none;
-}
-
-.chat-hint strong {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-/* ─── Chat Status Bar ─────────────────────────────────────────────── */
-.chat-statusbar {
-  height: 26px;
-  min-height: 26px;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  padding: 0 12px;
-  gap: 16px;
-  background: var(--statusbar-bg);
-  border-top: 1px solid var(--border);
-  font-size: 11.5px;
-  color: var(--statusbar-text);
-  user-select: none;
-  flex-shrink: 0;
-  transition: background 0.2s;
-}
-
-.chat-statusbar-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
+/* ─── Chat status items (now merged into the single #editorStatusbar) ── */
 .chat-statusbar-context {
-  margin-left: auto;
+  flex: 1;
   min-width: 0;       /* allow shrinking */
-  flex-shrink: 1;
   overflow: hidden;
 }
 
@@ -3021,7 +3008,7 @@ body.platform-darwin #app-header {
 }
 
 /* The dropdown panel — positioned via JS (fixed) so it can escape the
-   .right-sidebar's `overflow: hidden` instead of being clipped to the
+   .ai-bottom-panel's `overflow: hidden` instead of being clipped to the
    chat header section. */
 .model-picker-dropdown {
   position: fixed;
