@@ -237,6 +237,14 @@ body {
   -webkit-app-region: no-drag;
 }
 
+/* Room for the native traffic lights drawn by titleBarStyle: 'hiddenInset',
+   plus right-side breathing room since the custom .window-controls (which
+   normally provides it) is removed on macOS. */
+body.platform-darwin #app-header {
+  padding-left: 78px;
+  padding-right: 14px;
+}
+
 .app-header__left {
   display: flex;
   align-items: center;

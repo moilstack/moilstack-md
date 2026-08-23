@@ -714,6 +714,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ── Custom title-bar window controls ──────────────────────────────
+  // macOS gets native traffic lights (see titleBarStyle: 'hiddenInset' in
+  // main/index.js) so the custom Windows-style buttons must not render there.
+  const _wcContainer = document.getElementById('window-controls');
+  if (window.electronAPI?.platform === 'darwin') {
+    _wcContainer?.remove();
+    document.body.classList.add('platform-darwin');
+  }
+
   const _wcMinimize = document.getElementById('wc-minimize');
   const _wcMaximize = document.getElementById('wc-maximize');
   const _wcClose    = document.getElementById('wc-close');
