@@ -8,9 +8,7 @@
 /* ─── Design tokens — Light theme (Snow White) ─────────────────────── */
 :root {
   /* Layout (not theme-dependent) */
-  --sidebar-width:     25%;
-  --sidebar-min-width: 160px;
-  --sidebar-max-width: 500px;
+  --sidebar-width: 250px;
 
   /* Editor typography — overridden at runtime by the Font settings panel */
   --editor-font-size: 13px;
@@ -714,8 +712,6 @@ body.platform-darwin #app-header {
 /* ─── Left Sidebar ───────────────────────────────────────────────── */
 .left-sidebar {
   width: var(--sidebar-width);
-  min-width: var(--sidebar-min-width);
-  max-width: var(--sidebar-max-width);
   height: 100%;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
@@ -920,6 +916,10 @@ body.platform-darwin #app-header {
   text-overflow: ellipsis;
   user-select: none;
   position: relative; /* needed to position the pin button */
+  /* Fixed height (padding + the 18px pin button) so revealing the
+     hover-only pin button doesn't grow the row and jumble the list below it.
+     box-sizing is border-box globally, so this includes the padding. */
+  height: 28px;
 }
 
 .file-item svg {
@@ -1169,6 +1169,9 @@ body.platform-darwin #app-header {
   flex-direction: column;
   align-items: stretch;
   gap: 1px;
+  /* Two lines of content (name + preview) need more room than the fixed
+     28px single-line .file-item height, so let this variant grow instead. */
+  height: auto;
 }
 
 .file-item__tree-row {
@@ -1176,6 +1179,7 @@ body.platform-darwin #app-header {
   align-items: center;
   gap: 7px;
   min-width: 0;
+  min-height: 18px;
 }
 
 .file-item__tree-row span {
@@ -1203,6 +1207,9 @@ body.platform-darwin #app-header {
   overflow: hidden;
   padding: 6px 14px;
   gap: 2px;
+  /* This variant can show a second preview line below the name, so it
+     needs to grow beyond the base .file-item's fixed single-line height. */
+  height: auto;
 }
 
 .file-item__main {

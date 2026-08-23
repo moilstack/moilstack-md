@@ -62,39 +62,50 @@ if (toggleSplitBtn)   toggleSplitBtn.addEventListener('click',   () => setMode('
 const focusModeBtn = document.getElementById('btn-focus-split');
 // Snapshot of what to restore on exit — null while not in focus mode.
 let _focusModeRestore = null;
+// Re-entrancy guard: toggleFocusMode does async IPC round-trips (isMaximized),
+// so a rapid double-click can otherwise race two overlapping calls against
+// each other and corrupt/skip the restore snapshot. Ignore any click that
+// arrives while a previous toggle is still in flight.
+let _focusModeBusy = false;
 
 async function toggleFocusMode() {
-  if (!_focusModeRestore) {
-    const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
-    const aiExpanded      = !document.querySelector('#aiBottomPanel')?.classList.contains('ai-bottom-panel--collapsed');
-    const wasMaximized    = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
+  if (_focusModeBusy) return;
+  _focusModeBusy = true;
+  try {
+    if (!_focusModeRestore) {
+      const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
+      const aiExpanded      = !document.querySelector('#aiBottomPanel')?.classList.contains('ai-bottom-panel--collapsed');
+      const wasMaximized    = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
 
-    _focusModeRestore = { explorerVisible, aiExpanded, prevMode: currentMode, wasMaximized };
+      _focusModeRestore = { explorerVisible, aiExpanded, prevMode: currentMode, wasMaximized };
 
-    SidebarManager.setExplorerVisible(false, false);
-    SidebarManager.setAIPanelExpanded(false, false);
-    setMode('split');
-    if (!wasMaximized) window.electronAPI?.window?.toggleMaximize?.();
+      SidebarManager.setExplorerVisible(false, false);
+      SidebarManager.setAIPanelExpanded(false, false);
+      setMode('split');
+      if (!wasMaximized) window.electronAPI?.window?.toggleMaximize?.();
 
-    focusModeBtn?.classList.add('icon-btn--active');
-    focusModeBtn?.setAttribute('aria-pressed', 'true');
-  } else {
-    const { explorerVisible, aiExpanded, prevMode, wasMaximized } = _focusModeRestore;
+      focusModeBtn?.classList.add('icon-btn--active');
+      focusModeBtn?.setAttribute('aria-pressed', 'true');
+    } else {
+      const { explorerVisible, aiExpanded, prevMode, wasMaximized } = _focusModeRestore;
 
-    SidebarManager.setExplorerVisible(explorerVisible, false);
-    SidebarManager.setAIPanelExpanded(aiExpanded, false);
-    setMode(prevMode);
+      SidebarManager.setExplorerVisible(explorerVisible, false);
+      SidebarManager.setAIPanelExpanded(aiExpanded, false);
+      setMode(prevMode);
 
-    // Only undo the maximize *we* triggered. If the user already restored
-    // the window manually while in focus mode, it's no longer maximized —
-    // toggling again would re-maximize it, so check current state fresh
-    // rather than trusting the entry-time snapshot.
-    const isMaximizedNow = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
-    if (!wasMaximized && isMaximizedNow) window.electronAPI?.window?.toggleMaximize?.();
+      // Only undo the maximize *we* triggered. If the user already restored
+      // the window manually while in focus mode, it's no longer maximized —
+      // toggling again would re-maximize it, so check current state fresh
+      // rather than trusting the entry-time snapshot.
+      const isMaximizedNow = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
+      if (!wasMaximized && isMaximizedNow) window.electronAPI?.window?.toggleMaximize?.();
 
-    _focusModeRestore = null;
-    focusModeBtn?.classList.remove('icon-btn--active');
-    focusModeBtn?.setAttribute('aria-pressed', 'false');
+      _focusModeRestore = null;
+      focusModeBtn?.classList.remove('icon-btn--active');
+      focusModeBtn?.setAttribute('aria-pressed', 'false');
+    }
+  } finally {
+    _focusModeBusy = false;
   }
 }
 

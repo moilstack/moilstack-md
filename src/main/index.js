@@ -21,7 +21,7 @@ function loadWindowState() {
       return { width, height }
     }
   } catch { /* first run or corrupt file — fall through to defaults */ }
-  return { width: 1440, height: 900 }
+  return { width: 1280, height: 800 }
 }
 
 function saveWindowState(win) {
@@ -100,7 +100,7 @@ if (!gotLock) {
 
     // Only restore saved size for the very first window; subsequent windows
     // (opened via second-instance or New Instance) use the default size.
-    const { width, height } = allWins.length === 0 ? loadWindowState() : { width: 1440, height: 900 }
+    const { width, height } = allWins.length === 0 ? loadWindowState() : { width: 1280, height: 800 }
 
     const win = new BrowserWindow({
       width,
