@@ -105,22 +105,33 @@ const HamburgerMenu = (() => {
     document.getElementById('btnSettings')?.click();
   });
 
-  /* ── "Explorer" label (sidebar header) — jumps to Explorer settings ── */
-  function _openExplorerSettings() {
-    document.getElementById('btnSettings')?.click();
-    document.querySelector('.settings-nav-item[data-settings-panel="explorer"]')?.click();
-    requestAnimationFrame(() => {
-      const row = document.getElementById('settingsRow-explorerMode');
-      if (!row) return;
-      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      row.classList.add('settings-row--flash');
-      setTimeout(() => row.classList.remove('settings-row--flash'), 1200);
-    });
+  /* ── "Explorer" label (sidebar header) — cycles Explorer Mode ──────── */
+  const EXPLORER_MODES = [
+    { value: 'root-only',   label: 'Root folder only' },
+    { value: 'multi-level', label: 'Multi-level' },
+    { value: 'custom',      label: 'Recent Only (no folder)' },
+  ];
+
+  function _cycleExplorerMode() {
+    const current  = localStorage.getItem('explorerMode') || 'root-only';
+    const idx      = EXPLORER_MODES.findIndex(m => m.value === current);
+    const next     = EXPLORER_MODES[(idx + 1) % EXPLORER_MODES.length];
+
+    localStorage.setItem('explorerMode', next.value);
+    const explorerModeSel = document.getElementById('explorerMode');
+    if (explorerModeSel) explorerModeSel.value = next.value;
+
+    FileTreeManager.updateFolderToolbarButtons();
+    FileTreeManager.refresh();
+    RecentsPanel.applyExplorerMode();
+    RecentsPanel.render();
+
+    StatusBar.showToast(`Explorer mode: ${next.label}`);
   }
   const _sidebarExplorerLabel = document.getElementById('sidebarExplorerLabel');
-  _sidebarExplorerLabel?.addEventListener('click', _openExplorerSettings);
+  _sidebarExplorerLabel?.addEventListener('click', _cycleExplorerMode);
   _sidebarExplorerLabel?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _openExplorerSettings(); }
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _cycleExplorerMode(); }
   });
 
   /* ── Collapse All button (sidebar header) ─────────────────────────── */

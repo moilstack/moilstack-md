@@ -270,7 +270,18 @@ const MarkdownRenderer = (() => {
         }
 
         const langAttr = lang ? ` class="language-${escapeHtml(lang)}"` : '';
-        out.push(`<pre data-line="${blockLine}"><code${langAttr}>${escapeHtml(codeLines.join('\n'))}</code></pre>`);
+        const codeText = codeLines.join('\n');
+        out.push(
+          `<div class="code-block">` +
+            `<button type="button" class="code-copy-btn" title="Copy code" aria-label="Copy code">` +
+              `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">` +
+                `<rect x="4" y="4" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.1"/>` +
+                `<path d="M2.5 8V2a1 1 0 0 1 1-1h6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>` +
+              `</svg>` +
+            `</button>` +
+            `<pre data-line="${blockLine}"><code${langAttr}>${escapeHtml(codeText)}</code></pre>` +
+          `</div>`
+        );
         continue;
       }
 

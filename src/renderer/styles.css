@@ -8,7 +8,7 @@
 /* ─── Design tokens — Light theme (Snow White) ─────────────────────── */
 :root {
   /* Layout (not theme-dependent) */
-  --sidebar-width: 250px;
+  --sidebar-width: 280px;
 
   /* Editor typography — overridden at runtime by the Font settings panel */
   --editor-font-size: 13px;
@@ -30,7 +30,7 @@
   --section-header:    #a8a6a0;
 
   /* Borders & interactions */
-  --border:            #e8eaed;
+  --border:            #dbdad3;
   --hover-bg:          #f0f1f5;
   --active-file-bg:    #ecebf7;
   --active-file-text:  #5b5aa0;
@@ -769,12 +769,12 @@ body.platform-darwin #app-header {
 .sidebar-section__label-icon {
   color: var(--text-secondary);
   opacity: 0.7;
-  transition: opacity 0.15s, transform 0.2s;
+  transition: opacity 0.15s, transform 0.3s;
 }
 .sidebar-section__label--link:hover .sidebar-section__label-icon,
 .sidebar-section__label--link:focus-visible .sidebar-section__label-icon {
   opacity: 1;
-  transform: rotate(35deg);
+  transform: rotate(120deg);
 }
 
 .sidebar-section__actions {
@@ -1971,7 +1971,7 @@ body.platform-darwin #app-header {
   max-width: 800px;
   margin: 0 auto;
   padding: 24px 32px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.8;
   color: var(--text-primary);
 }
@@ -1993,18 +1993,18 @@ body.platform-darwin #app-header {
   margin: 1.75em 0 0.6em;
 }
 .preview-content h1 {
-  font-size: 24px;
+  font-size: 22px;
   border-bottom: 2px solid var(--border);
   padding-bottom: 8px;
   color: #1e3a8a;
 }
 .preview-content h2 {
-  font-size: 20px;
+  font-size: 18px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 6px;
   color: #3730a3;
 }
-.preview-content h3 { font-size: 16px; color: #0e7490; }
+.preview-content h3 { font-size: 15px; color: #0e7490; }
 .preview-content h4 { font-size: 1em;  color: #065f46; }
 .preview-content h5 { font-size: .93em; color: #92400e; }
 .preview-content h6 { font-size: .93em; color: #991b1b; }
@@ -2051,9 +2051,39 @@ body.platform-darwin #app-header {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px 18px;
-  overflow-x: auto;
+  overflow-x: scroll;
   margin: 1em 0;
   font-size: 14px;
+  scrollbar-color: transparent transparent;
+}
+
+/* `overflow-x: scroll` (not `auto`) plus custom scrollbar pseudo-elements
+   force a permanent, statically-drawn bar instead of the OS's
+   overlay-style scrollbar, which only paints in for the duration of an
+   active scroll/drag gesture and fades out the rest of the time — leaving
+   no visible cue that a code block scrolls until you're already dragging.
+   Both track and thumb stay transparent at rest and only pick up color on
+   hover, so it reads as an on-demand affordance (like the copy button)
+   instead of a bar sitting under every block all the time. */
+.preview-content pre::-webkit-scrollbar {
+  height: 8px;
+}
+.preview-content pre::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+.preview-content pre::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 10px;
+}
+.preview-content pre:hover {
+  scrollbar-color: var(--scrollbar-thumb-hover) var(--border);
+}
+.preview-content pre:hover::-webkit-scrollbar-track {
+  background: var(--border);
+}
+.preview-content pre:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-hover);
 }
 
 .preview-content pre code {
@@ -2062,6 +2092,42 @@ body.platform-darwin #app-header {
   font-size: 14px;
   color: var(--text-primary);
   border: none;
+}
+
+/* ── Code block copy button ─────────────────────────────────────── */
+.preview-content .code-block {
+  position: relative;
+}
+
+.preview-content .code-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+.preview-content .code-block:hover .code-copy-btn,
+.preview-content .code-copy-btn:focus-visible,
+.preview-content .code-copy-btn--copied {
+  display: flex;
+}
+.preview-content .code-copy-btn:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+.preview-content .code-copy-btn--copied {
+  color: #22c55e;
+  border-color: #22c55e;
 }
 
 .preview-content .markdown-embed {
@@ -2166,16 +2232,6 @@ body.platform-darwin #app-header {
 }
 #editorPane.hidden + #previewPane {
   border-left: none;
-}
-
-/* Split mode — both panes visible side by side, divider persists */
-.editor-area[data-view="split"] #editorPane,
-.editor-area[data-view="split"] #previewPane {
-  flex: 1;
-  min-width: 0;
-}
-.editor-area[data-view="split"] #editorPane {
-  border-right: 1px solid var(--border);
 }
 
 /* ─── Bottom App Status Bar ──────────────────────────────────────── */
@@ -2313,59 +2369,54 @@ body.platform-darwin #app-header {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   AI Chat Panel — Right Sidebar
+   AI Chat Popup — floats above the bottom-right corner, opened via
+   the .ai-fab trigger button instead of living docked in the layout.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ─── Right Sidebar Shell ─────────────────────────────────────────── */
+/* ─── Popup Shell ─────────────────────────────────────────────────── */
 .ai-bottom-panel {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  width: 100%;
-  height: 320px;
-  max-height: 60vh;
+  position: fixed;
+  right: 18px;
+  /* Top/bottom pinned so the popup grows with the Edit/Preview area without
+     touching it directly: a gap below the toolbar (84px area top + 20px),
+     and stopping above the floating trigger button (same offset as before,
+     bottom: 86px) rather than reaching all the way to the status bar.
+     min-height keeps today's size as a floor on short windows, where
+     top+bottom would otherwise squeeze it smaller. */
+  top: 104px;
+  bottom: 86px;
+  min-height: 520px;
+  width: 380px;
   background: var(--sidebar-bg);
-  border-top: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: height 0.18s ease, background 0.2s, color 0.2s;
+  z-index: 60;
+  transform-origin: bottom right;
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
-/* Collapsed AI panel — only the header/tab stays visible */
+/* Closed popup — fully hidden, not just squashed to a header tab */
 .ai-bottom-panel--collapsed {
-  height: 30px;
-}
-.ai-bottom-panel--collapsed .chat-messages,
-.ai-bottom-panel--collapsed .chat-input-area,
-.ai-bottom-panel--collapsed .chat-large-file-warn {
-  display: none;
+  opacity: 0;
+  transform: scale(0.95) translateY(8px);
+  pointer-events: none;
 }
 
-.chat-header-chevron {
-  display: flex;
-  align-items: center;
-  transition: transform 0.15s ease;
-  color: var(--text-secondary);
-  flex-shrink: 0;
-}
-.ai-bottom-panel--collapsed .chat-header-chevron {
-  transform: rotate(-90deg);
-}
-
-/* ─── Chat Header (also the collapsed-state click-to-expand tab) ────── */
+/* ─── Chat Header ────────────────────────────────────────────────── */
 .chat-header {
-  height: 30px;
-  min-height: 30px;
-  background: var(--surface);
+  height: 38px;
+  min-height: 38px;
+  background: var(--active-file-bg);
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 10px 0 14px;
   flex-shrink: 0;
-}
-.chat-header:hover {
-  background: var(--hover-bg);
 }
 
 .chat-header-title {
@@ -2376,6 +2427,57 @@ body.platform-darwin #app-header {
   font-weight: 600;
   color: var(--text-primary);
   user-select: none;
+}
+
+.chat-header-label {
+  color: var(--active-file-text);
+}
+
+/* ─── Floating AI chat trigger (bottom-right) ────────────────────── */
+.ai-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 38px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  z-index: 61;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.ai-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+}
+.ai-fab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.ai-fab__icon-open,
+.ai-fab__icon-close {
+  position: absolute;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.ai-fab__icon-close {
+  opacity: 0;
+  transform: scale(0.6);
+}
+.ai-fab--active .ai-fab__icon-open {
+  opacity: 0;
+  transform: scale(0.6);
+}
+.ai-fab--active .ai-fab__icon-close {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .ai-badge {

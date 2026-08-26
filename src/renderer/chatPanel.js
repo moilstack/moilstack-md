@@ -130,7 +130,7 @@ const ChatPanel = (() => {
     if (input && !currentSelection) {
       input.placeholder = isAskMode
         ? 'Ask a question about the file…'
-        : 'Ask AI to edit, improve, or rewrite…';
+        : 'Ask AI to make changes…';
     }
   }
 
@@ -419,7 +419,7 @@ const ChatPanel = (() => {
       if (chip)  chip.classList.add('hidden');
       if (input) input.placeholder = isAskMode
         ? 'Ask a question about the file…'
-        : 'Ask AI to edit, improve, or rewrite…';
+        : 'Ask AI to make changes…';
       hideSelectionGhost();
       updateTokenEstimate();
       updateFileSizeWarning(); // restore banner if file is large

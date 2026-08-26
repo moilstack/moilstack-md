@@ -18,7 +18,6 @@ var currentMode    = 'edit';
 
 const toggleEditBtn    = document.getElementById('editBtn');
 const togglePreviewBtn = document.getElementById('previewBtn');
-const toggleSplitBtn   = document.getElementById('splitBtn');
 
 function setMode(mode) {
   currentMode = mode;
@@ -29,7 +28,6 @@ function setMode(mode) {
   editorArea.setAttribute('data-view', mode);
   toggleEditBtn.classList.toggle('active',    mode === 'edit');
   togglePreviewBtn.classList.toggle('active', mode === 'preview');
-  toggleSplitBtn.classList.toggle('active',   mode === 'split');
 
   if (mode === 'edit') {
     editorPane.classList.remove('hidden');
@@ -41,11 +39,6 @@ function setMode(mode) {
         mdEditor.setSelectionRange(0, 0);
       });
     }
-  } else if (mode === 'split') {
-    editorPane.classList.remove('hidden');
-    previewPane.classList.remove('hidden');
-    EditorCore.renderMarkdown();
-    if (mdEditor) mdEditor.focus();
   } else {
     editorPane.classList.add('hidden');
     previewPane.classList.remove('hidden');
@@ -55,61 +48,6 @@ function setMode(mode) {
 
 if (toggleEditBtn)    toggleEditBtn.addEventListener('click',    () => setMode('edit'));
 if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', () => setMode('preview'));
-if (toggleSplitBtn)   toggleSplitBtn.addEventListener('click',   () => setMode('split'));
-
-/* ── Focus mode: hide both sidebars, maximize, force Split view ────── */
-
-const focusModeBtn = document.getElementById('btn-focus-split');
-// Snapshot of what to restore on exit — null while not in focus mode.
-let _focusModeRestore = null;
-// Re-entrancy guard: toggleFocusMode does async IPC round-trips (isMaximized),
-// so a rapid double-click can otherwise race two overlapping calls against
-// each other and corrupt/skip the restore snapshot. Ignore any click that
-// arrives while a previous toggle is still in flight.
-let _focusModeBusy = false;
-
-async function toggleFocusMode() {
-  if (_focusModeBusy) return;
-  _focusModeBusy = true;
-  try {
-    if (!_focusModeRestore) {
-      const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
-      const aiExpanded      = !document.querySelector('#aiBottomPanel')?.classList.contains('ai-bottom-panel--collapsed');
-      const wasMaximized    = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
-
-      _focusModeRestore = { explorerVisible, aiExpanded, prevMode: currentMode, wasMaximized };
-
-      SidebarManager.setExplorerVisible(false, false);
-      SidebarManager.setAIPanelExpanded(false, false);
-      setMode('split');
-      if (!wasMaximized) window.electronAPI?.window?.toggleMaximize?.();
-
-      focusModeBtn?.classList.add('icon-btn--active');
-      focusModeBtn?.setAttribute('aria-pressed', 'true');
-    } else {
-      const { explorerVisible, aiExpanded, prevMode, wasMaximized } = _focusModeRestore;
-
-      SidebarManager.setExplorerVisible(explorerVisible, false);
-      SidebarManager.setAIPanelExpanded(aiExpanded, false);
-      setMode(prevMode);
-
-      // Only undo the maximize *we* triggered. If the user already restored
-      // the window manually while in focus mode, it's no longer maximized —
-      // toggling again would re-maximize it, so check current state fresh
-      // rather than trusting the entry-time snapshot.
-      const isMaximizedNow = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
-      if (!wasMaximized && isMaximizedNow) window.electronAPI?.window?.toggleMaximize?.();
-
-      _focusModeRestore = null;
-      focusModeBtn?.classList.remove('icon-btn--active');
-      focusModeBtn?.setAttribute('aria-pressed', 'false');
-    }
-  } finally {
-    _focusModeBusy = false;
-  }
-}
-
-if (focusModeBtn) focusModeBtn.addEventListener('click', () => toggleFocusMode());
 
 /* ── Status bar / file selection ──────────────────────────────────── */
 
@@ -452,11 +390,11 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); SaveManager.saveFile(); }
 });
 
-// Ctrl+` — cycle edit → split → preview
+// Ctrl+` — toggle edit ↔ preview
 document.addEventListener('keydown', e => {
   if (e.key === '`' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
-    const next = { edit: 'split', split: 'preview', preview: 'edit' };
+    const next = { edit: 'preview', preview: 'edit' };
     setMode(next[currentMode] || 'edit');
   }
 });
@@ -707,7 +645,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // fresh untitled, first-file, or an existing file — so it stays consistent
   // regardless of which "On Launch" path was taken.
   const startupMode = localStorage.getItem('startupMode') || 'preview';
-  setMode(startupMode);
+  setMode(startupMode === 'edit' ? 'edit' : 'preview');
 
   // ── IPC: Save-and-close (user clicked "Save" in unsaved-changes dialog)
   window.electronAPI?.onSaveAndClose?.(async () => {

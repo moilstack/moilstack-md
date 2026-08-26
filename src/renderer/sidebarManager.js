@@ -18,11 +18,15 @@ const SidebarManager = (() => {
 
   function setAIPanelExpanded(expanded, persist = true) {
     const panel  = document.getElementById('aiBottomPanel');
-    const btn    = document.getElementById('btn-toggle-ai');
+    const fab    = document.getElementById('btn-toggle-ai');
     const header = document.getElementById('chatHeader');
     if (!panel) return;
     panel.classList.toggle('ai-bottom-panel--collapsed', !expanded);
-    if (btn) btn.classList.toggle('sidebar-toggle-btn--active', expanded);
+    if (fab) {
+      fab.classList.toggle('ai-fab--active', expanded);
+      fab.setAttribute('aria-expanded', String(expanded));
+      fab.title = expanded ? 'Close AI Assistant' : 'Open AI Assistant';
+    }
     if (header) header.setAttribute('aria-expanded', String(expanded));
     if (persist) {
       localStorage.setItem('aiPanelExpanded', expanded ? '1' : '0');
@@ -31,10 +35,10 @@ const SidebarManager = (() => {
 
   function initSidebarToggles() {
     const explorerVisible = localStorage.getItem('sidebar-explorer') !== 'hidden';
-    const aiExpanded      = localStorage.getItem('aiPanelExpanded') === '1';
-
+    // The AI popup always starts closed — it's a floating widget, not a
+    // persistent panel, so re-opening it on every launch would be surprising.
     setExplorerVisible(explorerVisible, false);
-    setAIPanelExpanded(aiExpanded, false);
+    setAIPanelExpanded(false, false);
 
     document.getElementById('btn-toggle-explorer')?.addEventListener('click', () => {
       const sidebar = document.querySelector('.left-sidebar');
@@ -46,10 +50,8 @@ const SidebarManager = (() => {
       setAIPanelExpanded(panel?.classList.contains('ai-bottom-panel--collapsed') ?? false);
     });
 
-    document.getElementById('chatHeader')?.addEventListener('click', (e) => {
-      if (e.target.closest('#btnModelPicker, #modelPickerDropdown, #btn-clear-chat')) return;
-      const panel = document.getElementById('aiBottomPanel');
-      setAIPanelExpanded(panel?.classList.contains('ai-bottom-panel--collapsed') ?? false);
+    document.getElementById('btn-close-ai')?.addEventListener('click', () => {
+      setAIPanelExpanded(false);
     });
   }
 
