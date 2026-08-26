@@ -2051,33 +2051,26 @@ body.platform-darwin #app-header {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px 18px;
-  overflow-x: scroll;
+  overflow-x: auto;
   margin: 1em 0;
   font-size: 14px;
-  scrollbar-color: transparent transparent;
+  scrollbar-color: auto;
 }
 
-/* `overflow-x: scroll` (not `auto`) plus custom scrollbar pseudo-elements
-   force a permanent, statically-drawn bar instead of the OS's
-   overlay-style scrollbar, which only paints in for the duration of an
-   active scroll/drag gesture and fades out the rest of the time — leaving
-   no visible cue that a code block scrolls until you're already dragging.
-   Both track and thumb stay transparent at rest and only pick up color on
-   hover, so it reads as an on-demand affordance (like the copy button)
-   instead of a bar sitting under every block all the time. */
+/* Custom WebKit scrollbar pseudo-elements bypass macOS native overlay-style
+   scrollbars (which stay invisible until actively dragged/scrolled).
+   The scrollbar thumb is subtly visible by default so users immediately know
+   a code block overflows, and darkens on hover. */
 .preview-content pre::-webkit-scrollbar {
-  height: 8px;
+  height: 6px;
 }
 .preview-content pre::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 10px;
 }
 .preview-content pre::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
-}
-.preview-content pre:hover {
-  scrollbar-color: var(--scrollbar-thumb-hover) var(--border);
 }
 .preview-content pre:hover::-webkit-scrollbar-track {
   background: var(--border);
