@@ -1,14 +1,14 @@
-# MoilStack .md (markdown) — AI-Powered Markdown Editor with Split View & Version History
+# MoilStack .md (markdown) — AI-Powered Markdown Editor with Version History
 
 [![Version](https://img.shields.io/github/v/release/moilstack/moilstack-md?label=version&include_prereleases)](https://github.com/moilstack/moilstack-md/releases)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-An open-source desktop **Markdown AI editor** and standalone markdown viewer built with Electron. Write, edit, and view Markdown files with syntax highlighting, live split-pane preview, and an integrated local AI assistant — all running privately on your machine.
+An open-source desktop **Markdown AI editor** and standalone markdown viewer built with Electron. Write, edit, and view Markdown files with syntax highlighting, a live preview pane, and an integrated local AI assistant — all running privately on your machine.
 
 
 
-![MoilStack .md — Split view with synchronized scrolling](assets/01_moilstack-md_Split.png)
+![MoilStack .md](assets/01_moilstack-md_Split.png)
 
 ## Download
 
@@ -24,11 +24,10 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 
 ## Features
 
-- **Edit, Split, and Preview modes** — syntax-highlighted editor, side-by-side split view with synchronized scrolling, and a clean preview pane, cycled with `Ctrl+\``
-- **Focus mode** — one click hides both sidebars, maximizes the window, and switches to Split view for distraction-free writing
-- **File explorer** — browse, create, rename, and open `.md` files from a folder, with Multi-level, Root-only, and Custom (no-folder) sidebar modes
+- **Edit and Preview modes** — a syntax-highlighted editor and a clean preview pane, toggled with `Ctrl+\``
+- **File explorer** — browse, create, rename, and open `.md` files from a folder, with Multi-level, Root-only, and Custom (no-folder) sidebar modes; click the "Explorer" label to cycle between them
 - **Global search** — find filenames and in-file content across the open folder (`Ctrl+Shift+F`), with tag search via `#tag` or `tag:name`
-- **AI Assistant** — ask the AI to edit your document, answer questions, or improve your writing
+- **AI Assistant** — a floating chat popup (opened from the button in the bottom-right corner) to ask the AI to edit your document, answer questions, or improve your writing
 - **Smart AI editing** — document edits are applied silently and instantly; informational answers stream as chat
 - **Undo AI edits** — every AI document change is reversible with the Undo button or `Ctrl+Z`
 - **Visual table builder** — insert Markdown tables with a point-and-click grid editor
@@ -149,7 +148,7 @@ When the AI assistant processes an edit, changes are applied silently and instan
 |---|---|
 | `Ctrl+S` | Save file |
 | `Ctrl+Z` | Undo (AI edits first, then native undo) |
-| `Ctrl+\`` | Cycle Edit → Split → Preview mode |
+| `Ctrl+\`` | Toggle Edit ↔ Preview mode |
 | `Ctrl+O` | Open folder picker |
 | `Ctrl+N` | New untitled file (in-memory) |
 | `Ctrl+Shift+N` | New file on disk in Explorer's active folder |

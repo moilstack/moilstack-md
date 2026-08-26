@@ -8,6 +8,22 @@ All notable new features and critical fixes for MoilStack .md.
 
 ### Added
 - **Inline syntax highlighting in the editor** — formatting syntax tags (like `**`, `_`, `` ` ``, and links) are now styled directly inside the editor highlight overlay. The formatting markup symbols themselves are partially muted, while the text inside is rendered bold, italic, code, or link styled, matching the visual focus of VS Code.
+- **Copy button on preview code blocks** — hovering a code block reveals a small copy-to-clipboard icon in its top-right corner, with a checkmark confirmation after copying.
+- **Cycle Explorer Mode from the sidebar label** — clicking "Explorer" now cycles Root folder only → Multi-level → Recent Only directly, instead of opening Settings.
+
+### Changed
+- **AI Assistant is now a floating chat popup** instead of a panel docked to the bottom of the window — opened via a new round button fixed to the bottom-right corner. The popup's height now tracks the Edit/Preview area's height as the window is resized (520px minimum).
+- **AI Assistant header restyled** with the app's accent "active" tint for better visibility, and its "Clear chat" button was removed (clearing still happens automatically when switching files).
+- **Chat input placeholder shortened** — "Ask AI to edit, improve, or rewrite…" is now "Ask AI to make changes…".
+- **Explorer sidebar widened** from 250px to 280px.
+- **Preview typography resized** — body text down to 13.5px; H1/H2/H3 down to 22px/18px/15px respectively.
+- **Preview code block scrollbar** no longer relies on the OS's fade-out overlay indicator — it now reserves its track permanently and reveals color on hover, so it's discoverable without needing to drag first.
+- **Light theme ("Snow White") border color darkened** for better visibility of dividers between panes and sections (Light 2 unaffected).
+
+### Removed
+- **Split view mode** — Edit and Preview are the only two view modes now; `Ctrl+\`` toggles between them instead of cycling through three.
+- **Focus mode** — the header button that hid both sidebars and switched to Split view has been removed.
+- **App name in the title bar** — "MoilStack .md" text next to the logo icon was removed from the header.
 
 ---
 
