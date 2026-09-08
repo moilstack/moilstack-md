@@ -481,10 +481,20 @@ const AIConfigManager = (() => {
     if (dropdown.classList.contains('hidden')) {
       _renderPickerList()
       // Position with fixed coords (relative to the viewport) so the dropdown
-      // isn't clipped by the .right-sidebar's `overflow: hidden`.
+      // isn't clipped by the .ai-bottom-panel's `overflow: hidden`. The trigger
+      // now lives in a header pinned near the bottom of the window, so flip
+      // the dropdown upward when there isn't enough room below it.
       if (trigger) {
         const rect = trigger.getBoundingClientRect()
-        dropdown.style.top   = `${rect.bottom + 6}px`
+        const estHeight = 260
+        const spaceBelow = window.innerHeight - rect.bottom
+        if (spaceBelow < estHeight + 12) {
+          dropdown.style.top    = 'auto'
+          dropdown.style.bottom = `${window.innerHeight - rect.top + 6}px`
+        } else {
+          dropdown.style.bottom = 'auto'
+          dropdown.style.top    = `${rect.bottom + 6}px`
+        }
         dropdown.style.right = `${window.innerWidth - rect.right}px`
       }
       dropdown.classList.remove('hidden')

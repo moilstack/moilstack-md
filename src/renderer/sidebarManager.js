@@ -1,5 +1,6 @@
 /**
- * sidebarManager.js — Explorer (left) and AI Assistant (right) sidebar toggles.
+ * sidebarManager.js — Explorer (left) sidebar toggle and AI Assistant
+ * (bottom panel) expand/collapse.
  */
 
 const SidebarManager = (() => {
@@ -15,23 +16,29 @@ const SidebarManager = (() => {
     }
   }
 
-  function setAIVisible(visible, persist = true) {
-    const sidebar = document.querySelector('.right-sidebar');
-    const btn     = document.getElementById('btn-toggle-ai');
-    if (!sidebar) return;
-    sidebar.classList.toggle('right-sidebar--hidden', !visible);
-    if (btn) btn.classList.toggle('sidebar-toggle-btn--active', visible);
+  function setAIPanelExpanded(expanded, persist = true) {
+    const panel  = document.getElementById('aiBottomPanel');
+    const fab    = document.getElementById('btn-toggle-ai');
+    const header = document.getElementById('chatHeader');
+    if (!panel) return;
+    panel.classList.toggle('ai-bottom-panel--collapsed', !expanded);
+    if (fab) {
+      fab.classList.toggle('ai-fab--active', expanded);
+      fab.setAttribute('aria-expanded', String(expanded));
+      fab.title = expanded ? 'Close AI Assistant' : 'Open AI Assistant';
+    }
+    if (header) header.setAttribute('aria-expanded', String(expanded));
     if (persist) {
-      localStorage.setItem('sidebar-ai', visible ? 'visible' : 'hidden');
+      localStorage.setItem('aiPanelExpanded', expanded ? '1' : '0');
     }
   }
 
   function initSidebarToggles() {
     const explorerVisible = localStorage.getItem('sidebar-explorer') !== 'hidden';
-    const aiVisible       = localStorage.getItem('sidebar-ai')       !== 'hidden';
-
+    // The AI popup always starts closed — it's a floating widget, not a
+    // persistent panel, so re-opening it on every launch would be surprising.
     setExplorerVisible(explorerVisible, false);
-    setAIVisible(aiVisible);
+    setAIPanelExpanded(false, false);
 
     document.getElementById('btn-toggle-explorer')?.addEventListener('click', () => {
       const sidebar = document.querySelector('.left-sidebar');
@@ -39,12 +46,16 @@ const SidebarManager = (() => {
     });
 
     document.getElementById('btn-toggle-ai')?.addEventListener('click', () => {
-      const sidebar = document.querySelector('.right-sidebar');
-      setAIVisible(sidebar?.classList.contains('right-sidebar--hidden') ?? false);
+      const panel = document.getElementById('aiBottomPanel');
+      setAIPanelExpanded(panel?.classList.contains('ai-bottom-panel--collapsed') ?? false);
+    });
+
+    document.getElementById('btn-close-ai')?.addEventListener('click', () => {
+      setAIPanelExpanded(false);
     });
   }
 
-  return { setExplorerVisible, setAIVisible, initSidebarToggles };
+  return { setExplorerVisible, setAIPanelExpanded, initSidebarToggles };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

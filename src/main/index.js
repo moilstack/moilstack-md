@@ -21,7 +21,7 @@ function loadWindowState() {
       return { width, height }
     }
   } catch { /* first run or corrupt file — fall through to defaults */ }
-  return { width: 1440, height: 900 }
+  return { width: 1280, height: 800 }
 }
 
 function saveWindowState(win) {
@@ -100,7 +100,7 @@ if (!gotLock) {
 
     // Only restore saved size for the very first window; subsequent windows
     // (opened via second-instance or New Instance) use the default size.
-    const { width, height } = allWins.length === 0 ? loadWindowState() : { width: 1440, height: 900 }
+    const { width, height } = allWins.length === 0 ? loadWindowState() : { width: 1280, height: 800 }
 
     const win = new BrowserWindow({
       width,
@@ -108,7 +108,12 @@ if (!gotLock) {
       ...(x !== undefined ? { x, y } : {}),
       title: 'MoilStack .md',
       icon: path.join(__dirname, '..', 'assets', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
-      frame: false,
+      // macOS keeps its native traffic-light controls (hiddenInset draws
+      // them inset over our custom title bar); other platforms stay fully
+      // frameless and use the custom min/max/close buttons instead.
+      ...(process.platform === 'darwin'
+        ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 12, y: 14 } }
+        : { frame: false }),
       // Matches the dark theme's --bg so there's no white flash before the
       // page paints. The window itself stays hidden until the renderer
       // reports it has finished its startup UI work (see 'renderer:ready'

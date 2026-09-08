@@ -57,40 +57,28 @@ if (toggleEditBtn)    toggleEditBtn.addEventListener('click',    () => setMode('
 if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', () => setMode('preview'));
 if (toggleSplitBtn)   toggleSplitBtn.addEventListener('click',   () => setMode('split'));
 
-/* ── Focus mode: hide both sidebars, maximize, force Split view ────── */
+/* ── Focus mode: hide left sidebar, force Split view ────────────────── */
 
 const focusModeBtn = document.getElementById('btn-focus-split');
 // Snapshot of what to restore on exit — null while not in focus mode.
 let _focusModeRestore = null;
 
-async function toggleFocusMode() {
+function toggleFocusMode() {
   if (!_focusModeRestore) {
     const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
-    const aiVisible       = !document.querySelector('.right-sidebar')?.classList.contains('right-sidebar--hidden');
-    const wasMaximized    = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
 
-    _focusModeRestore = { explorerVisible, aiVisible, prevMode: currentMode, wasMaximized };
+    _focusModeRestore = { explorerVisible, prevMode: currentMode };
 
     SidebarManager.setExplorerVisible(false, false);
-    SidebarManager.setAIVisible(false, false);
     setMode('split');
-    if (!wasMaximized) window.electronAPI?.window?.toggleMaximize?.();
 
     focusModeBtn?.classList.add('icon-btn--active');
     focusModeBtn?.setAttribute('aria-pressed', 'true');
   } else {
-    const { explorerVisible, aiVisible, prevMode, wasMaximized } = _focusModeRestore;
+    const { explorerVisible, prevMode } = _focusModeRestore;
 
     SidebarManager.setExplorerVisible(explorerVisible, false);
-    SidebarManager.setAIVisible(aiVisible, false);
     setMode(prevMode);
-
-    // Only undo the maximize *we* triggered. If the user already restored
-    // the window manually while in focus mode, it's no longer maximized —
-    // toggling again would re-maximize it, so check current state fresh
-    // rather than trusting the entry-time snapshot.
-    const isMaximizedNow = (await window.electronAPI?.window?.isMaximized?.()) ?? false;
-    if (!wasMaximized && isMaximizedNow) window.electronAPI?.window?.toggleMaximize?.();
 
     _focusModeRestore = null;
     focusModeBtn?.classList.remove('icon-btn--active');
@@ -477,10 +465,13 @@ document.addEventListener('keydown', async e => {
 
 /* ── Window close guards ──────────────────────────────────────────── */
 
-// Block close when unsaved — triggers Electron's will-prevent-unload
+// Block close when unsaved — triggers Electron's will-prevent-unload.
+// The untitled Scratchpad buffer is exempt: its content is always silently
+// persisted to the draft file (see the fire-and-forget silentSave() below),
+// so there's nothing at risk worth interrupting close for.
 window.addEventListener('beforeunload', (e) => {
-  const isEmptyUntitled = !currentFile.path && !(mdEditor?.value ?? '').trim();
-  if (SaveManager.isDirty() && !isEmptyUntitled && !SaveManager.isBypassBeforeUnload()) {
+  const isScratchpad = !currentFile.path;
+  if (SaveManager.isDirty() && !isScratchpad && !SaveManager.isBypassBeforeUnload()) {
     e.preventDefault();
     e.returnValue = '';
   }
@@ -672,7 +663,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       EditorCore.triggerUpdate();
     }
     SaveManager.markDirty();
-    StatusBar.showToast('Restored unsaved draft from your last session.');
   } else if (launchBehavior === 'untitled') {
     await newUntitledFile();
   } else if (launchBehavior === 'first-file') {
@@ -714,6 +704,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ── Custom title-bar window controls ──────────────────────────────
+  // macOS gets native traffic lights (see titleBarStyle: 'hiddenInset' in
+  // main/index.js) so the custom Windows-style buttons must not render there.
+  const _wcContainer = document.getElementById('window-controls');
+  if (window.electronAPI?.platform === 'darwin') {
+    _wcContainer?.remove();
+    document.body.classList.add('platform-darwin');
+  }
+
   const _wcMinimize = document.getElementById('wc-minimize');
   const _wcMaximize = document.getElementById('wc-maximize');
   const _wcClose    = document.getElementById('wc-close');

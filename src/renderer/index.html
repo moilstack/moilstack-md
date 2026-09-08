@@ -98,8 +98,6 @@
         <line x1="23" y1="13" x2="16" y2="20" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
         <polyline points="13,21 16,25 19,21" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>
-      <span class="app-header__app-name">MoilStack .md</span>
-      <span class="app-header__name-sep" aria-hidden="true">|</span>
       <div class="app-header__folder-wrap">
         <button class="app-header__folder-path" id="header-folder-path"
                 title="Recent folders" aria-haspopup="true" aria-expanded="false">
@@ -161,16 +159,6 @@
                   stroke="currentColor" stroke-width="1.3"/>
           </svg>
         </button>
-        <button id="btn-toggle-ai" class="sidebar-toggle-btn" title="Toggle AI Assistant">
-          <!-- Right-panel layout icon -->
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="1" y="1" width="13" height="13" rx="2"
-                  stroke="currentColor" stroke-width="1.3"/>
-            <line x1="10" y1="1" x2="10" y2="14"
-                  stroke="currentColor" stroke-width="1.3"/>
-          </svg>
-        </button>
       </div>
 
       <button id="theme-toggle" title="Cycle Light / Dim / Dark theme">
@@ -224,13 +212,14 @@
       <!-- 1. Section header row -->
       <div class="sidebar-section">
         <span class="sidebar-section__label sidebar-section__label--link" id="sidebarExplorerLabel"
-              role="button" tabindex="0" title="Explorer settings">
+              role="button" tabindex="0" title="Cycle Explorer mode (Root folder only / Multi-level / Recent Only)">
           Explorer
           <svg class="sidebar-section__label-icon" width="10" height="10" viewBox="0 0 14 14"
                fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M7 4.5A2.5 2.5 0 1 0 7 9.5 2.5 2.5 0 0 0 7 4.5Z" stroke="currentColor" stroke-width="1.1"/>
-            <path d="M7 1.5v1.2M7 11.3v1.2M12.5 7h-1.2M2.7 7H1.5M10.8 3.2l-.85.85M4.05 9.95l-.85.85M10.8 10.8l-.85-.85M4.05 4.05l-.85-.85"
-                  stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+            <path d="M2.5 7A4.5 4.5 0 0 1 11 5.2M11.5 2.5v2.7h-2.7"
+                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11.5 7A4.5 4.5 0 0 1 3 8.8M2.5 11.5v-2.7h2.7"
+                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </span>
         <div class="sidebar-section__actions">
@@ -414,7 +403,7 @@
                       stroke-linecap="round"/>
               </svg>
             </button>
-            <button class="icon-btn icon-btn--lg" id="btn-focus-split" title="Focus mode: hide sidebars, maximize, and switch to Split view" aria-label="Toggle focus mode" aria-pressed="false">
+            <button class="icon-btn icon-btn--lg" id="btn-focus-split" title="Focus mode: hide Explorer and switch to Split view" aria-label="Toggle focus mode" aria-pressed="false">
               <!-- Expand-to-corners SVG 18×18 -->
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -462,7 +451,7 @@
         </div><!-- /editor-toolbar -->
 
         <!-- ── Editor Area ─────────────────────────────────────────── -->
-        <div class="editor-area" id="editorArea" data-view="split">
+        <div class="editor-area" id="editorArea" data-view="edit">
 
           <div class="editor-pane" id="editorPane">
             <div id="line-numbers" aria-hidden="true"></div>
@@ -557,74 +546,21 @@
 
       </section>
 
-      <!-- ── Bottom Status Bar ──────────────────────────────────────── -->
-      <div class="statusbar" id="editorStatusbar">
+      <!-- ── AI Chat Popup (floats above the bottom-right corner) ───────── -->
+      <div class="ai-bottom-panel ai-bottom-panel--collapsed" id="aiBottomPanel">
 
-        <!-- Dot + filename -->
-        <div class="statusbar-item">
-          <div class="statusbar-dot"></div>
-          <span id="sbFilename">untitled.md</span>
-        </div>
-
-        <span class="statusbar-sep">|</span>
-
-        <!-- Lines -->
-        <div class="statusbar-item">
-          <!-- Lines icon 11×11 -->
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M1 2.5h9M1 5.5h6M1 8.5h4"
-                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-          </svg>
-          <span id="sbLines">0 lines</span>
-        </div>
-
-        <span class="statusbar-sep">|</span>
-
-        <!-- Chars -->
-        <div class="statusbar-item">
-          <!-- Type / T icon 11×11 -->
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M2 2.5h7M5.5 2.5v6"
-                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-          </svg>
-          <span id="sbChars">0 chars</span>
-        </div>
-
-        <span class="statusbar-sep">|</span>
-
-        <!-- Language label — pushed to the right -->
-        <div class="statusbar-item" style="margin-left:auto;">
-          <span style="color:var(--primary);font-weight:500;">Markdown</span>
-        </div>
-
-        <span class="statusbar-sep">|</span>
-
-        <!-- App version -->
-        <div class="statusbar-item">
-          <span id="sbVersion"></span>
-        </div>
-
-      </div><!-- /statusbar -->
-
-    </main><!-- /main-content -->
-
-    <!-- ── AI Chat Panel (Right Sidebar) ────────────────────────────── -->
-    <aside class="right-sidebar">
-
-      <!-- Chat Header -->
-      <div class="chat-header">
-        <div class="chat-header-title">
-          <!-- Chat bubble SVG 15×15 -->
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-               style="color:var(--primary);flex-shrink:0;">
-            <path d="M2 2.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5l-3 2.5V3.5a1 1 0 0 1 1-1Z"
-                  stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-          </svg>
-          AI Assistant
-          <!-- Model picker trigger + dropdown -->
+        <!-- Chat Header -->
+        <div class="chat-header" id="chatHeader" aria-expanded="false">
+          <div class="chat-header-title">
+            <!-- Chat bubble SVG 15×15 -->
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+                 style="color:var(--primary);flex-shrink:0;">
+              <path d="M2 2.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5l-3 2.5V3.5a1 1 0 0 1 1-1Z"
+                    stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            </svg>
+            <span class="chat-header-label">AI Assistant</span>
+            <!-- Model picker trigger + dropdown -->
           <div class="model-picker-wrapper">
             <button id="btnModelPicker" class="ai-badge model-picker-trigger" title="Select model">
               <span id="activeModelLabel">Loading…</span>
@@ -651,22 +587,19 @@
               </div>
             </div>
           </div>
-        </div>
-        <button class="icon-btn" id="btn-clear-chat" title="Clear chat history">
-          <!-- Trash SVG 14×14 -->
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M2 3.5h10M5 3.5V2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1
-                     M5.5 6v4M8.5 6v4
-                     M3 3.5l.8 7.2a1 1 0 0 0 1 .8h4.4a1 1 0 0 0 1-.8L11 3.5"
-                  stroke="currentColor" stroke-width="1.2"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div><!-- /chat-header -->
+          </div>
+          <button class="icon-btn" id="btn-close-ai" title="Close AI Assistant">
+            <!-- X SVG 14×14 -->
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M2.5 2.5 11.5 11.5M11.5 2.5 2.5 11.5" stroke="currentColor"
+                    stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div><!-- /chat-header -->
 
-      <!-- Chat Messages -->
-      <div class="chat-messages" id="chatMessages">
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
 
         <!-- ── AI Welcome / No-model state ──────────────────────────────── -->
         <div class="ai-welcome-screen hidden" id="aiWelcomeScreen" aria-live="polite">
@@ -719,17 +652,17 @@
 
       <!-- Chat Input -->
       <div class="chat-input-area">
-        <div class="chat-mode-row">
-          <button class="chat-mode-btn" id="btn-mode-ask" title="Ask questions without modifying the document">Ask</button>
-          <button class="chat-mode-btn chat-mode-btn--active" id="btn-mode-edit" title="Let AI edit or rewrite the document">Edit</button>
-        </div>
         <div class="chat-input-row">
           <textarea
             class="chat-textarea"
             id="chatInput"
-            placeholder="Ask AI to edit, improve, or rewrite…"
-            rows="3"
+            placeholder="Press Enter to send · Alt+Enter for newline"
+            rows="1"
           ></textarea>
+          <div class="chat-mode-row">
+            <button class="chat-mode-btn" id="btn-mode-ask" title="Ask questions without modifying the document">Ask</button>
+            <button class="chat-mode-btn chat-mode-btn--active" id="btn-mode-edit" title="Let AI edit or rewrite the document">Edit</button>
+          </div>
           <button class="send-btn" id="btn-send" title="Send message">
             <!-- Send arrow SVG 16×16 -->
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
@@ -738,16 +671,68 @@
             </svg>
           </button>
         </div>
-        <div class="chat-hint">Press <strong>Enter</strong> to send · <strong>Alt+Enter</strong> for newline</div>
       </div><!-- /chat-input-area -->
 
       <!-- Large-file warning — hidden until a big file is loaded -->
       <div class="chat-large-file-warn hidden" id="chatLargeFileWarn"></div>
 
-      <!-- Chat Status Bar -->
-      <div class="chat-statusbar">
-        <!-- Left: message count -->
-        <div class="chat-statusbar-item">
+      </div><!-- /ai-bottom-panel -->
+
+      <!-- ── Floating AI chat trigger (bottom-right) ─────────────────────── -->
+      <button class="ai-fab" id="btn-toggle-ai" title="Open AI Assistant" aria-expanded="false" aria-controls="aiBottomPanel">
+        <!-- Chat bubble SVG 16×16 -->
+        <svg class="ai-fab__icon-open" width="16" height="16" viewBox="0 0 15 15" fill="none"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M2 2.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5l-3 2.5V3.5a1 1 0 0 1 1-1Z"
+                stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        </svg>
+        <!-- Chevron-down SVG 14×14 (shown while the popup is open) -->
+        <svg class="ai-fab__icon-close" width="14" height="14" viewBox="0 0 15 15" fill="none"
+             xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M2.5 5.5 7.5 10.5 12.5 5.5" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+      <!-- ── Bottom Status Bar — always visible, merges editor + chat info ── -->
+      <div class="statusbar" id="editorStatusbar">
+
+        <!-- Dot + filename -->
+        <div class="statusbar-item">
+          <div class="statusbar-dot"></div>
+          <span id="sbFilename">untitled.md</span>
+        </div>
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- Lines -->
+        <div class="statusbar-item">
+          <!-- Lines icon 11×11 -->
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M1 2.5h9M1 5.5h6M1 8.5h4"
+                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span id="sbLines">0 lines</span>
+        </div>
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- Chars -->
+        <div class="statusbar-item">
+          <!-- Type / T icon 11×11 -->
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none"
+               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M2 2.5h7M5.5 2.5v6"
+                  stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span id="sbChars">0 chars</span>
+        </div>
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- Chat message count -->
+        <div class="statusbar-item">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M1.5 2h9a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-.75.75H4L1.5 10V2.75A.75.75 0 0 1 2.25 2Z"
@@ -755,8 +740,11 @@
           </svg>
           <span id="chatMsgCount">0</span>
         </div>
-        <!-- Centre: estimated input tokens for next request -->
-        <div class="chat-statusbar-item">
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- Estimated input tokens for next AI request -->
+        <div class="statusbar-item">
           <!-- Lightning bolt icon -->
           <svg width="10" height="12" viewBox="0 0 10 13" fill="none"
                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -766,15 +754,31 @@
           </svg>
           <span id="chatTokenBadge" class="tok-ok" title="Estimated input tokens for next request">~0 tok</span>
         </div>
-        <!-- Right: selection chip + active file context -->
-        <div class="chat-statusbar-item chat-statusbar-context">
+
+        <!-- AI selection chip + active context file — grows/shrinks to fill remaining space -->
+        <div class="statusbar-item chat-statusbar-context">
           <span class="chat-sel-chip hidden" id="chatSelChip"></span>
           <span class="chat-context-dot"></span>
           <span class="chat-context-label">Context: <span id="chatContextFile">untitled.md</span></span>
         </div>
-      </div><!-- /chat-statusbar -->
 
-    </aside><!-- /right-sidebar -->
+        <span class="statusbar-sep">|</span>
+
+        <!-- Language label -->
+        <div class="statusbar-item">
+          <span style="color:var(--primary);font-weight:500;">Markdown</span>
+        </div>
+
+        <span class="statusbar-sep">|</span>
+
+        <!-- App version -->
+        <div class="statusbar-item">
+          <span id="sbVersion"></span>
+        </div>
+
+      </div><!-- /statusbar -->
+
+    </main><!-- /main-content -->
 
   </div><!-- /#app -->
 
@@ -1084,7 +1088,7 @@
               <div class="settings-row__control">
                 <select id="launchBehavior" class="form-input settings-select">
                   <option value="recents">Show Recents</option>
-                  <option value="untitled">Start a new untitled file</option>
+                  <option value="untitled">Start in Scratchpad</option>
                   <option value="first-file">Open first file in Explorer</option>
                 </select>
               </div>

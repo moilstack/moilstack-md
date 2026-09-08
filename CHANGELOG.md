@@ -4,6 +4,46 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [1.1.4] - 2026-09-08
+
+### Added
+- **Split view mode restored** — Edit, Preview, and Split are back as three toggleable modes, with proportional scroll-sync between the editor and preview panes; `Ctrl+\`` cycles through all three again.
+- **Focus mode restored** — hides the Explorer sidebar and switches to Split view for a distraction-free layout; no longer maximizes the window (removed since the AI Assistant is a floating popup now, not a docked panel needing extra space).
+- **"Ivory & Slate" theme** — a new light theme (warm ivory background, slate text, steel-blue accent) added to the theme cycle.
+
+### Changed
+- **Untitled draft renamed to "Scratchpad"** throughout the app (Recent Files row, Settings → On Launch) — framed as an always-available notes buffer rather than something unsaved and at risk.
+- **Autosave is now a true 1-minute interval** instead of a 30-second debounce that reset on every keystroke — a long unbroken typing session now still gets saved periodically. Applies to all open files, not just Scratchpad.
+- **Scratchpad closes and restores silently** — no more Save/Discard/Cancel confirmation on app close for the Scratchpad buffer (its content is already autosaved), and no "restored draft" toast on relaunch. Named files with unsaved changes still prompt as before.
+- **Light theme border color lightened** further for softer dividers between panes and sections.
+
+### Removed
+- **"Light 2" theme** — removed from the theme cycle in favor of Ivory & Slate.
+- **"For writers" suggested-prompt group** removed from the AI Assistant's welcome greeting; only the developer-focused prompts remain.
+
+## [1.1.3] - 2026-08-22
+
+### Added
+- **Inline syntax highlighting in the editor** — formatting syntax tags (like `**`, `_`, `` ` ``, and links) are now styled directly inside the editor highlight overlay. The formatting markup symbols themselves are partially muted, while the text inside is rendered bold, italic, code, or link styled, matching the visual focus of VS Code.
+- **Copy button on preview code blocks** — hovering a code block reveals a small copy-to-clipboard icon in its top-right corner, with a checkmark confirmation after copying.
+- **Cycle Explorer Mode from the sidebar label** — clicking "Explorer" now cycles Root folder only → Multi-level → Recent Only directly, instead of opening Settings.
+
+### Changed
+- **AI Assistant is now a floating chat popup** instead of a panel docked to the bottom of the window — opened via a new round button fixed to the bottom-right corner. The popup's height now tracks the Edit/Preview area's height as the window is resized (520px minimum).
+- **AI Assistant header restyled** with the app's accent "active" tint for better visibility, and its "Clear chat" button was removed (clearing still happens automatically when switching files).
+- **Chat input placeholder shortened** — "Ask AI to edit, improve, or rewrite…" is now "Ask AI to make changes…".
+- **Explorer sidebar widened** from 250px to 280px.
+- **Preview typography resized** — body text down to 13.5px; H1/H2/H3 down to 22px/18px/15px respectively.
+- **Preview code block scrollbar** no longer relies on the OS's fade-out overlay indicator — it now reserves its track permanently and reveals color on hover, so it's discoverable without needing to drag first.
+- **Light theme ("Snow White") border color darkened** for better visibility of dividers between panes and sections (Light 2 unaffected).
+
+### Removed
+- **Split view mode** — Edit and Preview are the only two view modes now; `Ctrl+\`` toggles between them instead of cycling through three.
+- **Focus mode** — the header button that hid both sidebars and switched to Split view has been removed.
+- **App name in the title bar** — "MoilStack .md" text next to the logo icon was removed from the header.
+
+---
+
 ## [1.1.2] - 2026-08-20
 
 ### Added

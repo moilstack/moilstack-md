@@ -99,11 +99,6 @@ const ChatPanel = (() => {
     'Generate a table of contents for this document',
     'Check this doc for technical accuracy',
   ];
-  const WRITER_PROMPTS = [
-    'Improve the flow of this paragraph',
-    'Make this more concise',
-    'Fix grammar and tone',
-  ];
 
   /* ═══════════════════════════════════════════════════════════════════
      Token estimation
@@ -130,7 +125,7 @@ const ChatPanel = (() => {
     if (input && !currentSelection) {
       input.placeholder = isAskMode
         ? 'Ask a question about the file…'
-        : 'Ask AI to edit, improve, or rewrite…';
+        : 'Ask AI to make changes…';
     }
   }
 
@@ -419,7 +414,7 @@ const ChatPanel = (() => {
       if (chip)  chip.classList.add('hidden');
       if (input) input.placeholder = isAskMode
         ? 'Ask a question about the file…'
-        : 'Ask AI to edit, improve, or rewrite…';
+        : 'Ask AI to make changes…';
       hideSelectionGhost();
       updateTokenEstimate();
       updateFileSizeWarning(); // restore banner if file is large
@@ -670,7 +665,6 @@ const ChatPanel = (() => {
     bubble.className = 'bubble ai';
     bubble.appendChild(document.createTextNode(CHAT_GREETING));
     bubble.appendChild(buildGroup('🧑‍💻 For developers', DEV_PROMPTS));
-    bubble.appendChild(buildGroup('✍️ For writers', WRITER_PROMPTS));
 
     const row     = document.createElement('div');
     row.className = 'bubble-row ai';

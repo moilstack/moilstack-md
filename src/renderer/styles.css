@@ -8,9 +8,7 @@
 /* ─── Design tokens — Light theme (Snow White) ─────────────────────── */
 :root {
   /* Layout (not theme-dependent) */
-  --sidebar-width:     25%;
-  --sidebar-min-width: 160px;
-  --sidebar-max-width: 500px;
+  --sidebar-width: 280px;
 
   /* Editor typography — overridden at runtime by the Font settings panel */
   --editor-font-size: 13px;
@@ -32,7 +30,7 @@
   --section-header:    #a8a6a0;
 
   /* Borders & interactions */
-  --border:            #e8eaed;
+  --border:            #e6e5df;
   --hover-bg:          #f0f1f5;
   --active-file-bg:    #ecebf7;
   --active-file-text:  #5b5aa0;
@@ -63,45 +61,48 @@
   --scrollbar-track:   transparent;
 }
 
-/* ─── Design tokens — Light2 theme (flat, single-tone) ────────────── */
-/* Same palette as Light, but every background section uses --preview-bg */
-[data-theme="light2"] {
-  --primary:           #4f46e5;
+/* ─── Design tokens — Ivory & Slate theme ───────────────────────── */
+[data-theme="ivory-slate"] {
+  /* Steel-blue accent — distinct hue from Light's indigo/grey so buttons
+     and the chat trigger read as their own theme, not a re-tint of Light. */
+  --primary:           #2f5d82;
 
-  --bg:                #fefefa;
-  --surface:           #fefefa;
-  --sidebar-bg:        #fefefa;
-  --input-bg:          #fefefa;
-  --editor-bg:         #fefefa;
-  --preview-bg:        #fefefa;
+  --bg:                #fffdf7;
+  --surface:           #f7f5ed;
+  --sidebar-bg:        #f7f5ed;
+  --input-bg:          #fffdf7;
+  --editor-bg:         #fffdf7;
+  --preview-bg:        #fffdf7;
 
-  --text-primary:      #3d3929;
-  --text-secondary:    #83827d;
-  --section-header:    #a8a6a0;
+  --text-primary:      #2d3142;
+  --text-secondary:    #6b7280;
+  --section-header:    #9199a8;
 
-  --border:            #e5e4df;
-  --hover-bg:          #ece9df;
-  --active-file-bg:    #ecebf7;
-  --active-file-text:  #5b5aa0;
+  --border:            #e4e2d8;
+  --hover-bg:          #f0eee2;
+  /* Stronger, more saturated blue tint so the selected item clearly pops
+     against the warm ivory background instead of blending into it. */
+  --active-file-bg:    #d7e6f2;
+  --active-file-text:  #1f4863;
 
-  --statusbar-bg:      #f7f2e9;
-  --statusbar-text:    #83827d;
+  --statusbar-bg:      #f7f5ed;
+  --statusbar-text:    #6b7280;
 
-  --toggle-btn-bg:     #efeef8;
-  --toggle-btn-border: #e2e0f0;
-  --toggle-btn-text:   #5b5aa0;
+  --toggle-btn-bg:     #f7f5ed;
+  --toggle-btn-border: #e0ded2;
+  --toggle-btn-text:   #2d3142;
 
-  --chat-user-bg:      #4f46e5;
-  --chat-user-text:    #ffffff;
-  --chat-ai-bg:        #e5e4df;
-  --chat-ai-text:      #3d3929;
+  --chat-user-bg:      #2f5d82;
+  --chat-user-text:    #fffdf7;
+  --chat-ai-bg:        #f0eee2;
+  --chat-ai-text:      #2d3142;
 
-  --restore-btn-bg:    #fbeed3;
-  --restore-btn-text:  #92400e;
-  --restore-btn-border:#eecea1;
+  --restore-btn-bg:    #f3e6c8;
+  --restore-btn-text:  #8a6416;
+  --restore-btn-border:#ddc182;
 
-  --scrollbar-thumb:   #ddd9cd;
-  --scrollbar-thumb-hover: #a8a6a0;
+  --scrollbar-thumb:   #e0ded2;
+  --scrollbar-thumb-hover: #9199a8;
   --scrollbar-track:   transparent;
 }
 
@@ -235,6 +236,14 @@ body {
 #app-header input,
 #app-header label {
   -webkit-app-region: no-drag;
+}
+
+/* Room for the native traffic lights drawn by titleBarStyle: 'hiddenInset',
+   plus right-side breathing room since the custom .window-controls (which
+   normally provides it) is removed on macOS. */
+body.platform-darwin #app-header {
+  padding-left: 78px;
+  padding-right: 14px;
 }
 
 .app-header__left {
@@ -706,8 +715,6 @@ body {
 /* ─── Left Sidebar ───────────────────────────────────────────────── */
 .left-sidebar {
   width: var(--sidebar-width);
-  min-width: var(--sidebar-min-width);
-  max-width: var(--sidebar-max-width);
   height: 100%;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
@@ -765,12 +772,12 @@ body {
 .sidebar-section__label-icon {
   color: var(--text-secondary);
   opacity: 0.7;
-  transition: opacity 0.15s, transform 0.2s;
+  transition: opacity 0.15s, transform 0.3s;
 }
 .sidebar-section__label--link:hover .sidebar-section__label-icon,
 .sidebar-section__label--link:focus-visible .sidebar-section__label-icon {
   opacity: 1;
-  transform: rotate(35deg);
+  transform: rotate(120deg);
 }
 
 .sidebar-section__actions {
@@ -912,6 +919,10 @@ body {
   text-overflow: ellipsis;
   user-select: none;
   position: relative; /* needed to position the pin button */
+  /* Fixed height (padding + the 18px pin button) so revealing the
+     hover-only pin button doesn't grow the row and jumble the list below it.
+     box-sizing is border-box globally, so this includes the padding. */
+  height: 28px;
 }
 
 .file-item svg {
@@ -1161,6 +1172,9 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 1px;
+  /* Two lines of content (name + preview) need more room than the fixed
+     28px single-line .file-item height, so let this variant grow instead. */
+  height: auto;
 }
 
 .file-item__tree-row {
@@ -1168,6 +1182,7 @@ body {
   align-items: center;
   gap: 7px;
   min-width: 0;
+  min-height: 18px;
 }
 
 .file-item__tree-row span {
@@ -1195,6 +1210,9 @@ body {
   overflow: hidden;
   padding: 6px 14px;
   gap: 2px;
+  /* This variant can show a second preview line below the name, so it
+     needs to grow beyond the base .file-item's fixed single-line height. */
+  height: auto;
 }
 
 .file-item__main {
@@ -1245,10 +1263,14 @@ body {
   color: #d19bec;
 }
 
-[data-theme="light"] .file-item .file-tag,
-[data-theme="light2"] .file-item .file-tag {
+[data-theme="light"] .file-item .file-tag {
   background: #e8e6f5;
   color: #34315f;
+}
+
+[data-theme="ivory-slate"] .file-item .file-tag {
+  background: #d7e6f2;
+  color: #1f4863;
 }
 
 .file-item__preview {
@@ -1421,7 +1443,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 120px;
   overflow: hidden;
 }
 
@@ -1718,10 +1740,6 @@ body {
   background: #475569;
 }
 
-[data-theme="light2"] .toggle-group button.active {
-  background: #4f46e5;
-}
-
 
 
 
@@ -1834,6 +1852,43 @@ body {
 [data-theme="dim"] #editor-highlight .hl-h5 { color: #f0cf94; }
 [data-theme="dim"] #editor-highlight .hl-h6 { color: #ec9aa1; }
 
+/* Inline markdown syntax character styling */
+#editor-highlight .hl-syntax {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Bold text inside the editor highlight layer */
+#editor-highlight .hl-bold {
+  font-weight: bold;
+}
+
+/* Italic text inside the editor highlight layer */
+#editor-highlight .hl-italic {
+  font-style: italic;
+}
+
+/* Inline code styling in editor highlight layer */
+#editor-highlight .hl-code {
+  background: rgba(127, 127, 127, 0.15);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: #e06c75;
+}
+
+/* Link description styling */
+#editor-highlight .hl-link-text {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Link URL destination styling */
+#editor-highlight .hl-link-url {
+  color: var(--text-secondary);
+}
+
 /* ── Selection ghost — dimmed highlight when editor loses focus ────── */
 /* Sits behind #editor-highlight so syntax colours remain readable.    */
 /* JS sets `top` and `height`; the ghost is hidden by default.         */
@@ -1919,7 +1974,7 @@ body {
   max-width: 800px;
   margin: 0 auto;
   padding: 24px 32px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.8;
   color: var(--text-primary);
 }
@@ -1941,18 +1996,18 @@ body {
   margin: 1.75em 0 0.6em;
 }
 .preview-content h1 {
-  font-size: 24px;
+  font-size: 22px;
   border-bottom: 2px solid var(--border);
   padding-bottom: 8px;
   color: #1e3a8a;
 }
 .preview-content h2 {
-  font-size: 20px;
+  font-size: 18px;
   border-bottom: 1px solid var(--border);
   padding-bottom: 6px;
   color: #3730a3;
 }
-.preview-content h3 { font-size: 16px; color: #0e7490; }
+.preview-content h3 { font-size: 15px; color: #0e7490; }
 .preview-content h4 { font-size: 1em;  color: #065f46; }
 .preview-content h5 { font-size: .93em; color: #92400e; }
 .preview-content h6 { font-size: .93em; color: #991b1b; }
@@ -2002,6 +2057,29 @@ body {
   overflow-x: auto;
   margin: 1em 0;
   font-size: 14px;
+  scrollbar-color: auto;
+}
+
+/* Custom WebKit scrollbar pseudo-elements bypass macOS native overlay-style
+   scrollbars (which stay invisible until actively dragged/scrolled).
+   The scrollbar thumb is subtly visible by default so users immediately know
+   a code block overflows, and darkens on hover. */
+.preview-content pre::-webkit-scrollbar {
+  height: 6px;
+}
+.preview-content pre::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+.preview-content pre::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+.preview-content pre:hover::-webkit-scrollbar-track {
+  background: var(--border);
+}
+.preview-content pre:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-hover);
 }
 
 .preview-content pre code {
@@ -2010,6 +2088,42 @@ body {
   font-size: 14px;
   color: var(--text-primary);
   border: none;
+}
+
+/* ── Code block copy button ─────────────────────────────────────── */
+.preview-content .code-block {
+  position: relative;
+}
+
+.preview-content .code-copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+.preview-content .code-block:hover .code-copy-btn,
+.preview-content .code-copy-btn:focus-visible,
+.preview-content .code-copy-btn--copied {
+  display: flex;
+}
+.preview-content .code-copy-btn:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+.preview-content .code-copy-btn--copied {
+  color: #22c55e;
+  border-color: #22c55e;
 }
 
 .preview-content .markdown-embed {
@@ -2114,16 +2228,6 @@ body {
 }
 #editorPane.hidden + #previewPane {
   border-left: none;
-}
-
-/* Split mode — both panes visible side by side, divider persists */
-.editor-area[data-view="split"] #editorPane,
-.editor-area[data-view="split"] #previewPane {
-  flex: 1;
-  min-width: 0;
-}
-.editor-area[data-view="split"] #editorPane {
-  border-right: 1px solid var(--border);
 }
 
 /* ─── Bottom App Status Bar ──────────────────────────────────────── */
@@ -2261,42 +2365,53 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   AI Chat Panel — Right Sidebar
+   AI Chat Popup — floats above the bottom-right corner, opened via
+   the .ai-fab trigger button instead of living docked in the layout.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ─── Right Sidebar Shell ─────────────────────────────────────────── */
-.right-sidebar {
-  width: 25%;
-  min-width: 220px;
-  max-width: none;
-  height: 100%;
-  background: var(--sidebar-bg);
-  border-left: 1px solid var(--border);
+/* ─── Popup Shell ─────────────────────────────────────────────────── */
+.ai-bottom-panel {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  position: fixed;
+  right: 18px;
+  /* Top/bottom pinned so the popup grows with the Edit/Preview area without
+     touching it directly: a gap below the toolbar (84px area top + 20px),
+     and stopping above the floating trigger button (same offset as before,
+     bottom: 86px) rather than reaching all the way to the status bar.
+     min-height keeps today's size as a floor on short windows, where
+     top+bottom would otherwise squeeze it smaller. */
+  top: 104px;
+  bottom: 86px;
+  min-height: 520px;
+  width: 380px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: background 0.2s, color 0.2s;
+  z-index: 60;
+  transform-origin: bottom right;
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
-/* Collapsed AI sidebar */
-.right-sidebar--hidden {
-  width: 0 !important;
-  min-width: 0 !important;
-  border-left: none;
-  overflow: hidden;
+/* Closed popup — fully hidden, not just squashed to a header tab */
+.ai-bottom-panel--collapsed {
+  opacity: 0;
+  transform: scale(0.95) translateY(8px);
+  pointer-events: none;
 }
 
-/* ─── Chat Header ─────────────────────────────────────────────────── */
+/* ─── Chat Header ────────────────────────────────────────────────── */
 .chat-header {
-  height: 42px;
-  min-height: 42px;
-  background: var(--surface);
+  height: 38px;
+  min-height: 38px;
+  background: var(--active-file-bg);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 0 10px 0 14px;
   flex-shrink: 0;
 }
 
@@ -2308,6 +2423,57 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   user-select: none;
+}
+
+.chat-header-label {
+  color: var(--active-file-text);
+}
+
+/* ─── Floating AI chat trigger (bottom-right) ────────────────────── */
+.ai-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 38px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  z-index: 61;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.ai-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.26);
+}
+.ai-fab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.ai-fab__icon-open,
+.ai-fab__icon-close {
+  position: absolute;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.ai-fab__icon-close {
+  opacity: 0;
+  transform: scale(0.6);
+}
+.ai-fab--active .ai-fab__icon-open {
+  opacity: 0;
+  transform: scale(0.6);
+}
+.ai-fab--active .ai-fab__icon-close {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .ai-badge {
@@ -2662,26 +2828,34 @@ body {
   flex-shrink: 0;
 }
 
-/* ─── Ask / Edit mode toggle ──────────────────────────────────────── */
-/* ─── Ask / Edit mode tab strip ───────────────────────────────────── */
+/* ─── Ask / Edit mode toggle — compact segmented control inline
+   with the textarea ──────────────────────────────────────────────── */
 .chat-mode-row {
   display: flex;
-  gap: 0;
-  margin-bottom: 4px;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  height: 36px;
+  box-sizing: border-box;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
 }
 
 .chat-mode-btn {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
-  padding: 2px 12px;
+  padding: 0 9px;
+  height: 100%;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-radius: 6px;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   user-select: none;
-  line-height: 1.4;
-  transition: color 120ms ease, border-color 120ms ease;
+  line-height: 1.2;
+  transition: color 120ms ease, background 120ms ease;
 }
 
 .chat-mode-btn:hover:not(.chat-mode-btn--active) {
@@ -2689,8 +2863,8 @@ body {
 }
 
 .chat-mode-btn--active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: #ffffff;
+  background: var(--primary);
   font-weight: 600;
 }
 
@@ -2717,7 +2891,7 @@ body {
   font-size: 13px;
   line-height: 1.5;
   padding: 8px 10px;
-  min-height: 60px;
+  min-height: 34px;
   max-height: 120px;
   overflow-y: auto;
   transition: border-color 150ms ease, background 0.2s, color 0.2s;
@@ -2734,7 +2908,7 @@ body {
 
 .send-btn {
   width: 36px;
-  height: 36px;
+  height: 34px;
   min-width: 36px;
   border-radius: 8px;
   border: none;
@@ -2761,47 +2935,10 @@ body {
   outline-offset: 2px;
 }
 
-.chat-hint {
-  margin-top: 6px;
-  font-size: 11px;
-  color: var(--text-secondary);
-  user-select: none;
-}
-
-.chat-hint strong {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-/* ─── Chat Status Bar ─────────────────────────────────────────────── */
-.chat-statusbar {
-  height: 26px;
-  min-height: 26px;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  padding: 0 12px;
-  gap: 16px;
-  background: var(--statusbar-bg);
-  border-top: 1px solid var(--border);
-  font-size: 11.5px;
-  color: var(--statusbar-text);
-  user-select: none;
-  flex-shrink: 0;
-  transition: background 0.2s;
-}
-
-.chat-statusbar-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-
+/* ─── Chat status items (now merged into the single #editorStatusbar) ── */
 .chat-statusbar-context {
-  margin-left: auto;
+  flex: 1;
   min-width: 0;       /* allow shrinking */
-  flex-shrink: 1;
   overflow: hidden;
 }
 
@@ -2976,7 +3113,7 @@ body {
 }
 
 /* The dropdown panel — positioned via JS (fixed) so it can escape the
-   .right-sidebar's `overflow: hidden` instead of being clipped to the
+   .ai-bottom-panel's `overflow: hidden` instead of being clipped to the
    chat header section. */
 .model-picker-dropdown {
   position: fixed;
