@@ -61,45 +61,48 @@
   --scrollbar-track:   transparent;
 }
 
-/* ─── Design tokens — Light2 theme (flat, single-tone) ────────────── */
-/* Same palette as Light, but every background section uses --preview-bg */
-[data-theme="light2"] {
-  --primary:           #4f46e5;
+/* ─── Design tokens — Ivory & Slate theme ───────────────────────── */
+[data-theme="ivory-slate"] {
+  /* Steel-blue accent — distinct hue from Light's indigo/grey so buttons
+     and the chat trigger read as their own theme, not a re-tint of Light. */
+  --primary:           #2f5d82;
 
-  --bg:                #fefefa;
-  --surface:           #fefefa;
-  --sidebar-bg:        #fefefa;
-  --input-bg:          #fefefa;
-  --editor-bg:         #fefefa;
-  --preview-bg:        #fefefa;
+  --bg:                #fffdf7;
+  --surface:           #f7f5ed;
+  --sidebar-bg:        #f7f5ed;
+  --input-bg:          #fffdf7;
+  --editor-bg:         #fffdf7;
+  --preview-bg:        #fffdf7;
 
-  --text-primary:      #3d3929;
-  --text-secondary:    #83827d;
-  --section-header:    #a8a6a0;
+  --text-primary:      #2d3142;
+  --text-secondary:    #6b7280;
+  --section-header:    #9199a8;
 
-  --border:            #e5e4df;
-  --hover-bg:          #ece9df;
-  --active-file-bg:    #ecebf7;
-  --active-file-text:  #5b5aa0;
+  --border:            #e4e2d8;
+  --hover-bg:          #f0eee2;
+  /* Stronger, more saturated blue tint so the selected item clearly pops
+     against the warm ivory background instead of blending into it. */
+  --active-file-bg:    #d7e6f2;
+  --active-file-text:  #1f4863;
 
-  --statusbar-bg:      #f7f2e9;
-  --statusbar-text:    #83827d;
+  --statusbar-bg:      #f7f5ed;
+  --statusbar-text:    #6b7280;
 
-  --toggle-btn-bg:     #efeef8;
-  --toggle-btn-border: #e2e0f0;
-  --toggle-btn-text:   #5b5aa0;
+  --toggle-btn-bg:     #f7f5ed;
+  --toggle-btn-border: #e0ded2;
+  --toggle-btn-text:   #2d3142;
 
-  --chat-user-bg:      #4f46e5;
-  --chat-user-text:    #ffffff;
-  --chat-ai-bg:        #e5e4df;
-  --chat-ai-text:      #3d3929;
+  --chat-user-bg:      #2f5d82;
+  --chat-user-text:    #fffdf7;
+  --chat-ai-bg:        #f0eee2;
+  --chat-ai-text:      #2d3142;
 
-  --restore-btn-bg:    #fbeed3;
-  --restore-btn-text:  #92400e;
-  --restore-btn-border:#eecea1;
+  --restore-btn-bg:    #f3e6c8;
+  --restore-btn-text:  #8a6416;
+  --restore-btn-border:#ddc182;
 
-  --scrollbar-thumb:   #ddd9cd;
-  --scrollbar-thumb-hover: #a8a6a0;
+  --scrollbar-thumb:   #e0ded2;
+  --scrollbar-thumb-hover: #9199a8;
   --scrollbar-track:   transparent;
 }
 
@@ -1260,10 +1263,14 @@ body.platform-darwin #app-header {
   color: #d19bec;
 }
 
-[data-theme="light"] .file-item .file-tag,
-[data-theme="light2"] .file-item .file-tag {
+[data-theme="light"] .file-item .file-tag {
   background: #e8e6f5;
   color: #34315f;
+}
+
+[data-theme="ivory-slate"] .file-item .file-tag {
+  background: #d7e6f2;
+  color: #1f4863;
 }
 
 .file-item__preview {
@@ -1731,10 +1738,6 @@ body.platform-darwin #app-header {
 
 [data-theme="light"] .toggle-group button.active {
   background: #475569;
-}
-
-[data-theme="light2"] .toggle-group button.active {
-  background: #4f46e5;
 }
 
 

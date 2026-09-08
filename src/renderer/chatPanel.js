@@ -99,11 +99,6 @@ const ChatPanel = (() => {
     'Generate a table of contents for this document',
     'Check this doc for technical accuracy',
   ];
-  const WRITER_PROMPTS = [
-    'Improve the flow of this paragraph',
-    'Make this more concise',
-    'Fix grammar and tone',
-  ];
 
   /* ═══════════════════════════════════════════════════════════════════
      Token estimation
@@ -670,7 +665,6 @@ const ChatPanel = (() => {
     bubble.className = 'bubble ai';
     bubble.appendChild(document.createTextNode(CHAT_GREETING));
     bubble.appendChild(buildGroup('🧑‍💻 For developers', DEV_PROMPTS));
-    bubble.appendChild(buildGroup('✍️ For writers', WRITER_PROMPTS));
 
     const row     = document.createElement('div');
     row.className = 'bubble-row ai';
