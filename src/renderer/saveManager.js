@@ -14,7 +14,7 @@ const SaveManager = (() => {
   let _isDirty            = false;
   let _bypassBeforeUnload = false;
 
-  const AUTO_SAVE_DELAY = 30_000;
+  const AUTO_SAVE_DELAY = 60_000;
   let _autoSaveTimer    = null;
 
   /* ── Untitled-buffer draft (survives close / crash until saved-as or discarded) ──
@@ -95,17 +95,23 @@ const SaveManager = (() => {
     return true;
   }
 
-  /* ── Auto-save ────────────────────────────────────────────────────── */
+  /* ── Auto-save ────────────────────────────────────────────────────────
+     Fixed interval, not a debounce: once the document goes dirty, a tick
+     fires every AUTO_SAVE_DELAY regardless of continued typing, so a long
+     unbroken typing session still gets saved periodically instead of only
+     after the user pauses. The interval starts on the first markDirty()
+     after being clean and is torn down in markClean() (covers both its own
+     post-save markClean() and manual saveFile()/Ctrl+S). ──────────────── */
 
-  function _scheduleAutoSave() {
-    clearTimeout(_autoSaveTimer);
-    _autoSaveTimer = setTimeout(async () => {
+  function _startAutoSave() {
+    if (_autoSaveTimer) return; // already running
+    _autoSaveTimer = setInterval(async () => {
       if (_isDirty) await silentSave();
     }, AUTO_SAVE_DELAY);
   }
 
   function _cancelAutoSave() {
-    clearTimeout(_autoSaveTimer);
+    clearInterval(_autoSaveTimer);
     _autoSaveTimer = null;
   }
 
@@ -116,7 +122,7 @@ const SaveManager = (() => {
       _isDirty = true;
       document.querySelector('.statusbar-dot')?.classList.add('statusbar-dot--dirty');
     }
-    _scheduleAutoSave();
+    _startAutoSave();
   }
 
   function markClean() {

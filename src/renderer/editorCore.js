@@ -414,6 +414,88 @@ const EditorCore = (() => {
     }
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     Split-mode scroll sync
+
+     Proportional, not per-heading: previewPane.scrollTop always tracks
+     editor.scrollTop as the same fraction of each pane's own scroll range
+     (0 → 0, max → max, by construction). An earlier version anchored to the
+     nearest rendered heading's offsetTop instead, which is inherently
+     approximate — a raw "# Heading" source line and the ~40px block it
+     renders as don't correspond 1:1 in pixels, and the preview's own
+     padding/margins meant even the "top" case landed a few px short. That
+     approach also isn't fixable by patching harder: no per-line rendered
+     height a Markdown renderer produces will ever line up pixel-for-pixel
+     with the raw source, so pixel-perfect boundaries are needed instead —
+     which fractional matching provides for free at both ends.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  // How long to ignore a pane's own 'scroll' events after WE scroll it
+  // programmatically, so the echo doesn't bounce back and fight the sync
+  // that caused it. Needs to cover the native smooth-scroll animation
+  // (browser-timed, not fixed), not just one frame.
+  const SYNC_ECHO_COOLDOWN_MS = 400;
+
+  let _ignoreEditorEchoUntil  = 0; // set when WE scroll the editor (from preview)
+  let _ignorePreviewEchoUntil = 0; // set when WE scroll the preview (from editor)
+
+  // Coalesce bursts of 'scroll' events (fast wheel/trackpad scrolling can fire
+  // many per frame) into at most one sync computation per animation frame,
+  // always using the freshest scroll position at the time the frame runs.
+  let _previewSyncRAF = null;
+  let _editorSyncRAF  = null;
+
+  function _isSplitMode() {
+    const area = document.getElementById('editorArea');
+    return !!area && area.getAttribute('data-view') === 'split';
+  }
+
+  /** Scroll the preview pane to track the editor's current scroll position. */
+  function syncPreviewScrollFromEditor() {
+    if (performance.now() < _ignoreEditorEchoUntil) return; // echo of our own preview→editor scroll
+    if (!_isSplitMode() || _previewSyncRAF) return;
+    _previewSyncRAF = requestAnimationFrame(() => {
+      _previewSyncRAF = null;
+      _syncPreviewScrollFromEditorNow();
+    });
+  }
+
+  function _syncPreviewScrollFromEditorNow() {
+    const editor      = _deps.getEditor ? _deps.getEditor() : null;
+    const previewPane = document.getElementById('previewPane');
+    if (!editor || !previewPane) return;
+
+    const maxScroll = editor.scrollHeight - editor.clientHeight;
+    const paneMax   = previewPane.scrollHeight - previewPane.clientHeight;
+    const ratio     = maxScroll > 0 ? editor.scrollTop / maxScroll : 0;
+
+    _ignorePreviewEchoUntil = performance.now() + SYNC_ECHO_COOLDOWN_MS;
+    previewPane.scrollTo({ top: Math.round(ratio * Math.max(0, paneMax)), behavior: 'smooth' });
+  }
+
+  /** Scroll the editor to track the preview pane's current scroll position. */
+  function syncEditorScrollFromPreview() {
+    if (performance.now() < _ignorePreviewEchoUntil) return; // echo of our own editor→preview scroll
+    if (!_isSplitMode() || _editorSyncRAF) return;
+    _editorSyncRAF = requestAnimationFrame(() => {
+      _editorSyncRAF = null;
+      _syncEditorScrollFromPreviewNow();
+    });
+  }
+
+  function _syncEditorScrollFromPreviewNow() {
+    const editor      = _deps.getEditor ? _deps.getEditor() : null;
+    const previewPane = document.getElementById('previewPane');
+    if (!editor || !previewPane) return;
+
+    const paneMax   = previewPane.scrollHeight - previewPane.clientHeight;
+    const maxScroll = editor.scrollHeight - editor.clientHeight;
+    const ratio     = paneMax > 0 ? previewPane.scrollTop / paneMax : 0;
+
+    _ignoreEditorEchoUntil = performance.now() + SYNC_ECHO_COOLDOWN_MS;
+    editor.scrollTo({ top: Math.round(ratio * Math.max(0, maxScroll)), behavior: 'smooth' });
+  }
+
   /** Re-render preview and update status bar (debounced). */
   function triggerUpdate() {
     clearTimeout(renderTimer);
@@ -777,6 +859,8 @@ const EditorCore = (() => {
 
         // Reposition the selection ghost whenever the user scrolls
         if (typeof ChatPanel !== 'undefined') ChatPanel.positionSelectionGhost();
+
+        syncPreviewScrollFromEditor();
       });
 
       // When the editor loses focus and a line range is selected, paint the ghost
@@ -834,8 +918,13 @@ const EditorCore = (() => {
       });
     }
 
-    /* ── Preview: delegated task-checkbox listener ──────────────────── */
+    /* ── Preview: scroll sync + delegated task-checkbox listener ──── */
     if (preview) {
+      const previewPane = document.getElementById('previewPane');
+      if (previewPane) {
+        previewPane.addEventListener('scroll', () => syncEditorScrollFromPreview());
+      }
+
       preview.addEventListener('change', (e) => {
         const cb = e.target;
         if (!cb.matches('.task-checkbox')) return;

@@ -139,11 +139,11 @@ const RecentsPanel = (() => {
         : '';
       html += _rowHTML({
         iconSvg: DRAFT_ICON_SVG,
-        name: 'Untitled (unsaved)',
-        dataAttrs: `data-role="draft" title="Unsaved draft"`,
+        name: 'Scratchpad',
+        dataAttrs: `data-role="draft" title="Scratchpad — autosaved"`,
         extraClass: isLive ? ' active' : '',
         closeRole: 'draft-close',
-        closeTitle: 'Discard or save draft',
+        closeTitle: 'Discard or save Scratchpad',
         preview: draftPreview,
         withPreview,
       });

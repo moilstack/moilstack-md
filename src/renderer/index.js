@@ -18,6 +18,7 @@ var currentMode    = 'edit';
 
 const toggleEditBtn    = document.getElementById('editBtn');
 const togglePreviewBtn = document.getElementById('previewBtn');
+const toggleSplitBtn   = document.getElementById('splitBtn');
 
 function setMode(mode) {
   currentMode = mode;
@@ -28,6 +29,7 @@ function setMode(mode) {
   editorArea.setAttribute('data-view', mode);
   toggleEditBtn.classList.toggle('active',    mode === 'edit');
   togglePreviewBtn.classList.toggle('active', mode === 'preview');
+  toggleSplitBtn.classList.toggle('active',   mode === 'split');
 
   if (mode === 'edit') {
     editorPane.classList.remove('hidden');
@@ -39,6 +41,11 @@ function setMode(mode) {
         mdEditor.setSelectionRange(0, 0);
       });
     }
+  } else if (mode === 'split') {
+    editorPane.classList.remove('hidden');
+    previewPane.classList.remove('hidden');
+    EditorCore.renderMarkdown();
+    if (mdEditor) mdEditor.focus();
   } else {
     editorPane.classList.add('hidden');
     previewPane.classList.remove('hidden');
@@ -48,6 +55,38 @@ function setMode(mode) {
 
 if (toggleEditBtn)    toggleEditBtn.addEventListener('click',    () => setMode('edit'));
 if (togglePreviewBtn) togglePreviewBtn.addEventListener('click', () => setMode('preview'));
+if (toggleSplitBtn)   toggleSplitBtn.addEventListener('click',   () => setMode('split'));
+
+/* ── Focus mode: hide left sidebar, force Split view ────────────────── */
+
+const focusModeBtn = document.getElementById('btn-focus-split');
+// Snapshot of what to restore on exit — null while not in focus mode.
+let _focusModeRestore = null;
+
+function toggleFocusMode() {
+  if (!_focusModeRestore) {
+    const explorerVisible = !document.querySelector('.left-sidebar')?.classList.contains('left-sidebar--hidden');
+
+    _focusModeRestore = { explorerVisible, prevMode: currentMode };
+
+    SidebarManager.setExplorerVisible(false, false);
+    setMode('split');
+
+    focusModeBtn?.classList.add('icon-btn--active');
+    focusModeBtn?.setAttribute('aria-pressed', 'true');
+  } else {
+    const { explorerVisible, prevMode } = _focusModeRestore;
+
+    SidebarManager.setExplorerVisible(explorerVisible, false);
+    setMode(prevMode);
+
+    _focusModeRestore = null;
+    focusModeBtn?.classList.remove('icon-btn--active');
+    focusModeBtn?.setAttribute('aria-pressed', 'false');
+  }
+}
+
+if (focusModeBtn) focusModeBtn.addEventListener('click', () => toggleFocusMode());
 
 /* ── Status bar / file selection ──────────────────────────────────── */
 
@@ -390,11 +429,11 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); SaveManager.saveFile(); }
 });
 
-// Ctrl+` — toggle edit ↔ preview
+// Ctrl+` — cycle edit → split → preview
 document.addEventListener('keydown', e => {
   if (e.key === '`' && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
-    const next = { edit: 'preview', preview: 'edit' };
+    const next = { edit: 'split', split: 'preview', preview: 'edit' };
     setMode(next[currentMode] || 'edit');
   }
 });
@@ -426,10 +465,13 @@ document.addEventListener('keydown', async e => {
 
 /* ── Window close guards ──────────────────────────────────────────── */
 
-// Block close when unsaved — triggers Electron's will-prevent-unload
+// Block close when unsaved — triggers Electron's will-prevent-unload.
+// The untitled Scratchpad buffer is exempt: its content is always silently
+// persisted to the draft file (see the fire-and-forget silentSave() below),
+// so there's nothing at risk worth interrupting close for.
 window.addEventListener('beforeunload', (e) => {
-  const isEmptyUntitled = !currentFile.path && !(mdEditor?.value ?? '').trim();
-  if (SaveManager.isDirty() && !isEmptyUntitled && !SaveManager.isBypassBeforeUnload()) {
+  const isScratchpad = !currentFile.path;
+  if (SaveManager.isDirty() && !isScratchpad && !SaveManager.isBypassBeforeUnload()) {
     e.preventDefault();
     e.returnValue = '';
   }
@@ -621,7 +663,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       EditorCore.triggerUpdate();
     }
     SaveManager.markDirty();
-    StatusBar.showToast('Restored unsaved draft from your last session.');
   } else if (launchBehavior === 'untitled') {
     await newUntitledFile();
   } else if (launchBehavior === 'first-file') {
@@ -645,7 +686,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // fresh untitled, first-file, or an existing file — so it stays consistent
   // regardless of which "On Launch" path was taken.
   const startupMode = localStorage.getItem('startupMode') || 'preview';
-  setMode(startupMode === 'edit' ? 'edit' : 'preview');
+  setMode(startupMode);
 
   // ── IPC: Save-and-close (user clicked "Save" in unsaved-changes dialog)
   window.electronAPI?.onSaveAndClose?.(async () => {

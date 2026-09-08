@@ -403,6 +403,15 @@
                       stroke-linecap="round"/>
               </svg>
             </button>
+            <button class="icon-btn icon-btn--lg" id="btn-focus-split" title="Focus mode: hide Explorer and switch to Split view" aria-label="Toggle focus mode" aria-pressed="false">
+              <!-- Expand-to-corners SVG 18×18 -->
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
 
           <div class="toggle-group">
@@ -426,6 +435,16 @@
                 <circle cx="6" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/>
               </svg>
               Preview
+            </button>
+            <button id="splitBtn" data-mode="split" title="Split mode (Ctrl+`)">
+              <!-- Split-columns SVG 12×12 -->
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="1" y="1.5" width="10" height="9" rx="1.2"
+                      stroke="currentColor" stroke-width="1.2"/>
+                <line x1="6" y1="1.5" x2="6" y2="10.5" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              Split
             </button>
           </div>
 
@@ -1055,6 +1074,7 @@
                 <select id="startupMode" class="form-input settings-select">
                   <option value="preview">Preview</option>
                   <option value="edit">Edit</option>
+                  <option value="split">Split</option>
                 </select>
               </div>
             </div>
@@ -1068,7 +1088,7 @@
               <div class="settings-row__control">
                 <select id="launchBehavior" class="form-input settings-select">
                   <option value="recents">Show Recents</option>
-                  <option value="untitled">Start a new untitled file</option>
+                  <option value="untitled">Start in Scratchpad</option>
                   <option value="first-file">Open first file in Explorer</option>
                 </select>
               </div>
