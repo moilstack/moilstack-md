@@ -17,6 +17,7 @@ const TableBuilder = (() => {
   let _rows     = []; // string[][]
   let _selStart = null;
   let _selEnd   = null;
+  let _onSave   = null; // optional: receives the generated MD instead of editing #mdEditor
 
   /* ── Markdown table parser ────────────────────────────────────────── */
 
@@ -233,6 +234,16 @@ const TableBuilder = (() => {
 
   function _save() {
     const md     = _buildMd();
+
+    // Caller-supplied sink (e.g. Preview quick edit, where the editor pane is
+    // hidden) — hand the markdown over and skip the editor insertion below.
+    if (_onSave) {
+      const cb = _onSave;
+      _hide();
+      cb(md);
+      return;
+    }
+
     const editor = document.getElementById('mdEditor');
     if (!editor) { _hide(); return; }
 
@@ -255,7 +266,8 @@ const TableBuilder = (() => {
   /* ── Show / hide ──────────────────────────────────────────────────── */
 
   function show(opts = {}) {
-    const { cols, rows, selStart, selEnd } = opts;
+    const { cols, rows, selStart, selEnd, onSave } = opts;
+    _onSave = typeof onSave === 'function' ? onSave : null;
 
     if (cols && rows) {
       _cols     = cols.map(c => ({ ...c }));

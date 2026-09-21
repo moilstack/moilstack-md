@@ -5037,3 +5037,44 @@ select.form-input {
   font-style: italic;
   padding: 4px 0;
 }
+
+/* ── Preview quick edit (double-click a block to edit its Markdown) ─── */
+#editorArea[data-view="preview"] .preview-content.qe-enabled > :is(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, table, .code-block, .markdown-embed):hover {
+  outline: 1px dashed color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 4px;
+  border-radius: 3px;
+}
+
+.quick-edit {
+  margin: 8px 0;
+}
+
+.quick-edit__input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  padding: 8px 10px;
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas',
+               'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: var(--editor-font-size);
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-primary);
+  background: var(--editor-bg);
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  outline: none;
+}
+
+.quick-edit__hint {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  user-select: none;
+}

@@ -624,6 +624,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     getFindState:       () => FindReplaceWidget.getFindState(),
   });
 
+  // ── QuickEdit — double-click a block in Preview to edit it in place ─
+  QuickEdit.init({
+    getEditor:         () => mdEditor,
+    getPreviewContent: () => previewContent,
+  });
+
   // ── ChatPanel init — must run BEFORE EditorCore.updateStats() ─────
   StatusBar.updateChatContextFile(currentFile.name);
 

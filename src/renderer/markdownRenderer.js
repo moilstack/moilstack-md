@@ -239,6 +239,15 @@ const MarkdownRenderer = (() => {
       const line        = lines[i];
       const trimmedLine = line.trimStart();
       const blockLine   = startLine + i;
+      const startIdx    = i;
+      // Absolute editor line of the last non-blank line of the block ending
+      // just before `next` — emitted as data-line-end so the preview can map
+      // a rendered block back to its exact source range (quick edit).
+      const endOf = (next) => {
+        let e = next - 1;
+        while (e > startIdx && lines[e].trim() === '') e--;
+        return startLine + e;
+      };
 
       /* ── Fenced code block ──────────────────────────────────────── */
       // CommonMark: opening fence may have 0–3 leading spaces.
@@ -265,7 +274,7 @@ const MarkdownRenderer = (() => {
         // layer, so accidental self-nesting terminates instead of looping.
         if (lang === 'markdown' || lang === 'md') {
           const inner = parseMarkdown(codeLines.join('\n'), blockLine + 1, slugs);
-          out.push(`<div class="markdown-embed" data-line="${blockLine}">${inner}</div>`);
+          out.push(`<div class="markdown-embed" data-line="${blockLine}" data-line-end="${endOf(i)}">${inner}</div>`);
           continue;
         }
 
@@ -279,7 +288,7 @@ const MarkdownRenderer = (() => {
                 `<path d="M2.5 8V2a1 1 0 0 1 1-1h6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>` +
               `</svg>` +
             `</button>` +
-            `<pre data-line="${blockLine}"><code${langAttr}>${escapeHtml(codeText)}</code></pre>` +
+            `<pre data-line="${blockLine}" data-line-end="${endOf(i)}"><code${langAttr}>${escapeHtml(codeText)}</code></pre>` +
           `</div>`
         );
         continue;
@@ -290,7 +299,7 @@ const MarkdownRenderer = (() => {
       if (hm) {
         const lvl = hm[1].length;
         const id  = _slugifyHeading(hm[2].trim(), slugs);
-        out.push(`<h${lvl} id="${id}" data-line="${blockLine}">${parseInlineMath(hm[2].trim())}</h${lvl}>`);
+        out.push(`<h${lvl} id="${id}" data-line="${blockLine}" data-line-end="${endOf(i + 1)}">${parseInlineMath(hm[2].trim())}</h${lvl}>`);
         i++;
         continue;
       }
@@ -311,7 +320,7 @@ const MarkdownRenderer = (() => {
           i++;
         }
         // Recursively parse inner content for nested Markdown, preserving absolute line numbers
-        out.push(`<blockquote data-line="${quoteStartLine}">${parseMarkdown(quoteLines.join('\n'), quoteStartLine, slugs)}</blockquote>`);
+        out.push(`<blockquote data-line="${quoteStartLine}" data-line-end="${endOf(i)}">${parseMarkdown(quoteLines.join('\n'), quoteStartLine, slugs)}</blockquote>`);
         continue;
       }
 
@@ -377,7 +386,7 @@ const MarkdownRenderer = (() => {
         }
 
         out.push(
-          `<table data-line="${blockLine}"><thead><tr>${headerHtml}</tr></thead>` +
+          `<table data-line="${blockLine}" data-line-end="${endOf(i)}"><thead><tr>${headerHtml}</tr></thead>` +
           `<tbody>${bodyRows.join('')}</tbody></table>`
         );
         continue;
@@ -387,7 +396,11 @@ const MarkdownRenderer = (() => {
       if (/^[*\-+] /.test(trimmedLine) || /^\d+\. /.test(trimmedLine)) {
         const baseIndent = line.length - trimmedLine.length;
         const result     = parseListBlock(lines, i, baseIndent, blockLine);
-        out.push(result.html);
+        // Stamp the end line onto the outermost list tag (first occurrence only).
+        out.push(result.html.replace(
+          ` data-line="${blockLine}"`,
+          ` data-line="${blockLine}" data-line-end="${endOf(result.nextIdx)}"`
+        ));
         i = result.nextIdx;
         continue;
       }
@@ -421,7 +434,7 @@ const MarkdownRenderer = (() => {
         const rawPara = paraLines.join('\n');
         const { text: mathPara, slots: mathParaSlots } = protectMath(rawPara);
         const escapedPara = escapeHtml(mathPara).replace(/\n/g, '<br>');
-        out.push(`<p data-line="${blockLine}">${restoreMath(parseInline(escapedPara), mathParaSlots)}</p>`);
+        out.push(`<p data-line="${blockLine}" data-line-end="${endOf(i)}">${restoreMath(parseInline(escapedPara), mathParaSlots)}</p>`);
       } else {
         i++; // safety: no rule consumed this line — advance to prevent infinite loop
       }

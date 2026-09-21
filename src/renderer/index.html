@@ -1079,6 +1079,20 @@
               </div>
             </div>
 
+            <!-- Quick edit in Preview -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">Quick Edit in Preview</span>
+                <span class="settings-row__desc">Double-click a paragraph, heading, list, quote or code block in Preview to edit it in place (tables open the table builder)</span>
+              </div>
+              <div class="settings-row__control">
+                <select id="quickEditPreview" class="form-input settings-select">
+                  <option value="on">On</option>
+                  <option value="off">Off</option>
+                </select>
+              </div>
+            </div>
+
             <!-- Launch Behavior -->
             <div class="settings-row">
               <div class="settings-row__label">
@@ -1512,6 +1526,7 @@
   <script src="markdownRenderer.js"></script>
   <script src="editorCore.js"></script>
   <script src="tableBuilder.js"></script>
+  <script src="quickEdit.js"></script>
   <script src="chatPanel.js"></script>
   <!-- ── Orchestration entry point ─────────────────────────────────── -->
   <script src="index.js"></script>

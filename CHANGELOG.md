@@ -4,6 +4,16 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Quick edit in Preview** — double-click a paragraph, heading, list, quote or code block to edit just that block's Markdown in place, without leaving Preview. `Ctrl+Enter` or clicking away saves, `Esc` cancels; `Ctrl+B` / `Ctrl+I` / `Tab` work inside the editor. Double-clicking a table opens the visual table builder instead (tables with unusual syntax fall back to the raw editor). Clearing a block's text removes it. Saved changes join the normal undo history and mark the file as modified, so autosave and version history pick them up. Available in Preview mode only; links, task checkboxes and the code-copy button keep their existing behavior. Can be turned off in Settings → Quick Edit in Preview.
+
+### Changed
+- Rendered blocks in Preview now carry a `data-line-end` attribute alongside `data-line`, mapping each block to its exact source line range (internal; no visible change).
+
+---
+
 ## [1.1.4] - 2026-09-08
 
 ### Added
