@@ -85,20 +85,8 @@ const ChatPanel = (() => {
 
   /** Intro line shown automatically when the panel first loads. */
   const CHAT_GREETING =
-    "👋 Hi! I'm your writing assistant. I can help you improve your markdown, " +
-    "suggest edits, fix formatting, or summarize the current document.";
-
-  /**
-   * Suggested prompts shown as clickable chips under the greeting.
-   * Scoped to what this chat can actually see — the open document's text —
-   * not the wider project/repo, so no "generate a README" / "add a changelog
-   * entry" style prompts that imply access beyond the current file.
-   */
-  const DEV_PROMPTS = [
-    'Add a code example that illustrates this section',
-    'Generate a table of contents for this document',
-    'Check this doc for technical accuracy',
-  ];
+    "👋 Ask me anything about this document, or describe a change and I'll make it. " +
+    "For quick one-click edits, use ✨ AI in the toolbar or right-click selected text.";
 
   /* ═══════════════════════════════════════════════════════════════════
      Token estimation
@@ -625,51 +613,9 @@ const ChatPanel = (() => {
     chatMessages.appendChild(row);
   }
 
-  /**
-   * Insert the welcome greeting bubble: intro text plus clickable suggested-
-   * prompt chips (Dev / Writer groups). Clicking a chip fills the chat
-   * textarea with that prompt so the user can review or edit before sending.
-   */
+  /** Insert the welcome greeting bubble shown when the panel first loads. */
   function addGreetingBubble() {
-    const chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) return;
-
-    // Built with DOM APIs rather than an indented template literal: .bubble.ai
-    // uses `white-space: pre-wrap` to preserve newlines in normal AI replies,
-    // which would otherwise render the whitespace between innerHTML lines as
-    // visible blank gaps between the intro text and each chip group.
-    const buildGroup = (label, prompts) => {
-      const group = document.createElement('div');
-      group.className = 'chat-prompt-group';
-
-      const labelEl = document.createElement('div');
-      labelEl.className = 'chat-prompt-group-label';
-      labelEl.textContent = label;
-      group.appendChild(labelEl);
-
-      const chips = document.createElement('div');
-      chips.className = 'chat-prompt-chips';
-      prompts.forEach(p => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'chat-prompt-chip';
-        chip.dataset.prompt = p;
-        chip.textContent = p;
-        chips.appendChild(chip);
-      });
-      group.appendChild(chips);
-      return group;
-    };
-
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble ai';
-    bubble.appendChild(document.createTextNode(CHAT_GREETING));
-    bubble.appendChild(buildGroup('🧑‍💻 For developers', DEV_PROMPTS));
-
-    const row     = document.createElement('div');
-    row.className = 'bubble-row ai';
-    row.appendChild(bubble);
-    chatMessages.appendChild(row);
+    addSystemBubble(CHAT_GREETING);
   }
 
   /**
@@ -1250,27 +1196,80 @@ const ChatPanel = (() => {
         const undoBtn    = e.target.closest('.undo-btn');
         const restoreBtn = e.target.closest('.restore-btn');
         const copyBtn    = e.target.closest('.copy-btn');
-        const promptChip = e.target.closest('.chat-prompt-chip');
         if (undoBtn)         undoAIEdit(undoBtn);
         else if (restoreBtn) restoreContent(restoreBtn);
         else if (copyBtn)    copyResponse(copyBtn);
-        else if (promptChip) _useSuggestedPrompt(promptChip.dataset.prompt);
       });
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     One-shot AI actions shown in the chat (used by aiActions.js)
+     ═══════════════════════════════════════════════════════════════════ */
+
+  function _openPanel() {
+    if (typeof SidebarManager !== 'undefined') SidebarManager.setAIPanelExpanded(true);
+  }
+
+  function _setSendEnabled(enabled) {
+    const sendBtn   = document.getElementById('btn-send');
+    const chatInput = document.getElementById('chatInput');
+    if (sendBtn)   sendBtn.disabled   = !enabled;
+    if (chatInput) chatInput.disabled = !enabled;
+  }
+
   /**
-   * Fill the chat textarea with a suggested prompt (from a greeting chip)
-   * and focus it — the user reviews/edits before sending, same as if they'd
-   * typed it themselves.
-   * @param {string} prompt
+   * Start an action turn: open the panel, add a user bubble describing the
+   * action, and return an empty AI bubble for aiActions.js to fill. Chat input
+   * stays disabled until endActionTurn() — aiService handles one request at a time.
+   *
+   * @param {string} userText  e.g. "✨ Fix grammar & spelling · Lines 3–5"
+   * @returns {{ row: HTMLElement, bubbleEl: HTMLElement } | null}
    */
-  function _useSuggestedPrompt(prompt) {
+  function beginActionTurn(userText) {
+    _openPanel();
+    addUserBubble(userText);
+    const streaming = createStreamingBubble();
+    streaming?.row.classList.add('bubble-row--action');
+    _setSendEnabled(false);
+    scrollChatToBottom();
+    return streaming;
+  }
+
+  /**
+   * Finish an action turn: re-enable input and, when given, record the turn in
+   * the conversation history so follow-ups ("make it shorter") have context.
+   */
+  function endActionTurn(userContent, assistantContent) {
+    if (userContent && assistantContent) {
+      conversationHistory.push({ role: 'user',      content: userContent });
+      conversationHistory.push({ role: 'assistant', content: assistantContent });
+    }
+    messageCount += 2;
+    updateChatCount();
+    updateTokenEstimate();
+    _setSendEnabled(true);
+    scrollChatToBottom();
+  }
+
+  /**
+   * Open the panel in Edit mode with `text` in the input, for actions that
+   * need the user's own words (Translate…, Custom prompt…). The editor
+   * selection is captured first so the request is scoped to it.
+   */
+  function prefillInput(text) {
+    captureEditorSelection();
+    _openPanel();
+    if (isAskMode) { isAskMode = false; _syncModeUI(); }
     const input = document.getElementById('chatInput');
-    if (!input || !prompt) return;
-    input.value = prompt;
+    if (!input) return;
+    input.value = text;
     input.dispatchEvent(new Event('input')); // resize + token estimate
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
+  }
+
+  function isBusy() {
+    return !!document.getElementById('btn-send')?.disabled;
   }
 
   /* ── Public API ────────────────────────────────────────────────────── */
@@ -1286,6 +1285,11 @@ const ChatPanel = (() => {
     hideSelectionGhost,
     updateSelectionDisplay,
     updateChatCount,
+    beginActionTurn,
+    endActionTurn,
+    prefillInput,
+    scrollToBottom: scrollChatToBottom,
+    isBusy,
   };
 
 })();

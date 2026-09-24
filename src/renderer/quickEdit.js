@@ -266,7 +266,30 @@ const QuickEdit = (() => {
     applySetting();
   }
 
-  return { init, applySetting, lineRange, blockPatch };
+  /** The Quick Edit textarea currently open in Preview, or null. */
+  function activeInput() {
+    return _session && !_session.done ? _session.ta : null;
+  }
+
+  /**
+   * Save the open Quick Edit block and return the source range of what was
+   * selected in it (the whole block when nothing was selected), so an AI
+   * action can run on the committed text. Returns null if nothing is open.
+   */
+  function commitForAction() {
+    const s = _session;
+    if (!s || s.done) return null;
+    const newBlock = s.ta.value.replace(/\n+$/, '');
+    let a = Math.min(s.ta.selectionStart, newBlock.length);
+    let b = Math.min(s.ta.selectionEnd,   newBlock.length);
+    if (a === b) { a = 0; b = newBlock.length; }
+    endSession(true);
+    const editor = _deps.getEditor();
+    const r = newBlock && editor && lineRange(editor.value, s.startLine, s.startLine);
+    return r ? { start: r.start + a, end: r.start + b } : null;
+  }
+
+  return { init, applySetting, lineRange, blockPatch, activeInput, commitForAction };
 
 })();
 

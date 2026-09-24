@@ -1686,6 +1686,154 @@ body.platform-darwin #app-header {
   font-family: inherit;
 }
 
+/* ── Editor context menu: AI submenu ─────────────────────────────── */
+.ctx-sub { position: relative; }
+.ctx-item--ai { width: 100%; }
+.ctx-item--ai kbd { margin-left: auto; }
+.ctx-sub-arrow { font-size: 10px; color: var(--text-secondary); margin-left: 4px; }
+.ctx-submenu {
+  position: absolute;
+  top: -5px;
+  left: calc(100% + 6px); /* clear the parent menu's padding + border */
+  display: none;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.1);
+}
+.ctx-sub:hover > .ctx-submenu,
+.ctx-sub:focus-within > .ctx-submenu,
+.ctx-sub--open > .ctx-submenu { display: flex; }
+.ctx-sub--left > .ctx-submenu { left: auto; right: calc(100% + 6px); }
+/* Invisible bridge over the gap so the flyout stays open while the pointer crosses it */
+.ctx-submenu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -10px;
+  width: 10px;
+}
+.ctx-sub--left > .ctx-submenu::before { left: auto; right: -10px; }
+.ctx-sub:hover > .ctx-item--ai { background: var(--hover-bg); color: var(--primary); }
+/* Preview Quick Edit: the block-level dialogs work on the whole file, not the block */
+#ctx-menu.ctx-menu--quickedit [data-action="table"],
+#ctx-menu.ctx-menu--quickedit .ctx-group:has([data-action="tags"]),
+#ctx-menu.ctx-menu--quickedit .ctx-divider:has(+ .ctx-group [data-action="tags"]) { display: none; }
+
+/* ── AI action results (rendered inside AI Assistant bubbles) ───── */
+.ai-card__diff {
+  overflow: auto;
+  max-height: 300px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+}
+.ai-diff--del { color: #d9534f; background: rgba(217, 83, 79, .12); text-decoration: line-through; border-radius: 3px; }
+.ai-diff--add { color: #1e8e3e; background: rgba(30, 142, 62, .14); border-radius: 3px; }
+[data-theme="dark"] .ai-diff--add { color: #6cd48a; }
+[data-theme="dark"] .ai-diff--del { color: #f28b82; }
+.ai-card__error { color: #d9534f; padding: 4px 2px; }
+.ai-card__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.ai-card__btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px;
+  background: transparent; color: var(--text-primary); font: inherit; cursor: pointer;
+}
+.ai-card__btn:hover { background: var(--hover-bg); }
+.ai-card__btn--primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.ai-card__btn--primary:hover { background: var(--primary); filter: brightness(1.08); }
+
+/* ── Toolbar ✨ AI button + menu ─────────────────────────────────── */
+.ai-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;              /* sit next to the Edit/Preview toggle */
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 150ms ease, color 150ms ease;
+}
+.ai-toolbar-btn:hover,
+.ai-toolbar-btn[aria-expanded="true"] { background: var(--hover-bg); color: var(--primary); }
+.ai-toolbar-btn__caret { font-size: 9px; opacity: .7; }
+.ai-toolbar-menu {
+  position: fixed;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  min-width: 230px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.1);
+}
+.ai-toolbar-menu.visible { display: flex; }
+
+/* ── AI action results: document actions ───────────────────────────────────── */
+.ai-card__note { color: var(--text-secondary); font-size: 12px; }
+.ai-card__stat { color: var(--text-secondary); font-size: 11.5px; }
+.ai-diff--del-n { color: #d9534f; }
+.ai-card__diff--lines {
+  padding: 6px 0;
+  white-space: normal;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.ai-line { padding: 0 10px; white-space: pre-wrap; word-break: break-word; }
+.ai-line > span { display: inline-block; width: 14px; color: var(--text-secondary); user-select: none; }
+.ai-line--add { background: rgba(30, 142, 62, .14); color: #1e8e3e; }
+.ai-line--del { background: rgba(217, 83, 79, .12); color: #d9534f; }
+[data-theme="dark"] .ai-line--add { color: #6cd48a; }
+[data-theme="dark"] .ai-line--del { color: #f28b82; }
+.ai-line--gap { color: var(--text-secondary); font-style: italic; padding: 2px 24px; }
+.ai-card__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ai-tag {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--hover-bg);
+  border: 1px solid var(--border);
+  font-size: 12px;
+}
+.ai-card__list { overflow: auto; max-height: 300px; display: flex; flex-direction: column; gap: 6px; }
+.ai-sugg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.ai-sugg--done { opacity: .55; }
+.ai-sugg__text { white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.ai-sugg__reason { color: var(--text-secondary); font-size: 11.5px; }
+.ai-sugg__btns { display: flex; justify-content: flex-end; gap: 6px; }
+.ai-sugg__btns .ai-card__btn { padding: 3px 9px; font-size: 12px; }
+.ai-sugg__state { font-size: 11.5px; color: var(--text-secondary); }
+
+/* ── AI action results: chat bubble wrapper ────────────────────── */
+.ai-chat-result { display: flex; flex-direction: column; gap: 8px; white-space: normal; }
+.ai-chat-status { margin-top: 6px; font-size: 11.5px; color: var(--text-secondary); white-space: normal; }
+
 /* ── Topbar actions (Save, etc.) ─────────────────────────────────── */
 .topbar-actions {
   display: flex;
@@ -2828,48 +2976,6 @@ body.platform-darwin #app-header {
 }
 
 .bubble-action-btn:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 1px;
-}
-
-/* ─── Suggested-prompt chips (greeting bubble) ────────────────────── */
-.chat-prompt-group {
-  margin-top: 10px;
-}
-
-.chat-prompt-group-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 5px;
-}
-
-.chat-prompt-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.chat-prompt-chip {
-  font-size: 11.5px;
-  line-height: 1.4;
-  padding: 5px 10px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary);
-  cursor: pointer;
-  text-align: left;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-
-.chat-prompt-chip:hover {
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
-  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
-  color: var(--primary);
-}
-
-.chat-prompt-chip:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 1px;
 }

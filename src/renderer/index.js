@@ -658,6 +658,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     getRulerLineH:            EditorCore.getRulerLineH,
   });
 
+  AIActions.init({
+    getEditor:          () => document.getElementById('mdEditor'),
+    getFilename:        () => currentFile.name,
+    replaceRangeNative: EditorCore.replaceRangeNative,
+    setEditorContentNative: EditorCore.setEditorContentNative,
+    updateHighlight:    EditorCore.updateHighlight,
+    triggerUpdate:      EditorCore.triggerUpdate,
+  });
+
   EditorCore.updateStats();
 
   if (_openFileParam) {
