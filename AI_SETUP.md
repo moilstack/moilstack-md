@@ -1,6 +1,6 @@
 # AI Configuration & Model Setup Guide
 
-MoilStack .md supports five model connection types: the standard OpenAI Chat Completions API format, Anthropic's native Messages API, Ollama (local or Cloud), and locally installed CLI tools. This guide provides detailed instructions on configuring each[cite: 1].
+MoilStack .md supports five model connection types: the standard OpenAI Chat Completions API format, Anthropic's native Messages API, Ollama (local or Cloud), and locally installed CLI tools. This guide provides detailed instructions on configuring each.
 
 > **Starter models:** Five ready-to-use configs — **Claude Haiku** (CLI), **Agy — Gemini Flash Medium** (CLI), **Anthropic Haiku**, **Ollama Local**, and **Ollama Cloud** — are added automatically the first time you launch the app (and any time one is missing), so you don't need to create these from scratch. CLI ones just need the tool installed and logged in; the API/Cloud ones just need a key pasted into **Settings → AI Models → Edit**.
 
@@ -8,16 +8,16 @@ MoilStack .md supports five model connection types: the standard OpenAI Chat Com
 
 ## Cloud API Providers
 
-To connect a cloud provider, navigate to **Settings** (⚙ gear icon) → **AI Models** → **Add Model**, choose a provider type, and input your credentials[cite: 1].
+To connect a cloud provider, navigate to **Settings** (⚙ gear icon) → **AI Models** → **Add Model**, choose a provider type, and input your credentials.
 
 | Provider | Base URL | Free Tier Details |
 |---|---|---|
-| [Groq](https://console.groq.com) | `https://api.groq.com/openai/v1` | ✅ No credit card required[cite: 1] |
-| [Google Gemini](https://aistudio.google.com/app/apikey) | `https://generativelanguage.googleapis.com/v1beta/openai/` | ✅ Free tier available[cite: 1] |
-| [OpenRouter](https://openrouter.ai/keys) | `https://openrouter.ai/api/v1` | ✅ Free models available (append `:free`)[cite: 1] |
-| [Mistral](https://console.mistral.ai) | `https://api.mistral.ai/v1` | ✅ Free tier available[cite: 1] |
-| [Together AI](https://api.together.ai) | `https://api.together.xyz/v1` | ✅ $1 credit on signup[cite: 1] |
-| [OpenAI](https://platform.openai.com/api-keys) | `https://api.openai.com/v1` | Paid tier only[cite: 1] |
+| [Groq](https://console.groq.com) | `https://api.groq.com/openai/v1` | ✅ No credit card required |
+| [Google Gemini](https://aistudio.google.com/app/apikey) | `https://generativelanguage.googleapis.com/v1beta/openai/` | ✅ Free tier available |
+| [OpenRouter](https://openrouter.ai/keys) | `https://openrouter.ai/api/v1` | ✅ Free models available (append `:free`) |
+| [Mistral](https://console.mistral.ai) | `https://api.mistral.ai/v1` | ✅ Free tier available |
+| [Together AI](https://api.together.ai) | `https://api.together.xyz/v1` | ✅ $1 credit on signup |
+| [OpenAI](https://platform.openai.com/api-keys) | `https://api.openai.com/v1` | Paid tier only |
 
 ---
 
@@ -46,18 +46,18 @@ Instead of talking to an API, MoilStack .md can spawn a command-line tool you al
 
 ## Local & Cloud Ollama Setup
 
-For maximum data privacy, you can run large language models completely local to your machine with zero data leakage[cite: 1]. Ollama Cloud uses the same connection type, just pointed at a remote host with an API key.
+For maximum data privacy, you can run large language models completely local to your machine with zero data leakage. Ollama Cloud uses the same connection type, just pointed at a remote host with an API key.
 
 ### Local
-1. Download and install the core framework from [ollama.com/download](https://ollama.com/download)[cite: 1].
-2. Open your local terminal window and pull your preferred model[cite: 1]. We highly recommend running `ollama pull qwen2.5:7b` or `ollama pull llama3.2`[cite: 1].
-3. Inside MoilStack .md, open the Settings menu, add a new model with the type set to **Ollama**, leave the API Key field blank, and click **Detect** to auto-discover your active local engines[cite: 1].
+1. Download and install the core framework from [ollama.com/download](https://ollama.com/download).
+2. Open your local terminal window and pull your preferred model. We highly recommend running `ollama pull qwen2.5:7b` or `ollama pull llama3.2`.
+3. Inside MoilStack .md, open the Settings menu, add a new model with the type set to **Ollama**, leave the API Key field blank, and click **Detect** to auto-discover your active local engines.
 
 ### Cloud
 1. Sign up at [ollama.com](https://ollama.com) and grab an API key.
 2. Add a new model with type **Ollama**, set the Base URL to `https://ollama.com` (or your cloud endpoint), paste in the API key, then click **Detect** to list available cloud models.
 
-> *Note: Running local models under 7B parameters may yield less reliable results when processing strict inline document edits[cite: 1].*
+> *Note: Running local models under 7B parameters may yield less reliable results when processing strict inline document edits.*
 
 ---
 
@@ -65,11 +65,11 @@ For maximum data privacy, you can run large language models completely local to 
 
 | Model Name | Integration Provider | Editing Accuracy | Speed Metrics |
 |---|---|---|---|
-| `llama-3.3-70b-versatile` | Groq (Free) | ⭐⭐⭐⭐⭐ | Ultra Fast[cite: 1] |
-| `gemini-2.0-flash` | Google (Free) | ⭐⭐⭐⭐⭐ | Exceptionally Fast[cite: 1] |
-| `gpt-4o-mini` | OpenAI (Paid) | ⭐⭐⭐⭐⭐ | Fast[cite: 1] |
-| `qwen2.5:7b` | Ollama (Local) | ⭐⭐⭐⭐ | Medium[cite: 1] |
-| `llama3.2` | Ollama (Local) | ⭐⭐⭐ | Fast[cite: 1] |
+| `llama-3.3-70b-versatile` | Groq (Free) | ⭐⭐⭐⭐⭐ | Ultra Fast |
+| `gemini-2.0-flash` | Google (Free) | ⭐⭐⭐⭐⭐ | Exceptionally Fast |
+| `gpt-4o-mini` | OpenAI (Paid) | ⭐⭐⭐⭐⭐ | Fast |
+| `qwen2.5:7b` | Ollama (Local) | ⭐⭐⭐⭐ | Medium |
+| `llama3.2` | Ollama (Local) | ⭐⭐⭐ | Fast |
 
 ---
 
@@ -77,18 +77,18 @@ For maximum data privacy, you can run large language models completely local to 
 
 | Provider Integration | Support Status | Architecture Notes |
 |---|---|---|
-| Groq | ✅ Fully Supported | Standard OpenAI format integration with free options[cite: 1]. |
-| OpenAI | ✅ Fully Supported | Native standard compatibility[cite: 1]. |
-| Together AI | ✅ Fully Supported | Native standard compatibility[cite: 1]. |
-| Mistral AI | ✅ Fully Supported | Native standard compatibility[cite: 1]. |
-| OpenRouter | ✅ Fully Supported | Native standard compatibility[cite: 1]. |
-| Google Gemini | ✅ Fully Supported | Accessible via standard OpenAI-compatible endpoints[cite: 1]. |
-| Cerebras | ✅ Fully Supported | Native standard compatibility[cite: 1]. |
-| Perplexity | ✅ Fully Supported | Native standard compatibility[cite: 1]. |
-| Azure OpenAI | ⚠️ Partial Support | Utilizes a unique deployment URL layout rather than global endpoints[cite: 1]. |
+| Groq | ✅ Fully Supported | Standard OpenAI format integration with free options. |
+| OpenAI | ✅ Fully Supported | Native standard compatibility. |
+| Together AI | ✅ Fully Supported | Native standard compatibility. |
+| Mistral AI | ✅ Fully Supported | Native standard compatibility. |
+| OpenRouter | ✅ Fully Supported | Native standard compatibility. |
+| Google Gemini | ✅ Fully Supported | Accessible via standard OpenAI-compatible endpoints. |
+| Cerebras | ✅ Fully Supported | Native standard compatibility. |
+| Perplexity | ✅ Fully Supported | Native standard compatibility. |
+| Azure OpenAI | ⚠️ Partial Support | Utilizes a unique deployment URL layout rather than global endpoints. |
 | Anthropic Claude (API) | ✅ Fully Supported | Native Messages API integration — its own dedicated connection type, not the OpenAI-compatible shim. |
 | Claude Code (CLI) | ✅ Fully Supported | Spawned as a local subprocess; uses its own login, no API key stored in the app. |
 | Agy (CLI) | ✅ Fully Supported | Spawned as a local subprocess; uses its own login, no API key stored in the app. |
-| AWS Bedrock | ❌ Not Supported | Demands AWS SigV4 request signatures which are not yet supported[cite: 1]. |
-| Ollama (Local) | ✅ Fully Supported | Integrated via dedicated Ollama NDJSON streaming endpoints[cite: 1]. |
+| AWS Bedrock | ❌ Not Supported | Demands AWS SigV4 request signatures which are not yet supported. |
+| Ollama (Local) | ✅ Fully Supported | Integrated via dedicated Ollama NDJSON streaming endpoints. |
 | Ollama Cloud | ✅ Fully Supported | Same Ollama connection type, pointed at a remote host with an API key. |

@@ -4,186 +4,69 @@
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-An open-source desktop **Markdown AI editor** and standalone markdown viewer built with Electron. Write, edit, and view Markdown files with syntax highlighting, a live preview pane, and an integrated local AI assistant — all running privately on your machine.
-
-
+An open-source desktop **Markdown AI editor** and standalone markdown viewer built with Electron. Write, edit, and view Markdown files with syntax highlighting, a live preview pane, and an integrated AI assistant — with the option to run everything privately on your machine.
 
 ![MoilStack .md](assets/01_moilstack-md_Split.png)
 
 ## Download
 
-Pre-built installers are available on the [Releases page](https://github.com/moilstack/moilstack-md/releases/latest).
+Get the latest installer for Windows, macOS, or Linux from the [Releases page](https://github.com/moilstack/moilstack-md/releases/latest), or from the [Microsoft Store](https://apps.microsoft.com/detail/9pp0mrt5lrk5?hl=en-US&gl=AZ).
 
-| Platform | Format |
-|---|---|
-| Windows | NSIS installer, portable ZIP |
-| Linux | AppImage, DEB |
-| macOS | DMG, ZIP |
-
-> **Note (Windows):** the NSIS/ZIP installer above isn't code-signed, so Windows SmartScreen may show a "Windows protected your PC" warning when you run it. This is normal for an open-source project without a paid code-signing certificate — click **More info → Run anyway** to proceed. If you'd rather avoid unsigned-binary warnings altogether, install from the [Microsoft Store](https://apps.microsoft.com/detail/9pp0mrt5lrk5?hl=en-US&gl=AZ) instead.
+Windows SmartScreen warning or Linux launch issues? See the [Install Guide](INSTALL.md).
 
 ## Features
 
-- **Edit and Preview modes** — a syntax-highlighted editor and a clean preview pane, toggled with `Ctrl+\``
-- **File explorer** — browse, create, rename, and open `.md` files from a folder, with Multi-level (default), Root-only, and Custom (no-folder) sidebar modes; click the "Explorer" label to cycle between them
-- **Quick edit in Preview** — double-click a block in Preview to edit its Markdown in place
-- **Global search** — find filenames and in-file content across the open folder (`Ctrl+Shift+F`), with tag search via `#tag` or `tag:name`
-- **✨ AI actions** — right-click selected text to fix grammar, improve, shorten, expand, simplify, change tone, translate, or explain; use the toolbar ✨ AI button to summarize, add a table of contents, fix formatting, proofread, or suggest tags for the whole document
-- **Review before applying** — AI changes are shown with removed text in red and added text in green, with Accept / Reject / Retry
-- **AI Assistant** — a floating chat popup (opened from the button in the bottom-right corner) where AI results appear, and where you can ask questions or request any other change
-- **Smart AI editing** — document edits are applied silently and instantly; informational answers stream as chat
-- **Undo AI edits** — every AI document change is reversible with the Undo button or `Ctrl+Z`
-- **Visual table builder** — insert Markdown tables with a point-and-click grid editor
-- **File labels & tags** — colour-tag files in the explorer for quick navigation, or add searchable tags stored in YAML frontmatter
-- **File backups & Version History** — every save (manual, autosave, or AI edit) is snapshotted to the app's user data folder; right-click a file → "Version History…" to browse and restore prior versions
-- **File trash** — delete files to the OS Recycle Bin from the context menu
-- **Multi-model support** — connect any OpenAI-compatible API (Groq, OpenAI, Mistral, Together AI), Anthropic's native API, Ollama (local or Cloud), or a locally installed CLI tool (Claude Code, Agy); a "⚠ Incomplete" indicator flags any model missing required setup (API key, model name, etc.)
-- **Export to PDF** — one-click export via native save dialog
-- **Dark / light theme** — persisted across sessions
-- **Configurable editor** — font size and font family settings
-- **Update notifications** — an "Update" button appears in the header when a newer release is available
+**Writing**
+- **Edit, Preview and Split modes** — syntax-highlighted editor with live preview
+- **Quick edit in Preview** — double-click a block to edit it in place
+- **Visual table builder** — create Markdown tables with a point-and-click grid
+- **Export to PDF**, dark / light themes, and configurable editor fonts
+
+**AI**
+- **✨ AI actions** — right-click selected text to fix grammar, improve, shorten, translate and more; use the toolbar ✨ AI button to summarize, add a table of contents, proofread, or suggest tags
+- **Review before applying** — see changes highlighted, then Accept, Reject or Retry
+- **AI Assistant chat** — ask questions about your document or request any other change
+- **Any model** — OpenAI-compatible APIs (Groq, Gemini, OpenAI, Mistral…), Anthropic, Ollama (fully offline), or CLI tools like Claude Code
+
+**Files**
+- **File explorer** — Multi-level tree, Root-only, or Recent-only modes
+- **Search** — across file names and content, with `#tag` search
+- **Labels & tags** — colour-label files and add searchable frontmatter tags
+- **Version History** — every save is backed up; browse and restore old versions
+- **Safe by default** — every AI change can be undone with `Ctrl+Z`
 
 ## Screens
-### 01 - ✨ AI actions on selected text
+
+### ✨ AI actions on selected text
 ![AI actions menu](assets/02_moilstack-md_AI-Menu.png)
-### 02 - Review AI changes before applying
+
+### Review AI changes before applying
 ![AI review in the assistant](assets/03_moilstack-md_AI-Review.png)
 
+## Documentation
 
-## Getting Started
+### Installing
+Installers are available for Windows (NSIS, portable ZIP, Microsoft Store), macOS (DMG, ZIP) and Linux (DEB, AppImage). The guide explains how to get past the Windows SmartScreen warning and how to fix AppImage launch errors on newer Linux distros.
 
-### Prerequisites
+→ [Install Guide](INSTALL.md)
 
-- [Node.js](https://nodejs.org/) v18 or later
-- [npm](https://www.npmjs.com/)
+### Connecting an AI model
+MoilStack .md works with OpenAI-compatible APIs (Groq, Gemini, OpenAI, Mistral, Together AI), Anthropic's API, Ollama running locally or in the cloud, and installed CLI tools like Claude Code. A few starter models are added on first launch — just add an API key or log in to the CLI. Use Ollama to keep everything fully offline.
 
-### Install & Run
+→ [AI Setup Guide](AI_SETUP.md)
 
-```bash
-git clone https://github.com/moilstack/moilstack-md.git
-cd moilstack-md
-npm install
-npm start
-```
+### Using the app
+Learn how to use the ✨ AI actions on selected text and whole documents, review and accept AI changes, chat with the AI Assistant, restore old versions of a file, and speed things up with keyboard shortcuts.
 
-> `npm start` uses `nodemon` — the app auto-reloads when you change any file in `src/`.
+→ [User Guide](USER_GUIDE.md)
 
-### Build for Distribution
+### Contributing
+Issues and pull requests are welcome. The guide covers running the app from source, running tests, and building installers.
 
-```bash
-npm run package
-```
+→ [Contributing Guide](CONTRIBUTING.md)
 
-Output goes to the `dist/` folder. Targets: NSIS/ZIP (Windows), DMG/ZIP (macOS), AppImage/DEB (Linux).
-
-
-## Installing on Linux
-
-**DEB** (Debian, Ubuntu, Mint, Pop!_OS, and other Debian-based distros):
-
-```bash
-sudo apt install ./moilstack-md_*.deb
-```
-
-**AppImage** (works on virtually any distro — Fedora, Arch, openSUSE, Ubuntu, etc. — no installation required):
-
-```bash
-chmod +x moilstack-md-*.AppImage
-./moilstack-md-*.AppImage
-```
-
-If it fails to launch with a FUSE-related error (some minimal or newer distros, e.g. Fedora 41+, ship without FUSE2 by default), either install FUSE:
-
-```bash
-# Fedora
-sudo dnf install fuse fuse-libs
-# Ubuntu/Debian
-sudo apt install fuse
-```
-
-or skip FUSE entirely and extract-and-run instead:
-
-```bash
-./moilstack-md-*.AppImage --appimage-extract-and-run
-```
-
-## AI Assistant Setup
-
-MoilStack .md relies on the standard OpenAI Chat Completions API architectural design, allowing you to instantly deploy powerful cloud models or execute complex workflows completely offline.
-
-### Flexible Deployment Options
-* **Fully Offline & Private:** Protect sensitive information by running local text operations straight on your machine through **Ollama**.
-* **High-Speed Cloud API Infrastructure:** Connect native accounts from **Google Gemini**, **Groq**, **OpenAI**, **Mistral**, **Together AI**, or **Anthropic**'s own API.
-* **Local CLI Tools:** Route requests through an already-installed, already-authenticated command-line tool — **Claude Code** (`claude`) or **Agy** (`agy`) — spawned directly as a subprocess, no API key stored in the app. If you're already logged into either CLI, its starter model works immediately with zero setup in the app.
-* **Ollama Cloud:** Point the existing Ollama connection type at a cloud/remote host with an API key instead of (or alongside) a local install.
-
-A handful of ready-to-use starter models (Claude Haiku CLI, Agy CLI, Anthropic Haiku, Ollama Local, Ollama Cloud) are added automatically on first launch — just paste in an API key (or install/log in the relevant CLI) and go.
-
-For definitive step-by-step setup guides, free tier account endpoint links, local model terminal scripts, and detailed performance matrices, see our dedicated [AI Configuration & Model Setup Guide](AI_SETUP.md).
-
-
-## Using the AI Assistant
-
-MoilStack .md acts as an interactive markdown AI editor, allowing you to seamlessly communicate text changes directly to your local workspace.
-
-### One-click ✨ AI actions
-* **Selected text:** select text (or place the cursor in a paragraph), right-click → **✨ AI**, and pick an action — Fix grammar, Improve writing, Make shorter / longer, Simplify, Tone, Translate, or Explain. `Ctrl+K` opens a custom prompt for the selection.
-* **Whole document:** click **✨ AI** in the toolbar — Summarize, Table of contents, Fix Markdown formatting, Proofread, Suggest tags, or Simplify.
-* **In Preview:** double-click a block to edit it, then right-click for the same menu.
-
-Results appear in the AI Assistant with the changes highlighted. Click **Accept** to apply, **Reject** to discard, or **Retry** for a new answer.
-
-### Document Editing & Refinement
-For anything else, ask the AI assistant in the chat:
-* "Fix the grammar and layout flow in this document"
-* "Add a clean summary section right at the top"
-* "Convert this raw text paragraph into a clear bulleted list"
-
-When the AI assistant processes an edit, changes are applied silently and instantly into the editor pane. A structural summary of the modifications appears inside the chat window.
-
-### Safety & Version Controls
-* **Instant Undo:** Every single document modification made by the AI can be instantly reversed using the UI Undo button (↺) or by pressing `Ctrl+Z`.
-* **Automatic Snapshots:** For absolute safety, MoilStack .md saves automatic file backups to the app's user data directory (not your workspace folder) before any AI processing occurs, and also before every manual save and autosave.
-* **Scoped Selections:** Highlight specific sentences or code lines inside the editor pane before typing a prompt to limit the AI assistant's scope exclusively to that text selection.
-
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|---|---|
-| `Ctrl+S` | Save file |
-| `Ctrl+Z` | Undo (AI edits first, then native undo) |
-| `Ctrl+K` | ✨ AI custom prompt for the selected text |
-| `Ctrl+\`` | Toggle Edit ↔ Preview mode |
-| `Ctrl+O` | Open folder picker |
-| `Ctrl+N` | New untitled file (in-memory) |
-| `Ctrl+Shift+N` | New file on disk in Explorer's active folder |
-| `Ctrl+F` | Find & replace |
-| `Ctrl+Shift+F` | Global search (filenames & content) |
-| `Enter` | Send chat message |
-| `Alt+Enter` | New line in chat input |
-| `Escape` | Close any open modal or dropdown |
-
-## File Backups & Version History
-
-Every time your document is written to disk — an AI edit, `Ctrl+S`, or autosave — MoilStack .md automatically stores a version, keeping the last **10 backups per file**. Empty or duplicate-content snapshots are skipped so the 10 slots aren't wasted.
-
-Right-click any file in the Explorer and choose **Version History…** to view and restore past versions:
-
-* A two-pane view lists every snapshot by date/time on the left; click one to see its raw text on the right.
-* A pinned **Current** entry always shows the file's live content for comparison, and is selected by default when the panel opens.
-* **Restore This Version** loads the selected snapshot back in (with a confirm step) and is disabled while Current is selected — restoring backs up whatever's there first, so nothing is lost either way.
-
-
-
-## Contributing
-
-Issues and pull requests are welcome. For significant changes, please open an issue first to discuss what you'd like to change.
-
-See [CHANGELOG.md](CHANGELOG.md) for version history.
+See the [Changelog](CHANGELOG.md) for what's new in each version.
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
-
-> The project name, logo, and visual branding assets are not open source. See [BRANDING.md](BRANDING.md) for the Trademark & Branding Policy.
+MIT — see [LICENSE](LICENSE). The project name, logo, and branding are not open source — see [BRANDING.md](BRANDING.md).
