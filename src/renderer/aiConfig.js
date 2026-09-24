@@ -571,7 +571,7 @@ const AIConfigManager = (() => {
     if (quickEditSel) quickEditSel.value = localStorage.getItem('quickEditPreview') || 'on'
 
     // Seed the explorer-mode selector with the saved preference (default: root-only)
-    const savedExplorerMode = localStorage.getItem('explorerMode') || 'root-only'
+    const savedExplorerMode = localStorage.getItem('explorerMode') || 'multi-level'
     const explorerModeSel   = document.getElementById('explorerMode')
     if (explorerModeSel) explorerModeSel.value = savedExplorerMode
 

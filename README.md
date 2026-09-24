@@ -25,9 +25,12 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 ## Features
 
 - **Edit and Preview modes** — a syntax-highlighted editor and a clean preview pane, toggled with `Ctrl+\``
-- **File explorer** — browse, create, rename, and open `.md` files from a folder, with Multi-level, Root-only, and Custom (no-folder) sidebar modes; click the "Explorer" label to cycle between them
+- **File explorer** — browse, create, rename, and open `.md` files from a folder, with Multi-level (default), Root-only, and Custom (no-folder) sidebar modes; click the "Explorer" label to cycle between them
+- **Quick edit in Preview** — double-click a block in Preview to edit its Markdown in place
 - **Global search** — find filenames and in-file content across the open folder (`Ctrl+Shift+F`), with tag search via `#tag` or `tag:name`
-- **AI Assistant** — a floating chat popup (opened from the button in the bottom-right corner) to ask the AI to edit your document, answer questions, or improve your writing
+- **✨ AI actions** — right-click selected text to fix grammar, improve, shorten, expand, simplify, change tone, translate, or explain; use the toolbar ✨ AI button to summarize, add a table of contents, fix formatting, proofread, or suggest tags for the whole document
+- **Review before applying** — AI changes are shown with removed text in red and added text in green, with Accept / Reject / Retry
+- **AI Assistant** — a floating chat popup (opened from the button in the bottom-right corner) where AI results appear, and where you can ask questions or request any other change
 - **Smart AI editing** — document edits are applied silently and instantly; informational answers stream as chat
 - **Undo AI edits** — every AI document change is reversible with the Undo button or `Ctrl+Z`
 - **Visual table builder** — insert Markdown tables with a point-and-click grid editor
@@ -35,21 +38,16 @@ Pre-built installers are available on the [Releases page](https://github.com/moi
 - **File backups & Version History** — every save (manual, autosave, or AI edit) is snapshotted to the app's user data folder; right-click a file → "Version History…" to browse and restore prior versions
 - **File trash** — delete files to the OS Recycle Bin from the context menu
 - **Multi-model support** — connect any OpenAI-compatible API (Groq, OpenAI, Mistral, Together AI), Anthropic's native API, Ollama (local or Cloud), or a locally installed CLI tool (Claude Code, Agy); a "⚠ Incomplete" indicator flags any model missing required setup (API key, model name, etc.)
-- **Suggested prompts** — the AI chat opens with clickable Dev/Writer prompt chips scoped to the current document
 - **Export to PDF** — one-click export via native save dialog
 - **Dark / light theme** — persisted across sessions
 - **Configurable editor** — font size and font family settings
 - **Update notifications** — an "Update" button appears in the header when a newer release is available
 
 ## Screens
-### 01 - Explorer with treeview mode
-![Explorer with treeview](assets/02_moilstack-md_Tree.png)
-### 02 - Ask / Edit using AI 
-![AI assistant](assets/03_moilstack-md_AI.png)
-### 03 - Global search with tag filtering
-![Search](assets/04_moilstack-md_Search.png)
-### 04 - Formatting menu with Add Tags
-![Edit Options](assets/05_moilstack-md_Edit.png)
+### 01 - ✨ AI actions on selected text
+![AI actions menu](assets/02_moilstack-md_AI-Menu.png)
+### 02 - Review AI changes before applying
+![AI review in the assistant](assets/03_moilstack-md_AI-Review.png)
 
 
 ## Getting Started
@@ -128,8 +126,15 @@ For definitive step-by-step setup guides, free tier account endpoint links, loca
 
 MoilStack .md acts as an interactive markdown AI editor, allowing you to seamlessly communicate text changes directly to your local workspace.
 
+### One-click ✨ AI actions
+* **Selected text:** select text (or place the cursor in a paragraph), right-click → **✨ AI**, and pick an action — Fix grammar, Improve writing, Make shorter / longer, Simplify, Tone, Translate, or Explain. `Ctrl+K` opens a custom prompt for the selection.
+* **Whole document:** click **✨ AI** in the toolbar — Summarize, Table of contents, Fix Markdown formatting, Proofread, Suggest tags, or Simplify.
+* **In Preview:** double-click a block to edit it, then right-click for the same menu.
+
+Results appear in the AI Assistant with the changes highlighted. Click **Accept** to apply, **Reject** to discard, or **Retry** for a new answer.
+
 ### Document Editing & Refinement
-Simply ask the AI assistant to modify your active file text:
+For anything else, ask the AI assistant in the chat:
 * "Fix the grammar and layout flow in this document"
 * "Add a clean summary section right at the top"
 * "Convert this raw text paragraph into a clear bulleted list"
@@ -148,6 +153,7 @@ When the AI assistant processes an edit, changes are applied silently and instan
 |---|---|
 | `Ctrl+S` | Save file |
 | `Ctrl+Z` | Undo (AI edits first, then native undo) |
+| `Ctrl+K` | ✨ AI custom prompt for the selected text |
 | `Ctrl+\`` | Toggle Edit ↔ Preview mode |
 | `Ctrl+O` | Open folder picker |
 | `Ctrl+N` | New untitled file (in-memory) |
