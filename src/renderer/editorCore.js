@@ -557,7 +557,7 @@ const EditorCore = (() => {
    * @param {string} replacement  Text to place in [start, end).
    */
   function replaceRangeNative(start, end, replacement) {
-    const editor = _deps.getEditor ? _deps.getEditor() : null;
+    const editor = _target();
     if (!editor) return;
 
     editor.focus();
@@ -630,10 +630,33 @@ const EditorCore = (() => {
      ═══════════════════════════════════════════════════════════════════ */
 
   /**
+   * Textarea the editing helpers below act on: the main editor, or — while
+   * runToolbarAction() is running for another textarea (Quick Edit in
+   * Preview) — that one. Stats/highlight/render always use the main editor.
+   */
+  let _actionTarget = null;
+  function _target() {
+    return _actionTarget || (_deps.getEditor ? _deps.getEditor() : null);
+  }
+
+  /**
+   * Run a TOOLBAR_ACTIONS entry against `target` instead of the main editor.
+   * @param {string} name
+   * @param {HTMLTextAreaElement} [target]
+   */
+  function runToolbarAction(name, target = null) {
+    const action = TOOLBAR_ACTIONS[name];
+    if (!action) return;
+    _actionTarget = target;
+    try { action(); }
+    finally { _actionTarget = null; }
+  }
+
+  /**
    * Wrap the current selection (or insert at cursor) with before/after strings.
    */
   function insertMd(before, after) {
-    const ta = _deps.getEditor ? _deps.getEditor() : null;
+    const ta = _target();
     if (!ta) return;
     const start = ta.selectionStart, end = ta.selectionEnd;
     const sel = ta.value.substring(start, end);
@@ -646,7 +669,7 @@ const EditorCore = (() => {
    * Prepend prefix to the start of the line containing the cursor.
    */
   function insertLine(prefix) {
-    const ta = _deps.getEditor ? _deps.getEditor() : null;
+    const ta = _target();
     if (!ta) return;
     const start     = ta.selectionStart;
     const lineStart = ta.value.lastIndexOf('\n', start - 1) + 1;
@@ -659,7 +682,7 @@ const EditorCore = (() => {
    * Wrap the current selection (or a placeholder) with before/after strings.
    */
   function wrapSelection(before, after = '', placeholder = 'text') {
-    const editor = _deps.getEditor ? _deps.getEditor() : null;
+    const editor = _target();
     if (!editor) return;
     const start    = editor.selectionStart;
     const end      = editor.selectionEnd;
@@ -675,7 +698,7 @@ const EditorCore = (() => {
    * If every line already starts with the prefix, remove it (toggle).
    */
   function toggleLinePrefix(prefix) {
-    const editor = _deps.getEditor ? _deps.getEditor() : null;
+    const editor = _target();
     if (!editor) return;
     const val   = editor.value;
     const start = editor.selectionStart;
@@ -703,13 +726,13 @@ const EditorCore = (() => {
   const TOOLBAR_ACTIONS = {
     // ── Clipboard ──────────────────────────────────────────────────
     copy: () => {
-      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      const editor = _target();
       if (!editor) return;
       editor.focus();
       document.execCommand('copy');
     },
     paste: () => {
-      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      const editor = _target();
       if (!editor) return;
       editor.focus();
       document.execCommand('paste');
@@ -737,7 +760,7 @@ const EditorCore = (() => {
     ul:            () => toggleLinePrefix('- '),
     blockquote:    () => toggleLinePrefix('> '),
     ol: () => {
-      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      const editor = _target();
       if (!editor) return;
       const val   = editor.value;
       const start = editor.selectionStart;
@@ -757,7 +780,7 @@ const EditorCore = (() => {
     },
     table: () => {
       if (typeof TableBuilder === 'undefined') return;
-      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      const editor = _target();
       if (editor) {
         const selStart = editor.selectionStart;
         const selEnd   = editor.selectionEnd;
@@ -773,7 +796,7 @@ const EditorCore = (() => {
       TableBuilder.show();
     },
     codeblock: () => {
-      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      const editor = _target();
       if (!editor) return;
       const start    = editor.selectionStart;
       const end      = editor.selectionEnd;
@@ -784,7 +807,7 @@ const EditorCore = (() => {
       triggerUpdate();
     },
     sectionblock: () => {
-      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      const editor = _target();
       if (!editor) return;
       const start    = editor.selectionStart;
       const end      = editor.selectionEnd;
@@ -795,7 +818,7 @@ const EditorCore = (() => {
       triggerUpdate();
     },
     hr: () => {
-      const editor = _deps.getEditor ? _deps.getEditor() : null;
+      const editor = _target();
       if (!editor) return;
       const pos = editor.selectionStart;
       const val    = editor.value;
@@ -999,6 +1022,7 @@ const EditorCore = (() => {
     insertMd,
     insertLine,
     TOOLBAR_ACTIONS,
+    runToolbarAction,
     toggleTaskCheckbox,
     getRulerCtx,
     getRulerWidth,

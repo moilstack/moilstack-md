@@ -566,8 +566,12 @@ const AIConfigManager = (() => {
     const startupModeSel   = document.getElementById('startupMode')
     if (startupModeSel) startupModeSel.value = savedStartupMode
 
+    // Seed the quick-edit selector with the saved preference (default: on)
+    const quickEditSel = document.getElementById('quickEditPreview')
+    if (quickEditSel) quickEditSel.value = localStorage.getItem('quickEditPreview') || 'on'
+
     // Seed the explorer-mode selector with the saved preference (default: root-only)
-    const savedExplorerMode = localStorage.getItem('explorerMode') || 'root-only'
+    const savedExplorerMode = localStorage.getItem('explorerMode') || 'multi-level'
     const explorerModeSel   = document.getElementById('explorerMode')
     if (explorerModeSel) explorerModeSel.value = savedExplorerMode
 
@@ -774,6 +778,12 @@ const AIConfigManager = (() => {
     /* ── Startup mode selector ────────────────────────────────────── */
     document.getElementById('startupMode')?.addEventListener('change', e => {
       localStorage.setItem('startupMode', e.target.value)
+    })
+
+    /* ── Quick edit in Preview ─────────────────────────────────────── */
+    document.getElementById('quickEditPreview')?.addEventListener('change', e => {
+      localStorage.setItem('quickEditPreview', e.target.value)
+      if (typeof QuickEdit !== 'undefined') QuickEdit.applySetting()
     })
 
     /* ── Explorer mode selector ────────────────────────────────────── */

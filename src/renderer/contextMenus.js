@@ -21,7 +21,8 @@ const ContextMenus = (() => {
   }
 
   function hideCtxMenu() {
-    ctxMenu?.classList.remove('visible');
+    ctxMenu?.classList.remove('visible', 'ctx-menu--quickedit');
+    document.getElementById('ctx-ai')?.classList.remove('ctx-sub--open');
   }
 
   if (_editorEl) {
@@ -34,10 +35,58 @@ const ContextMenus = (() => {
   ctxMenu?.querySelectorAll('[data-action]').forEach(item => {
     item.addEventListener('mousedown', e => {
       e.preventDefault();
-      const action = EditorCore.TOOLBAR_ACTIONS[item.dataset.action];
-      if (action) action();
+      // In a Preview Quick Edit block, format that textarea instead of the editor.
+      const target = ctxMenu.classList.contains('ctx-menu--quickedit') ? QuickEdit.activeInput() : null;
+      EditorCore.runToolbarAction(item.dataset.action, target);
       hideCtxMenu();
     });
+  });
+
+  /* ── AI submenu (items generated from AIActions.ACTIONS) ─────────── */
+
+  const aiSub     = document.getElementById('ctx-ai');
+  const aiSubMenu = document.getElementById('ctx-ai-menu');
+  if (aiSubMenu && typeof AIActions !== 'undefined') {
+    // Custom prompt sits last, after a divider
+    AIActions.actionsFor('selection').forEach(a => {
+      if (a.id === 'custom') aiSubMenu.insertAdjacentHTML('beforeend', '<div class="ctx-divider"></div>');
+      const btn = document.createElement('button');
+      btn.className = 'ctx-item';
+      btn.type = 'button';
+      btn.dataset.aiAction = a.id;
+      btn.textContent = a.label;
+      if (a.id === 'custom') btn.insertAdjacentHTML('beforeend', '<kbd>Ctrl K</kbd>');
+      btn.addEventListener('mousedown', e => {
+        e.preventDefault();  // keep the editor selection
+        // From a Preview Quick Edit block, act on its (saved) text rather than the editor selection.
+        const range = ctxMenu.classList.contains('ctx-menu--quickedit') ? QuickEdit.commitForAction() : null;
+        hideCtxMenu();
+        AIActions.run(a.id, range); // result appears in the AI Assistant
+      });
+      aiSubMenu.appendChild(btn);
+    });
+
+    // Open the flyout on whichever side has room
+    aiSub.addEventListener('mouseenter', () => {
+      const r = ctxMenu.getBoundingClientRect();
+      aiSub.classList.toggle('ctx-sub--left', r.right + 220 > window.innerWidth);
+    });
+    // Clicking "AI" also opens the flyout (not everyone discovers hover menus)
+    aiSub.querySelector('.ctx-item--ai')?.addEventListener('mousedown', e => {
+      e.preventDefault();
+      aiSub.classList.toggle('ctx-sub--open');
+    });
+  }
+
+  /* ── Preview Quick Edit block → full menu on its textarea ─────────── */
+  // Only a block open for editing (double-click in Preview) gets a menu;
+  // the rest of Preview keeps the native one.
+
+  document.getElementById('previewContent')?.addEventListener('contextmenu', e => {
+    if (!e.target.closest('.quick-edit__input')) return;
+    e.preventDefault();
+    ctxMenu.classList.add('ctx-menu--quickedit');
+    showCtxMenu(e.clientX, e.clientY);
   });
 
   document.addEventListener('click',   e => { if (!ctxMenu?.contains(e.target)) hideCtxMenu(); });
@@ -51,7 +100,7 @@ const ContextMenus = (() => {
   function showFileCtxMenu(filePath, x, y) {
     if (!fileCtxMenu) return;
     _fileCtxTarget = filePath;
-    const isRootOnly = (localStorage.getItem('explorerMode') || 'root-only') === 'root-only';
+    const isRootOnly = (localStorage.getItem('explorerMode') || 'multi-level') === 'root-only';
     const labelBtn   = fileCtxMenu.querySelector('[data-file-action="label"]');
     const labelDivider = labelBtn?.previousElementSibling;
     if (labelBtn)   labelBtn.style.display   = isRootOnly ? '' : 'none';

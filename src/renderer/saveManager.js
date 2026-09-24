@@ -79,8 +79,7 @@ const SaveManager = (() => {
     const content = getDraft();
     if (!content) return true;
 
-    const raw  = _extractFirstLine(content);
-    const safe = raw.replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 60) || 'untitled';
+    const safe = suggestFilename(content);
     const folder = sessionStorage.getItem('lastFolder') || null;
 
     const result = await window.electronAPI?.newFile(safe, folder);
@@ -142,6 +141,20 @@ const SaveManager = (() => {
   // horizontal rules with ordinary prose between them.
   function _looksLikeYaml(fmText) {
     return /^[ \t]*[A-Za-z0-9_-]+:([ \t]|$)/m.test(fmText);
+  }
+
+  /**
+   * Default filename for saving the Scratchpad: the first line of text made
+   * filesystem-safe, suffixed with the date and time so it's unique,
+   * e.g. "Scratchpad-2026-09-24_143205" (no extension).
+   */
+  function suggestFilename(content) {
+    const safe = _extractFirstLine(content).replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 60);
+    const d    = new Date();
+    const pad  = n => String(n).padStart(2, '0');
+    const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+                  `_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    return `${safe || 'untitled'}-${stamp}`;
   }
 
   function _extractFirstLine(content) {
@@ -465,6 +478,7 @@ const SaveManager = (() => {
     extractFirstLine: _extractFirstLine,
     initDraft,
     getDraft,
+    suggestFilename,
     hasDraft,
     clearDraft,
     saveDraftAs,

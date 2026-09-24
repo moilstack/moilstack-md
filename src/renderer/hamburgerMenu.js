@@ -113,7 +113,7 @@ const HamburgerMenu = (() => {
   ];
 
   function _cycleExplorerMode() {
-    const current  = localStorage.getItem('explorerMode') || 'root-only';
+    const current  = localStorage.getItem('explorerMode') || 'multi-level';
     const idx      = EXPLORER_MODES.findIndex(m => m.value === current);
     const next     = EXPLORER_MODES[(idx + 1) % EXPLORER_MODES.length];
 
@@ -138,7 +138,7 @@ const HamburgerMenu = (() => {
   // Disabled in Root folder only mode, since that view has no sub-folders to
   // collapse (see FileTreeManager.updateFolderToolbarButtons).
   document.getElementById('btn-collapse-all')?.addEventListener('click', () => {
-    const rootOnly = (localStorage.getItem('explorerMode') || 'root-only') === 'root-only';
+    const rootOnly = (localStorage.getItem('explorerMode') || 'multi-level') === 'root-only';
     if (rootOnly) return;
     FileTreeManager.collapseAll();
   });

@@ -6,13 +6,6 @@
 
 const ModalManager = (() => {
 
-  /** Derive a filesystem-safe default filename from the document's first line of text. */
-  function _suggestFilename() {
-    const raw  = SaveManager.extractFirstLine(document.getElementById('mdEditor')?.value ?? '');
-    const safe = raw.replace(/[\\/:*?"<>|]/g, '').trim().slice(0, 60);
-    return safe || 'untitled';
-  }
-
   /**
    * Save-As — opens the native Save dialog pre-pointed at the active folder
    * (or the OS default location if none is open) with a filename suggested
@@ -20,7 +13,7 @@ const ModalManager = (() => {
    */
   async function showSaveAsModal() {
     const folder = sessionStorage.getItem('lastFolder') || null;
-    const result = await window.electronAPI?.newFile(_suggestFilename(), folder);
+    const result = await window.electronAPI?.newFile(SaveManager.suggestFilename(document.getElementById('mdEditor')?.value ?? ''), folder);
     if (!result?.filePath) return;
 
     const editor  = document.getElementById('mdEditor');

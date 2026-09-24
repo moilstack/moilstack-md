@@ -89,7 +89,9 @@ async function seedDefaultModels() {
   const config = await readConfig()
   config.models = config.models || []
 
-  const CLAUDE_FLAGS = `--model {{model}} 'Follow the instructions in the attached file exactly and respond accordingly. @{{prompt_file}}' --disallowedTools "Read,Glob,Grep,Bash,Write,Edit,WebFetch,WebSearch,Task,NotebookEdit"`
+  // Without -p/--print, `claude` boots its interactive UI, which cannot run over piped stdio.
+  const LEGACY_CLAUDE_FLAGS = `--model {{model}} 'Follow the instructions in the attached file exactly and respond accordingly. @{{prompt_file}}' --disallowedTools "Read,Glob,Grep,Bash,Write,Edit,WebFetch,WebSearch,Task,NotebookEdit"`
+  const CLAUDE_FLAGS = `-p --model {{model}} 'Follow the instructions in the attached file exactly and respond accordingly. @{{prompt_file}}' --disallowedTools "Read,Glob,Grep,Bash,Write,Edit,WebFetch,WebSearch,Task,NotebookEdit"`
   const AGY_FLAGS    = `--sandbox --add-dir "{{cwd}}" -p "{{prompt}}" --model "{{model}}"`
 
   const seeds = [
@@ -102,8 +104,15 @@ async function seedDefaultModels() {
 
   let changed = false
   for (const seed of seeds) {
-    const exists = config.models.some(m => m.label === seed.label && m.type === seed.type)
-    if (exists) continue
+    const existing = config.models.find(m => m.label === seed.label && m.type === seed.type)
+    if (existing) {
+      // Migrate untouched copies of the old seed; user-edited flags are left alone.
+      if (existing.flags === LEGACY_CLAUDE_FLAGS) {
+        existing.flags = seed.flags
+        changed = true
+      }
+      continue
+    }
 
     const hasDefault = config.models.some(m => m.is_default)
     const id = crypto.randomUUID()
@@ -378,7 +387,8 @@ function registerIpcHandlers() {
    *   withMeta  {boolean} — attach modified (ms), firstLine, and tags to each file
    *
    * Each node: { type:'file'|'folder', name, path, children?, modified?, firstLine?, tags? }
-   * Folders are sorted before files; both groups are alphabetical.
+   * Folders are sorted before files; each group is newest-modified first
+   * (a folder's time is its newest file's), with name as tiebreaker.
    * Returns { entries: TreeNode[] } or null on error.
    */
   ipcMain.handle('folder:read', async (_event, folderPath, options = {}) => {
@@ -393,13 +403,16 @@ function registerIpcHandlers() {
           const fullPath = path.join(dirPath, e.name)
           if (!rootOnly && e.isDirectory() && depth < 4) {
             const children = await readEntries(fullPath, depth + 1)
-            entries.push({ type: 'folder', name: e.name, path: fullPath, children })
+            // A folder's modified time is that of its newest file, at any depth.
+            const modified = children.reduce((m, c) => Math.max(m, c.modified || 0), 0)
+            entries.push({ type: 'folder', name: e.name, path: fullPath, children, modified })
           } else if (e.isFile() && /\.(md|markdown|txt)$/i.test(e.name)) {
             const node = { type: 'file', name: e.name, path: fullPath }
+            try {
+              node.modified = (await fs.stat(fullPath)).mtimeMs
+            } catch { /* leave modified undefined */ }
             if (withMeta) {
               try {
-                const stat = await fs.stat(fullPath)
-                node.modified = stat.mtimeMs
                 const raw = await fs.readFile(fullPath, 'utf8')
                 node.firstLine = _extractFirstLine(raw)
                 node.tags = _extractTags(raw)
@@ -410,6 +423,9 @@ function registerIpcHandlers() {
         }
         entries.sort((a, b) => {
           if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
+          // Most recently modified first (folders use their newest file).
+          const diff = (b.modified || 0) - (a.modified || 0)
+          if (diff !== 0) return diff
           return a.name.localeCompare(b.name)
         })
         return entries
@@ -1337,6 +1353,39 @@ function _tokenizeFlags(str) {
   return tokens
 }
 
+/**
+ * GUI-launched apps on macOS/Linux get a minimal PATH (no shell profile), so
+ * `claude`/`agy` installed under ~/.local/bin, Homebrew, nvm, etc. are not
+ * found. Merge the login shell's PATH plus common install dirs. Cached.
+ */
+let _cliPathCache = null
+function _resolveCliPath() {
+  if (_cliPathCache) return _cliPathCache
+  const sep = path.delimiter
+  const parts = (process.env.PATH || '').split(sep).filter(Boolean)
+
+  if (process.platform !== 'win32') {
+    try {
+      const { execFileSync } = require('child_process')
+      const out = execFileSync(process.env.SHELL || '/bin/zsh', ['-ilc', 'echo -n "__P__$PATH__P__"'], {
+        encoding: 'utf8', timeout: 3000, stdio: ['ignore', 'pipe', 'ignore'],
+      })
+      const m = out.match(/__P__(.*)__P__/s)
+      if (m) parts.push(...m[1].split(':').filter(Boolean))
+    } catch { /* fall through to the static list */ }
+
+    const home = os.homedir()
+    parts.push(
+      path.join(home, '.local', 'bin'), path.join(home, '.claude', 'local'),
+      path.join(home, '.npm-global', 'bin'), path.join(home, '.bun', 'bin'),
+      '/opt/homebrew/bin', '/opt/homebrew/sbin', '/usr/local/bin',
+    )
+  }
+
+  _cliPathCache = [...new Set(parts)].join(sep)
+  return _cliPathCache
+}
+
 async function _handleCli(model, messages, send, cwd) {
   const { spawn } = require('child_process')
 
@@ -1359,20 +1408,32 @@ async function _handleCli(model, messages, send, cwd) {
       .replace(/\{\{cwd\}\}/g, cwd || '')
   ).map(tok => (tok === '{{prompt}}' ? prompt : tok)) // whole-token substitution keeps the prompt as one argv element
 
+  const clip     = (s, n) => (s.length > n ? s.slice(0, n) + `… (+${s.length - n} chars)` : s)
+  const cmdLine  = [exe, ...args.map(a => (/\s/.test(a) ? JSON.stringify(clip(a, 120)) : a))].join(' ')
+  console.log('[cli] spawn:', cmdLine)
+  console.log('[cli] cwd:', cwd || '(none)', '| platform:', process.platform, '| prompt chars:', prompt.length)
+
   try {
     await new Promise((resolve, reject) => {
       const child = spawn(exe, args, {
         shell:       false,
         windowsHide: true,
         cwd:         cwd || undefined,
-        env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' },
+        env: {
+          ...process.env,
+          ...(process.platform === 'win32' ? {} : { PATH: _resolveCliPath() }),
+          FORCE_COLOR: '0',
+          NO_COLOR: '1',
+        },
       })
 
       let stderrBuf     = ''
+      let rawStdout     = ''
       let jsonBuffer     = ''
       const useStreamJson = exe === 'claude' && flagsTemplate.includes('stream-json')
 
       child.stdout.on('data', (chunk) => {
+        rawStdout = (rawStdout + chunk.toString('utf8')).slice(-4000)
         if (!useStreamJson) {
           send('ai:token', chunk.toString('utf8'))
           return
@@ -1398,19 +1459,42 @@ async function _handleCli(model, messages, send, cwd) {
         }
       })
 
-      child.stderr.on('data', (chunk) => { stderrBuf += chunk.toString('utf8') })
+      child.stderr.on('data', (chunk) => {
+        const s = chunk.toString('utf8')
+        stderrBuf += s
+        console.error('[cli] stderr:', s.trimEnd())
+      })
 
       child.on('error', (err) => {
+        console.error('[cli] spawn error:', err)
         if (err.code === 'ENOENT') {
-          reject(new Error(`"${exe}" was not found. Is it installed and on your PATH?`))
+          reject(new Error(`"${exe}" was not found (ENOENT). Is it installed and on your PATH?\nCommand: ${cmdLine}\nPATH: ${process.platform === 'win32' ? process.env.Path || process.env.PATH : _resolveCliPath()}`))
         } else {
-          reject(err)
+          reject(new Error(`${err.code || 'spawn error'}: ${err.message}\nCommand: ${cmdLine}`))
         }
       })
 
-      child.on('close', (code) => {
-        if (code !== 0 && code !== null) {
-          reject(new Error(stderrBuf.trim() || `${exe} exited with code ${code}`))
+      child.on('close', (code, signal) => {
+        console.log(`[cli] exited code=${code} signal=${signal}`)
+        if (rawStdout) console.log('[cli] stdout tail:', rawStdout)
+        if ((code !== 0 && code !== null) || signal) {
+          const combined = `${stderrBuf}\n${rawStdout}`
+          if (/(oauth|auth).{0,40}(expired|failed|could not be refreshed|not authenticated)/i.test(combined) ||
+              /please run.{0,20}(claude|agy).{0,20}login|not logged in/i.test(combined)) {
+            reject(new Error(
+              `Your "${exe}" CLI login has expired. Open a terminal and run "${exe}"` +
+              (exe === 'claude' ? ' (or "claude login")' : ' login') +
+              ` to sign in again, then retry.`
+            ))
+            return
+          }
+          const detail = [
+            stderrBuf.trim() || `${exe} exited with code ${code}${signal ? ` (signal ${signal})` : ''}`,
+            rawStdout.trim() && `--- stdout ---\n${rawStdout.trim()}`,
+            `--- command ---\n${cmdLine}`,
+            `--- exit ---\ncode=${code} signal=${signal}`,
+          ].filter(Boolean).join('\n\n')
+          reject(new Error(detail))
         } else {
           resolve()
         }

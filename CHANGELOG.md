@@ -4,6 +4,38 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [1.1.5] - 2026-09-24
+
+### Added
+- **"Add folder…" in the header folder dropdown** — opens the folder picker and switches to the chosen folder, right from the recent-folders list.
+- **Scratchpad starter template** — an empty Scratchpad now opens with a `## Scratchpad` heading and three note placeholders. An untouched template counts as empty, so closing it never prompts to save.
+- **Quick edit in Preview** — double-click a paragraph, heading, list, quote or code block to edit just that block's Markdown in place, without leaving Preview. `Ctrl+Enter` or clicking away saves, `Esc` cancels; `Ctrl+B` / `Ctrl+I` / `Tab` work inside the editor. Double-clicking a table opens the visual table builder instead (tables with unusual syntax fall back to the raw editor). Clearing a block's text removes it. Saved changes join the normal undo history and mark the file as modified, so autosave and version history pick them up. Available in Preview mode only; links, task checkboxes and the code-copy button keep their existing behavior. Can be turned off in Settings → Quick Edit in Preview.
+- **✨ AI in the right-click menu** — select text, right-click → ✨ AI: fix grammar, improve, shorten, expand, simplify, change tone, translate, or explain. With nothing selected, it works on the paragraph under the cursor.
+- **✨ AI button in the toolbar** — one-click actions for the whole document: summarize (TL;DR at the top), table of contents, fix Markdown formatting, proofread, suggest tags, and simplify.
+- **Review before applying** — AI results show the changes (removed text in red, added in green) with Accept, Reject and Retry. Proofread lists each fix separately; suggested tags open in Add Tags for you to confirm.
+- **`Ctrl+K` custom prompt** — tell the AI what to do with the selected text.
+- **Full right-click menu while editing a block in Preview** — formatting and ✨ AI actions work on the block you double-clicked.
+
+### Changed
+- **All AI results appear in the AI Assistant** — right-click and toolbar actions show their result in the chat, so you can follow up (e.g. "make it shorter").
+- **New AI Assistant greeting** — a short intro pointing to the ✨ AI actions.
+- **Explorer Mode now defaults to Multi-level** for new installs. A mode you already picked is kept.
+- **Multi-level Explorer sorts by last modified** — within each folder, files and sub-folders are listed newest first (a folder's time is that of its newest file, at any depth); folders still come before files, with name as tiebreaker. Saving a file moves it (and its parent folders) to the top immediately.
+- **Redesigned header folder dropdown** — a *Current* section shows the open folder's name with a short `~`-based path, and a *Recent* section lists other folders by name, most recently opened first, with a compact "opened N ago" time (swapped for the remove button on hover). Rows have a fixed height so hovering no longer shifts them.
+- **Header shows the folder name in bold** instead of the full path (full path on hover). "No folder opened" stays muted.
+- **Scratchpad save suggests a unique filename** — the Save dialog pre-fills the first line of text plus the date and time (e.g. `Scratchpad-2026-09-24_143205.md`), so saving never collides with an earlier file.
+- Switching folders from the dropdown now refreshes that folder's recent-used time.
+- Rendered blocks in Preview now carry a `data-line-end` attribute alongside `data-line`, mapping each block to its exact source line range (internal; no visible change).
+
+### Fixed
+- Folder names in the recent-folders dropdown are now HTML-escaped.
+
+### Removed
+- **Suggested prompt chips** ("For developers") removed from the AI Assistant greeting — replaced by the ✨ AI actions.
+- **Open Folder button hidden from the Explorer header** — superseded by "Add folder…" in the header dropdown (still available from the ☰ menu and the welcome screen). Hidden for now, to be removed in a later release.
+
+---
+
 ## [1.1.4] - 2026-09-08
 
 ### Added

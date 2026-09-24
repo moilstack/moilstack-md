@@ -82,13 +82,14 @@ const TagModal = (() => {
     _overlay?.classList.add('hidden');
   }
 
-  function show() {
+  /** @param {string[]} [suggested]  Extra tags (e.g. from AI) merged after the existing ones. */
+  function show(suggested = []) {
     const editor = document.getElementById('mdEditor');
     if (!editor || !_overlay || !_input) return;
 
     const parsed   = _splitFrontmatter(editor.value);
     const existing = parsed ? _getExistingTags(parsed.fmLines) : [];
-    _input.value = existing.join(', ');
+    _input.value = [...new Set([...existing, ...suggested])].join(', ');
     _overlay.classList.remove('hidden');
     _input.focus();
     _input.select();
