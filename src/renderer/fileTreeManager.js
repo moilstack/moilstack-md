@@ -290,6 +290,23 @@ const FileTreeManager = (() => {
     return result;
   }
 
+  // Mirrors folder:read ordering in main: folders before files, each group
+  // newest-modified first (a folder's time is its newest file's), then name.
+  function _resortTree(entries) {
+    for (const e of entries) {
+      if (e.type === 'folder') {
+        _resortTree(e.children ?? []);
+        e.modified = (e.children ?? []).reduce((m, c) => Math.max(m, c.modified || 0), 0);
+      }
+    }
+    entries.sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+      const diff = (b.modified || 0) - (a.modified || 0);
+      if (diff !== 0) return diff;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
   /* ── Restore active item after re-render ──────────────────────────── */
 
   function restoreActiveItem() {
@@ -322,6 +339,7 @@ const FileTreeManager = (() => {
       file.modified = Date.now();
       if (firstLine !== undefined) file.firstLine = firstLine;
       if (tags !== undefined) file.tags = tags;
+      _resortTree(_cachedTree);
       renderFileTree();
       restoreActiveItem();
     }
@@ -541,7 +559,12 @@ const FileTreeManager = (() => {
 
   async function setActiveFolder(folderPath) {
     const label = document.getElementById('header-folder-name');
-    if (label) label.textContent = folderPath;
+    if (label) {
+      // Show just the folder name; full path on hover.
+      label.textContent = folderPath.split(/[\\/]/).filter(Boolean).pop() || folderPath;
+      label.title = folderPath;
+      label.classList.remove('is-empty', 'is-path');
+    }
     localStorage.setItem('lastFolder', folderPath);
     sessionStorage.setItem('lastFolder', folderPath);
 
@@ -567,19 +590,73 @@ const FileTreeManager = (() => {
     const dropdown = document.getElementById('folder-recent-dropdown');
     if (!btn || !dropdown) return;
 
+    const FOLDER_ICON_SVG = `
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none"
+           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+              stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>`;
+
+    // Parent directory of a folder, with the home directory shown as "~".
+    function _shortParent(folderPath) {
+      const sepIdx = Math.max(folderPath.lastIndexOf('/'), folderPath.lastIndexOf('\\'));
+      const parent = sepIdx > 0 ? folderPath.slice(0, sepIdx) : folderPath;
+      return parent.replace(/^(\/Users\/[^/]+|\/home\/[^/]+|[A-Za-z]:\\Users\\[^\\]+)/i, '~');
+    }
+
+    function _timeAgo(ts) {
+      if (!ts) return '';
+      const mins = Math.floor((Date.now() - ts) / 60000);
+      if (mins < 1)  return 'now';
+      if (mins < 60) return `${mins}m`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24)  return `${hrs}h`;
+      const days = Math.floor(hrs / 24);
+      if (days < 30) return `${days}d`;
+      return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    }
+
+    function _heading(text) {
+      const h = document.createElement('div');
+      h.className = 'folder-recent-heading';
+      h.textContent = text;
+      dropdown.appendChild(h);
+    }
+
     function _populateDropdown() {
+      const current = sessionStorage.getItem('lastFolder') || '';
       const folders = StorageManager.getRecentFolders();
+      const recents = folders
+        .filter(f => f.path !== current)
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       dropdown.innerHTML = '';
 
-      if (!folders.length) {
-        const empty = document.createElement('div');
-        empty.className = 'folder-recent-empty';
-        empty.textContent = 'No recent folders';
-        dropdown.appendChild(empty);
-        return;
+      if (current) {
+        _heading('Current');
+        const name = current.split(/[\\/]/).filter(Boolean).pop() || current;
+        const row = document.createElement('div');
+        row.className = 'folder-recent-item folder-recent-item--current';
+        row.setAttribute('title', current);
+        row.innerHTML = `
+          ${FOLDER_ICON_SVG}
+          <div class="folder-recent-item__text">
+            <span class="folder-recent-item__name">${_escHtml(name)}</span>
+            <span class="folder-recent-item__path">${_escHtml(_shortParent(current))}</span>
+          </div>`;
+        row.addEventListener('click', _closeDropdown);
+        dropdown.appendChild(row);
       }
 
-      folders.forEach(item => {
+      _heading('Recent');
+
+      if (!recents.length) {
+        const empty = document.createElement('div');
+        empty.className = 'folder-recent-empty';
+        empty.textContent = 'No other recent folders';
+        dropdown.appendChild(empty);
+      }
+
+      recents.forEach(item => {
         // A <div> here, not a <button> — it needs to nest the remove
         // button below, and a <button> can't legally contain another
         // <button> (the browser would silently close the outer one early).
@@ -590,22 +667,18 @@ const FileTreeManager = (() => {
         row.setAttribute('title', item.path);
 
         row.innerHTML = `
-          <svg width="13" height="13" viewBox="0 0 15 15" fill="none"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
-                  stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-          </svg>
-          <div style="min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;">
-            <span class="folder-recent-item__name">${item.name}</span>
-            <span class="folder-recent-item__path">${item.path}</span>
-          </div>
+          ${FOLDER_ICON_SVG}
+          <span class="folder-recent-item__name">${_escHtml(item.name)}</span>
+          <span class="folder-recent-item__time">${_timeAgo(item.timestamp)}</span>
           <button class="folder-recent-remove-btn" title="Remove from Recents"
-                  aria-label="Remove ${item.name} from recent folders">
+                  aria-label="Remove ${_escHtml(item.name)} from recent folders">
             ${REMOVE_ICON_SVG}
           </button>`;
 
         const _open = async () => {
           _closeDropdown();
+          // Refresh the timestamp so "opened N ago" stays accurate.
+          StorageManager.addRecentItem('folder', item.path, item.name);
           await setActiveFolder(item.path);
         };
 
@@ -625,6 +698,32 @@ const FileTreeManager = (() => {
 
         dropdown.appendChild(row);
       });
+
+      const sep = document.createElement('div');
+      sep.className = 'folder-recent-separator';
+      dropdown.appendChild(sep);
+
+      const add = document.createElement('div');
+      add.className = 'folder-recent-item folder-recent-add';
+      add.setAttribute('role', 'menuitem');
+      add.setAttribute('tabindex', '0');
+      add.innerHTML = `
+        <span class="folder-recent-add__icon" aria-hidden="true">＋</span>
+        <span class="folder-recent-item__name">Add folder…</span>`;
+      const _addFolder = async () => {
+        _closeDropdown();
+        const result = await window.electronAPI?.openFolder();
+        if (!result?.folderPath) return;
+        SidebarManager.setExplorerVisible(true, false);
+        const folderName = result.folderPath.split(/[\\/]/).filter(Boolean).pop() || result.folderPath;
+        StorageManager.addRecentItem('folder', result.folderPath, folderName);
+        await setActiveFolder(result.folderPath);
+      };
+      add.addEventListener('click', _addFolder);
+      add.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); _addFolder(); }
+      });
+      dropdown.appendChild(add);
     }
 
     function _openDropdown() {

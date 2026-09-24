@@ -212,7 +212,10 @@ const RecentsPanel = (() => {
       if (closeBtn.dataset.role === 'draft-close') {
         const isLive      = !currentFile.path;
         const liveContent = isLive ? (document.getElementById('mdEditor')?.value ?? '') : '';
-        const hasContent  = isLive ? liveContent.length > 0 : !!SaveManager.getDraft();
+        // An untouched starter template counts as empty — nothing to lose.
+        const hasContent  = isLive
+          ? liveContent.length > 0 && liveContent !== window.SCRATCHPAD_TEMPLATE
+          : !!SaveManager.getDraft();
 
         if (!hasContent) {
           // Nothing typed yet — nothing to lose, just reset silently.

@@ -243,6 +243,10 @@ async function openRecentFile(filePath) {
   RecentsPanel.render();
 }
 
+// Starter content shown whenever the Scratchpad would otherwise open empty.
+const SCRATCHPAD_TEMPLATE = '## Scratchpad\n\nNote 1\n\nNote 2\n\nNote 3\n';
+window.SCRATCHPAD_TEMPLATE = SCRATCHPAD_TEMPLATE;
+
 /**
  * Restore the persisted untitled draft into the editor (from the "Recent
  * Files" section's draft row) after having switched away to another file.
@@ -256,7 +260,7 @@ async function restoreDraftFile() {
     }
   }
 
-  const draft = SaveManager.getDraft();
+  const draft = SaveManager.getDraft() || SCRATCHPAD_TEMPLATE;
 
   if (mdEditor) {
     mdEditor.value     = draft;
@@ -314,7 +318,11 @@ async function openSingleFile(filePath) {
   SidebarManager.setExplorerVisible(true, true);
 
   const label = document.getElementById('header-folder-name');
-  if (label) label.textContent = filePath;
+  if (label) {
+    label.textContent = filePath;
+    label.classList.remove('is-empty');
+    label.classList.add('is-path');
+  }
 
   selectFile(null, filePath, content.split('\n').length, content.length);
 
@@ -332,7 +340,7 @@ async function openSingleFile(filePath) {
  */
 function _resetToBlankUntitled() {
   if (mdEditor) {
-    mdEditor.value     = '';
+    mdEditor.value     = SCRATCHPAD_TEMPLATE;
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
     const gutter = document.getElementById('line-numbers');

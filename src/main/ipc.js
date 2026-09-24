@@ -387,7 +387,8 @@ function registerIpcHandlers() {
    *   withMeta  {boolean} — attach modified (ms), firstLine, and tags to each file
    *
    * Each node: { type:'file'|'folder', name, path, children?, modified?, firstLine?, tags? }
-   * Folders are sorted before files; both groups are alphabetical.
+   * Folders are sorted before files; each group is newest-modified first
+   * (a folder's time is its newest file's), with name as tiebreaker.
    * Returns { entries: TreeNode[] } or null on error.
    */
   ipcMain.handle('folder:read', async (_event, folderPath, options = {}) => {
@@ -402,13 +403,16 @@ function registerIpcHandlers() {
           const fullPath = path.join(dirPath, e.name)
           if (!rootOnly && e.isDirectory() && depth < 4) {
             const children = await readEntries(fullPath, depth + 1)
-            entries.push({ type: 'folder', name: e.name, path: fullPath, children })
+            // A folder's modified time is that of its newest file, at any depth.
+            const modified = children.reduce((m, c) => Math.max(m, c.modified || 0), 0)
+            entries.push({ type: 'folder', name: e.name, path: fullPath, children, modified })
           } else if (e.isFile() && /\.(md|markdown|txt)$/i.test(e.name)) {
             const node = { type: 'file', name: e.name, path: fullPath }
+            try {
+              node.modified = (await fs.stat(fullPath)).mtimeMs
+            } catch { /* leave modified undefined */ }
             if (withMeta) {
               try {
-                const stat = await fs.stat(fullPath)
-                node.modified = stat.mtimeMs
                 const raw = await fs.readFile(fullPath, 'utf8')
                 node.firstLine = _extractFirstLine(raw)
                 node.tags = _extractTags(raw)
@@ -419,6 +423,9 @@ function registerIpcHandlers() {
         }
         entries.sort((a, b) => {
           if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
+          // Most recently modified first (folders use their newest file).
+          const diff = (b.modified || 0) - (a.modified || 0)
+          if (diff !== 0) return diff
           return a.name.localeCompare(b.name)
         })
         return entries

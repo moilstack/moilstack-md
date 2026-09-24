@@ -106,7 +106,7 @@
             <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
                   stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
           </svg>
-          <span id="header-folder-name">No folder opened</span>
+          <span id="header-folder-name" class="is-empty">No folder opened</span>
           <svg class="folder-chevron" width="8" height="8" viewBox="0 0 10 10" fill="none"
                xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.5"
@@ -225,7 +225,8 @@
         <div class="sidebar-section__actions">
 
           <!-- Open Folder button -->
-          <button class="icon-btn" title="Open Folder (Ctrl+O)" id="btn-open-folder">
+          <!-- Hidden: superseded by "Add folder…" in the header folder dropdown. Remove once confirmed. -->
+          <button class="icon-btn" title="Open Folder (Ctrl+O)" id="btn-open-folder" style="display:none">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
                  xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"

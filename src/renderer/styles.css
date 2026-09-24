@@ -308,10 +308,31 @@ body.platform-darwin #app-header {
 
 .app-header__folder-path span {
   font-size: 11.5px;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Leading "/" so the folder name reads as an address. */
+.app-header__folder-path span:not(.is-empty):not(.is-path)::before {
+  content: '/';
+  margin-right: 1px;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* Placeholder ("No folder opened") stays muted. */
+.app-header__folder-path span.is-empty {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* Single-file full path: truncate from the left so the file name stays visible. */
+.app-header__folder-path span.is-path {
+  font-weight: 400;
+  color: var(--text-secondary);
   direction: rtl;
   text-align: left;
 }
@@ -332,8 +353,8 @@ body.platform-darwin #app-header {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  min-width: 290px;
-  max-width: 420px;
+  min-width: 220px;
+  max-width: 320px;
   background: var(--sidebar-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -347,9 +368,9 @@ body.platform-darwin #app-header {
 .folder-recent-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 9px 10px;
+  padding: 6px 10px 6px 8px;
   background: none;
   border: none;
   border-radius: 5px;
@@ -357,23 +378,6 @@ body.platform-darwin #app-header {
   text-align: left;
   color: var(--text-primary);
   transition: background 0.12s;
-}
-
-.folder-recent-item + .folder-recent-item {
-  border-top: 1px solid var(--border);
-  border-radius: 0;
-}
-
-.folder-recent-item:last-child {
-  border-radius: 0 0 4px 4px;
-}
-
-.folder-recent-item:first-child {
-  border-radius: 4px 4px 0 0;
-}
-
-.folder-recent-item:only-child {
-  border-radius: 4px;
 }
 
 .folder-recent-item:hover {
@@ -422,16 +426,75 @@ body.platform-darwin #app-header {
   text-overflow: ellipsis;
 }
 
+.folder-recent-item__name { flex: 1; min-width: 0; }
+
+.folder-recent-item__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .folder-recent-item__path {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  direction: rtl;
-  text-align: left;
-  flex: 1;
-  min-width: 0;
+}
+
+.folder-recent-item--current {
+  background: var(--hover-bg, rgba(128,128,128,0.12));
+  cursor: default;
+}
+.folder-recent-item--current .folder-recent-item__name { font-weight: 600; }
+.folder-recent-item--current svg { color: var(--primary); opacity: 1; }
+
+/* Fixed row height so swapping the time for the × on hover doesn't
+   change the row's height. The Current row is two lines, so it's exempt. */
+.folder-recent-item:not(.folder-recent-item--current) {
+  box-sizing: border-box;
+  height: 32px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.folder-recent-item__time {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+/* Swap the time for the remove button on hover. */
+.folder-recent-item:hover .folder-recent-item__time,
+.folder-recent-item:focus-within .folder-recent-item__time { display: none; }
+
+.folder-recent-add__icon {
+  flex-shrink: 0;
+  width: 13px;
+  text-align: center;
+  color: var(--primary);
+}
+
+.folder-recent-heading {
+  padding: 8px 10px 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.folder-recent-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
+}
+
+.folder-recent-add .folder-recent-item__name {
+  font-weight: 500;
+  color: var(--primary);
 }
 
 .folder-recent-empty {
