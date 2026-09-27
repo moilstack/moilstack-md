@@ -184,6 +184,7 @@ const MarkdownRenderer = (() => {
    * _extractFirstLine/_extractTags on the main-process side.
    */
   function _stripFrontmatter(src) {
+    if (src.charCodeAt(0) === 0xFEFF) src = src.slice(1); // UTF-8 BOM (Windows editors)
     if (!src.startsWith('---')) return src;
     const fmEnd = src.indexOf('\n---', 3);
     if (fmEnd === -1) return src;

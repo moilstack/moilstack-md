@@ -486,7 +486,9 @@ function registerIpcHandlers() {
    */
   ipcMain.handle('file:read', async (_event, filePath) => {
     try {
-      const content = await fs.readFile(filePath, 'utf8')
+      // Strip the BOM so the renderer's frontmatter checks (preview, tag
+      // modal, sidebar tags) see the leading `---` and don't render it.
+      const content = _stripBOM(await fs.readFile(filePath, 'utf8'))
       return { content }
     } catch {
       return null
