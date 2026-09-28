@@ -31,6 +31,9 @@
 
   /* Borders & interactions */
   --border:            #e6e5df;
+  /* Softer line used for the major layout separators (title bar, explorer,
+     editor/preview split) so they read as a hint rather than a hard rule. */
+  --divider:           #f0efea;
   --hover-bg:          #f0f1f5;
   --active-file-bg:    #ecebf7;
   --active-file-text:  #5b5aa0;
@@ -79,6 +82,7 @@
   --section-header:    #9199a8;
 
   --border:            #e4e2d8;
+  --divider:           var(--border);
   --hover-bg:          #f0eee2;
   /* Stronger, more saturated blue tint so the selected item clearly pops
      against the warm ivory background instead of blending into it. */
@@ -122,6 +126,7 @@
   --section-header:    #5c6370;
 
   --border:            #3e4451;
+  --divider:           var(--border);
   --hover-bg:          #2f333d;
   --active-file-bg:    #3a2c42;
   --active-file-text:  #c678dd;
@@ -163,6 +168,7 @@
   --section-header:    #7a8290;
 
   --border:            #4c525c;
+  --divider:           var(--border);
   --hover-bg:          #454b55;
   --active-file-bg:    #31465f;
   --active-file-text:  #7fc0ff;
@@ -223,7 +229,7 @@ body {
   height: 42px;
   padding: 0 0 0 14px;
   background: var(--sidebar-bg);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
   flex-shrink: 0;
   user-select: none;
   -webkit-app-region: drag;
@@ -489,7 +495,7 @@ body.platform-darwin #app-header {
 .folder-recent-separator {
   height: 1px;
   margin: 4px 0;
-  background: var(--border);
+  background: var(--divider);
 }
 
 .folder-recent-add .folder-recent-item__name {
@@ -610,7 +616,7 @@ body.platform-darwin #app-header {
 
 .hamburger-divider {
   height: 1px;
-  background: var(--border);
+  background: var(--divider);
   margin: 3px 4px;
 }
 
@@ -780,7 +786,7 @@ body.platform-darwin #app-header {
   width: var(--sidebar-width);
   height: 100%;
   background: var(--sidebar-bg);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--divider);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -805,7 +811,7 @@ body.platform-darwin #app-header {
   height: 42px;
   min-height: 42px;
   padding: 0 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
   flex-shrink: 0;
 }
 
@@ -1111,7 +1117,7 @@ body.platform-darwin #app-header {
 /* ── Recent Files section (bottom of the Explorer sidebar) ──────────── */
 .recents-section {
   flex-shrink: 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
 }
 
 .recents-header {
@@ -1226,7 +1232,7 @@ body.platform-darwin #app-header {
 
 .file-list-section-header--files {
   margin-top: 4px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   padding-top: 10px;
 }
 
@@ -1384,7 +1390,7 @@ body.platform-darwin #app-header {
 
 .file-date-group-header ~ .file-date-group-header {
   margin-top: 4px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   padding-top: 10px;
 }
 
@@ -1432,7 +1438,7 @@ body.platform-darwin #app-header {
 /* ── File ctx menu divider ───────────────────────────────────────────── */
 .file-ctx-divider {
   height: 1px;
-  background: var(--border);
+  background: var(--divider);
   margin: 3px 6px;
 }
 
@@ -1520,7 +1526,7 @@ body.platform-darwin #app-header {
   height: 42px;
   min-height: 42px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
   flex-shrink: 0;
   overflow-x: auto;
   scrollbar-width: none;          /* Firefox */
@@ -1622,7 +1628,7 @@ body.platform-darwin #app-header {
 
 .ctx-divider {
   height: 1px;
-  background: var(--border);
+  background: var(--divider);
   margin: 4px 0;
 }
 
@@ -1969,7 +1975,7 @@ body.platform-darwin #app-header {
   display: flex;
   flex-direction: row;   /* line-numbers gutter | editor-wrapper side by side */
   min-width: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--divider);
   overflow: hidden;
 }
 
@@ -1992,7 +1998,7 @@ body.platform-darwin #app-header {
   color: var(--text-secondary);
   opacity: 0.45;
   background: var(--editor-bg);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--divider);
 
   overflow: hidden;        /* scroll is driven by the textarea's scroll event */
   user-select: none;
@@ -2155,7 +2161,7 @@ body.platform-darwin #app-header {
   font-size: 11px;
   color: var(--section-header);
   background: var(--sidebar-bg);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   flex-shrink: 0;
   user-select: none;
 }
@@ -2214,7 +2220,7 @@ body.platform-darwin #app-header {
 }
 .preview-content h2 {
   font-size: 18px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
   padding-bottom: 6px;
   color: #3730a3;
 }
@@ -2432,7 +2438,7 @@ body.platform-darwin #app-header {
 /* ── Pane visibility (controlled by setMode via .hidden) ─────────── */
 /* When editorPane is visible and previewPane is hidden, drop the divider */
 #editorPane:not(.hidden) {
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--divider);
 }
 #previewPane:not(.hidden) {
   flex: 1;
@@ -2451,7 +2457,7 @@ body.platform-darwin #app-header {
   padding: 0 12px;
   gap: 16px;
   background: var(--statusbar-bg);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   font-size: 11.5px;
   color: var(--statusbar-text);
   user-select: none;
@@ -2618,7 +2624,7 @@ body.platform-darwin #app-header {
   height: 38px;
   min-height: 38px;
   background: var(--active-file-bg);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2992,7 +2998,7 @@ body.platform-darwin #app-header {
 /* ─── Chat Input Area ─────────────────────────────────────────────── */
 .chat-input-area {
   padding: 6px 12px 8px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   background: var(--surface);
   flex-shrink: 0;
 }
@@ -3347,7 +3353,7 @@ body.platform-darwin #app-header {
 
 .model-picker-footer {
   padding: 4px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
 }
 
 .model-picker-manage {
@@ -3418,7 +3424,7 @@ body.platform-darwin #app-header {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
   flex-shrink: 0;
 }
 
@@ -3968,7 +3974,7 @@ select.form-input {
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
 }
 
 .label-modal__title {
@@ -4057,7 +4063,7 @@ select.form-input {
   flex-shrink: 0;
   overflow-y: auto;
   padding: 16px;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--divider);
 }
 
 .vh-main {
@@ -4192,7 +4198,7 @@ select.form-input {
 .settings-nav {
   width: 160px;
   flex-shrink: 0;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--divider);
   padding: 10px 6px;
   display: flex;
   flex-direction: column;
@@ -4489,7 +4495,7 @@ select.form-input {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--divider);
   border-radius: 6px;
   transition: background-color 0.3s;
 }
@@ -5148,7 +5154,7 @@ select.form-input {
 
 .tbl-modal-divider {
   border: none;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--divider);
   margin: 14px 0;
 }
 
