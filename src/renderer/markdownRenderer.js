@@ -112,6 +112,10 @@ const MarkdownRenderer = (() => {
     return line.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
   }
 
+  // Horizontal rule: three or more of the same -, * or _ character, optionally
+  // separated by spaces ("---", "***", "* * *", "- - -"). Tested on a trimmed line.
+  const HR_RE = /^([-*_])[ \t]*(?:\1[ \t]*){2,}$/;
+
   /* ── List parser (recursive — supports nested lists) ───────────── */
 
   function parseListBlock(lines, startIdx, baseIndent, topLine) {
@@ -125,8 +129,23 @@ const MarkdownRenderer = (() => {
       const trimmed = line.trimStart();
       const indent  = line.length - trimmed.length;
 
-      if (trimmed === '') break;          // blank line ends this list level
+      if (trimmed === '') {
+        // Blank lines between items keep the list going ("loose" list) as long
+        // as the next non-blank line is a sibling item of the same kind —
+        // otherwise each item would become its own list and restart at 1.
+        let j = i + 1;
+        while (j < lines.length && lines[j].trim() === '') j++;
+        if (j >= lines.length) break;
+        const nextTrimmed = lines[j].trimStart();
+        const nextIndent  = lines[j].length - nextTrimmed.length;
+        const sameKind    = ordered ? /^\d+\. /.test(nextTrimmed) : /^[*\-+] /.test(nextTrimmed);
+        const isRule      = HR_RE.test(nextTrimmed);
+        if (nextIndent !== baseIndent || !sameKind || isRule) break;
+        i = j;
+        continue;
+      }
       if (indent < baseIndent) break;     // dedented — end of this level
+      if (HR_RE.test(trimmed)) break;     // "* * *" / "- - -" is a rule, not an item
 
       const isUnordered = /^[*\-+] /.test(trimmed);
       const isOrdered   = /^\d+\. /.test(trimmed);
@@ -162,7 +181,10 @@ const MarkdownRenderer = (() => {
     }
 
     const tag  = ordered ? 'ol' : 'ul';
-    const attr = (!ordered && hasTaskItems) ? ' class="task-list"' : '';
+    // Honour a list that doesn't begin at 1 (e.g. one resumed after a paragraph).
+    const startNum = ordered ? parseInt(lines[startIdx].trimStart(), 10) : 1;
+    const attr = (!ordered && hasTaskItems) ? ' class="task-list"'
+               : (ordered && startNum !== 1) ? ` start="${startNum}"` : '';
     // topLine is only set by the outermost call (see call site) — nested sublists
     // don't carry their own data-line, so scroll-sync anchors on the top item only.
     const lineAttr = topLine !== undefined ? ` data-line="${topLine}"` : '';
@@ -305,7 +327,7 @@ const MarkdownRenderer = (() => {
       }
 
       /* ── Horizontal rule ────────────────────────────────────────── */
-      if (/^(-{3,}|\*{3,}|_{3,})\s*$/.test(trimmedLine)) {
+      if (HR_RE.test(trimmedLine)) {
         out.push(`<hr data-line="${blockLine}">`);
         i++;
         continue;
@@ -425,7 +447,7 @@ const MarkdownRenderer = (() => {
         lines[i].trim() !== '>'     &&
         !/^[*\-+] /.test(lines[i].trimStart()) &&
         !/^\d+\. /.test(lines[i].trimStart())  &&
-        !/^(-{3,}|\*{3,}|_{3,})\s*$/.test(lines[i].trimStart())
+        !HR_RE.test(lines[i].trimStart())
       ) {
         paraLines.push(lines[i]);
         i++;

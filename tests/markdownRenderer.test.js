@@ -168,6 +168,32 @@ describe('Markdown Rendering', () => {
       expect(lines[2]).toMatch(/^\d+\. /);
     });
 
+    test('keeps one ordered list when items are separated by blank lines', () => {
+      const { MarkdownRenderer } = require('../src/renderer/markdownRenderer.js');
+      const html = MarkdownRenderer.parseMarkdown(`1. First\n2. Second\n\n\n3. Third`);
+      expect(html.match(/<ol/g)).toHaveLength(1);
+      expect(html.match(/<li>/g)).toHaveLength(3);
+    });
+
+    test('ordered list keeps its starting number', () => {
+      const { MarkdownRenderer } = require('../src/renderer/markdownRenderer.js');
+      expect(MarkdownRenderer.parseMarkdown(`4. Four\n5. Five`)).toContain('<ol start="4"');
+      expect(MarkdownRenderer.parseMarkdown(`1. One\n2. Two`)).not.toContain('start=');
+    });
+
+    test('renders spaced horizontal rules instead of list items', () => {
+      const { MarkdownRenderer } = require('../src/renderer/markdownRenderer.js');
+      for (const rule of ['---', '***', '___', '* * *', '- - -', '_ _ _', '*  *  *  *']) {
+        const html = MarkdownRenderer.parseMarkdown(`- a\n\n${rule}\n\n- b`);
+        expect(html.match(/<hr/g)).toHaveLength(1);
+        expect(html.match(/<ul/g)).toHaveLength(2);
+        expect(html.match(/<li>/g)).toHaveLength(2);
+      }
+      expect(MarkdownRenderer.parseMarkdown(`- a\n* * *\n- b`).match(/<hr/g)).toHaveLength(1);
+      expect(MarkdownRenderer.parseMarkdown(`* * item`)).not.toContain('<hr');
+      expect(MarkdownRenderer.parseMarkdown(`- -- x`)).not.toContain('<hr');
+    });
+
     test('renders blockquotes with >', () => {
       const md = `> This is a quote\n> Second line`;
       expect(md).toMatch(/^> /m);
