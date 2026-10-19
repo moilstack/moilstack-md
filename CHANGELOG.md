@@ -4,6 +4,15 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [1.1.6] - 2026-10-12
+
+### Fixed
+- **Numbered lists keep counting across blank lines** — items separated by blank lines stay in one list (1, 2, 3) instead of each restarting at 1. Applies to bullet, task and nested lists too.
+- **Numbered lists keep their starting number** — a list that begins at a number other than 1 (e.g. one resumed at `4.` after a paragraph) is no longer renumbered from 1.
+- **Spaced horizontal rules** — `* * *`, `- - -` and `_ _ _` now render as a rule instead of a bullet item.
+
+---
+
 ## [1.1.5] - 2026-09-24
 
 ### Added
