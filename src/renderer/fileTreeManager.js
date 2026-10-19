@@ -155,8 +155,6 @@ const FileTreeManager = (() => {
     const escapedPath = file.path.replace(/"/g, '&quot;');
     const tags = file.tags || [];
     const preview = file.firstLine || '';
-    const tagsHTML = tags.map(t => `<span class="file-tag">${_escHtml('#' + t)}</span>`).join('');
-    const tagsTitle = tags.length ? ` title="${_escHtml(tags.map(t => '#' + t).join(', '))}"` : '';
     const labelDot = label
       ? `<svg class="file-item__label-dot" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="4" cy="4" r="4" fill="${label.color}"/></svg>`
       : '';
@@ -168,7 +166,7 @@ const FileTreeManager = (() => {
           ${_fileIconSVG(file.name)}
           <span class="file-item__name">${file.name}</span>
           ${labelDot}
-          ${tagsHTML ? `<div class="file-item__tags"${tagsTitle}>${tagsHTML}</div>` : ''}
+          ${_tagIndicatorHTML(tags)}
           <button class="file-pin-btn${pinned ? ' file-pin-btn--active' : ''}"
                   data-pin-path="${escapedPath}"
                   title="${pinned ? 'Unpin file' : 'Pin file'}"

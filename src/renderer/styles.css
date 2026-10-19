@@ -553,11 +553,6 @@ body.platform-darwin #app-header {
   min-width: 0;
 }
 
-.app-header__icon {
-  flex-shrink: 0;
-  display: block;
-}
-
 .app-header__app-name {
   font-size: 13px;
   font-weight: 700;
@@ -1213,17 +1208,11 @@ body.platform-darwin #app-header {
   gap: 7px;
   padding: 6px 12px;
   font-size: 13px;
-  color: #d97706;
+  color: var(--icon-folder);   /* per-theme, see "Per-theme icon colours" */
   cursor: pointer;
   user-select: none;
   transition: background 120ms ease;
   flex-shrink: 0;
-}
-[data-theme="dark"] .folder-row,
-[data-theme="nord"] .folder-row,
-[data-theme="forest"] .folder-row,
-[data-theme="midnight"] .folder-row {
-  color: #e5c07b;
 }
 
 .folder-row:hover {
@@ -1301,76 +1290,39 @@ body.platform-darwin #app-header {
    which both set color: var(--text-secondary).
    ──────────────────────────────────────────────────────────────────── */
 
-/* File icon — blue in both themes via the app primary variable */
+/* Per-theme icon colours — picked from each theme's own palette */
+:root                      { --icon-md: #6366f1; --icon-txt: #0d9488; --icon-folder: #d97706; }
+[data-theme="ivory-slate"] { --icon-md: #2f5d82; --icon-txt: #5f7a52; --icon-folder: #b07d2b; }
+[data-theme="xcode-light"] { --icon-md: #0b57d0; --icon-txt: #6c36a9; --icon-folder: #3d8be0; }
+[data-theme="github-light"]{ --icon-md: #0969da; --icon-txt: #1a7f37; --icon-folder: #9a6700; }
+[data-theme="one-light"]   { --icon-md: #a626a4; --icon-txt: #50a14f; --icon-folder: #c18401; }
+[data-theme="paper"]       { --icon-md: #2383e2; --icon-txt: #787774; --icon-folder: #cb912f; }
+[data-theme="dim"]         { --icon-md: #d19bec; --icon-txt: #7fd3de; --icon-folder: #f0cf94; }
+[data-theme="nord"]        { --icon-md: #b48ead; --icon-txt: #8fbcbb; --icon-folder: #ebcb8b; }
+[data-theme="forest"]      { --icon-md: #9fd4a5; --icon-txt: #8ab4c9; --icon-folder: #d9b36c; }
+[data-theme="midnight"]    { --icon-md: #5eead4; --icon-txt: #a5b4fc; --icon-folder: #fbbf24; }
+[data-theme="dark"]        { --icon-md: #c678dd; --icon-txt: #56b6c2; --icon-folder: #e5c07b; }
+
+/* Other file types follow the theme accent */
 .file-item .icon-file,
 .welcome-recent-item .icon-file {
   color: var(--primary);
 }
 
-/* Markdown file icon — purple */
 .file-item .icon-file--md,
 .welcome-recent-item .icon-file--md {
-  color: #7c3aed;
-}
-[data-theme="dark"] .file-item .icon-file--md,
-[data-theme="nord"] .file-item .icon-file--md,
-[data-theme="forest"] .file-item .icon-file--md,
-[data-theme="midnight"] .file-item .icon-file--md,
-[data-theme="dark"] .welcome-recent-item .icon-file--md,
-[data-theme="nord"] .welcome-recent-item .icon-file--md,
-[data-theme="forest"] .welcome-recent-item .icon-file--md,
-[data-theme="midnight"] .welcome-recent-item .icon-file--md {
-  color: #a78bfa;
-}
-[data-theme="dim"] .file-item .icon-file--md,
-[data-theme="dim"] .welcome-recent-item .icon-file--md {
-  color: #d19bec;
+  color: var(--icon-md);
 }
 
-/* Plain-text file icon — teal */
 .file-item .icon-file--txt,
 .welcome-recent-item .icon-file--txt {
-  color: #0d9488;
-}
-[data-theme="dark"] .file-item .icon-file--txt,
-[data-theme="nord"] .file-item .icon-file--txt,
-[data-theme="forest"] .file-item .icon-file--txt,
-[data-theme="midnight"] .file-item .icon-file--txt,
-[data-theme="dark"] .welcome-recent-item .icon-file--txt,
-[data-theme="nord"] .welcome-recent-item .icon-file--txt,
-[data-theme="forest"] .welcome-recent-item .icon-file--txt,
-[data-theme="midnight"] .welcome-recent-item .icon-file--txt {
-  color: #2dd4bf;
-}
-[data-theme="dim"] .file-item .icon-file--txt,
-[data-theme="dim"] .welcome-recent-item .icon-file--txt {
-  color: #7fd3de;
+  color: var(--icon-txt);
 }
 
-/* Folder icon — amber light, darker amber dark */
 .folder-row .icon-folder,
 .file-item .icon-folder,
 .welcome-recent-item .icon-folder {
-  color: #d97706;
-}
-[data-theme="dark"] .folder-row .icon-folder,
-[data-theme="nord"] .folder-row .icon-folder,
-[data-theme="forest"] .folder-row .icon-folder,
-[data-theme="midnight"] .folder-row .icon-folder,
-[data-theme="dark"] .file-item .icon-folder,
-[data-theme="nord"] .file-item .icon-folder,
-[data-theme="forest"] .file-item .icon-folder,
-[data-theme="midnight"] .file-item .icon-folder,
-[data-theme="dark"] .welcome-recent-item .icon-folder,
-[data-theme="nord"] .welcome-recent-item .icon-folder,
-[data-theme="forest"] .welcome-recent-item .icon-folder,
-[data-theme="midnight"] .welcome-recent-item .icon-folder {
-  color: #e5c07b;
-}
-[data-theme="dim"] .folder-row .icon-folder,
-[data-theme="dim"] .file-item .icon-folder,
-[data-theme="dim"] .welcome-recent-item .icon-folder {
-  color: #f0cf94;
+  color: var(--icon-folder);
 }
 
 .file-item span {

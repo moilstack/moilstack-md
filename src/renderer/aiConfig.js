@@ -645,8 +645,14 @@ const AIConfigManager = (() => {
     if (sel) sel.value = value
     const btn = document.getElementById('btn-toggle-preview-width')
     if (btn) {
-      btn.classList.toggle('icon-btn--active', value === 'full')
-      btn.setAttribute('aria-pressed', String(value === 'full'))
+      const full = value === 'full'
+      btn.classList.toggle('icon-btn--active', full)
+      btn.setAttribute('aria-pressed', String(full))
+      // Icon shows the current state; the tooltip says what a click will do
+      btn.querySelector('.pw-lines')?.setAttribute('d', full
+        ? 'M6 9h12M6 12h12M6 15h12'               // text across the whole page
+        : 'M8 8v8M16 8v8M10 10h4M10 13h4')       // narrow column between margins
+      btn.title = full ? 'Use readable width' : 'Use full width'
     }
   }
 

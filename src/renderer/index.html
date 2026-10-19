@@ -35,13 +35,9 @@
         </button>
 
         <div id="hamburger-menu" class="hamburger-menu hidden" role="menu">
-          <button class="hamburger-item" id="hmenu-new" role="menuitem">
+          <button class="hamburger-item" id="hmenu-new-explorer-file" role="menuitem">
             <span class="hamburger-item__label">New</span>
             <kbd class="hamburger-item__kbd">Ctrl+N</kbd>
-          </button>
-          <button class="hamburger-item" id="hmenu-new-explorer-file" role="menuitem">
-            <span class="hamburger-item__label">New File (Explorer)</span>
-            <kbd class="hamburger-item__kbd">Ctrl+Shift+N</kbd>
           </button>
           <div class="hamburger-divider"></div>
           <button class="hamburger-item" id="hmenu-open-file" role="menuitem">
@@ -87,17 +83,6 @@
         </div>
       </div>
 
-      <svg class="app-header__icon" width="20" height="20" viewBox="0 0 32 32"
-           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M3 1 L20 1 L29 10 L29 31 L3 31 Z" fill="#6366f1" stroke="#4f46e5" stroke-width="1" stroke-linejoin="round"/>
-        <path d="M20 1 L20 10 L29 10 Z" fill="white" opacity="0.9"/>
-        <path d="M20 1 L20 10 L29 10" fill="none" stroke="#4f46e5" stroke-width="1" stroke-linejoin="round"/>
-        <rect x="8" y="13" width="2" height="10" rx="1" fill="white"/>
-        <rect x="22" y="13" width="2" height="10" rx="1" fill="white"/>
-        <line x1="9" y1="13" x2="16" y2="20" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="23" y1="13" x2="16" y2="20" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-        <polyline points="13,21 16,25 19,21" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-      </svg>
       <div class="app-header__folder-wrap">
         <button class="app-header__folder-path" id="header-folder-path"
                 title="Recent folders" aria-haspopup="true" aria-expanded="false">
@@ -439,12 +424,13 @@
                       stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
-            <button class="icon-btn icon-btn--lg" id="btn-toggle-preview-width" title="Toggle full-width preview" aria-label="Toggle full-width preview" aria-pressed="false">
+            <button class="icon-btn icon-btn--lg" id="btn-toggle-preview-width" title="Use full width" aria-label="Full-width preview" aria-pressed="false">
+              <!-- Page icon: narrow text column (readable width) / full-width lines — swapped by aiConfig.js -->
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"
-                      stroke="currentColor" stroke-width="2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
+                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+                   stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <rect x="3" y="4" width="18" height="16" rx="2"/>
+                <path class="pw-lines" d="M8 8v8M16 8v8M10 10h4M10 13h4"/>
               </svg>
             </button>
           </div>

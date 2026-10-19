@@ -38,11 +38,6 @@ const HamburgerMenu = (() => {
 
   /* ── Menu items ───────────────────────────────────────────────────── */
 
-  document.getElementById('hmenu-new')?.addEventListener('click', async () => {
-    closeHamburgerMenu();
-    await newUntitledFile();
-  });
-
   document.getElementById('hmenu-new-explorer-file')?.addEventListener('click', async () => {
     closeHamburgerMenu();
     await FileOperations.triggerExplorerNewFile();

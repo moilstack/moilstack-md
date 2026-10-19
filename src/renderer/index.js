@@ -455,17 +455,10 @@ document.addEventListener('keydown', async e => {
   }
 });
 
-// Ctrl+N — new untitled file (notepad-style; no folder or sidebar required)
+// Ctrl+N (and the old Ctrl+Shift+N) — new file in the Explorer's active folder.
+// In Recent Only mode there's no folder, so it starts an untitled file instead.
 document.addEventListener('keydown', async e => {
-  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'n') {
-    e.preventDefault();
-    await newUntitledFile();
-  }
-});
-
-// Ctrl+Shift+N — new file in the explorer (creates a file on disk in the active folder)
-document.addEventListener('keydown', async e => {
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
     e.preventDefault();
     await FileOperations.triggerExplorerNewFile();
   }
