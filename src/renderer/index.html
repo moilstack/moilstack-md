@@ -1173,6 +1173,20 @@
               </div>
             </div>
 
+            <!-- In Short banner -->
+            <div class="settings-row">
+              <div class="settings-row__label">
+                <span class="settings-row__name">In Short Banner</span>
+                <span class="settings-row__desc">Show a one-line AI summary at the top of Preview when you open a file. Uses your selected AI model; summaries are remembered until the file changes.</span>
+              </div>
+              <div class="settings-row__control">
+                <select id="inShortBanner" class="form-input settings-select">
+                  <option value="on">On</option>
+                  <option value="off">Off</option>
+                </select>
+              </div>
+            </div>
+
             <!-- Launch Behavior -->
             <div class="settings-row">
               <div class="settings-row__label">
@@ -1639,6 +1653,7 @@
   <script src="searchPanel.js"></script>
   <!-- ── Core rendering modules ────────────────────────────────────── -->
   <script src="aiService.js"></script>
+  <script src="inShort.js"></script>
   <script src="../../node_modules/katex/dist/katex.min.js"></script>
   <script src="markdownRenderer.js"></script>
   <script src="editorCore.js"></script>

@@ -115,6 +115,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Fire the AI request (Ollama or API backend)
   askAI: (payload) => ipcRenderer.invoke('ai:ask', payload),
 
+  // Background AI request — resolves with { text } or { error }; uses no
+  // shared listeners, so it never disturbs a chat stream in progress
+  completeAI: (payload) => ipcRenderer.invoke('ai:complete', payload),
+
   // Register one-way event listeners for streaming tokens
   onAIToken: (cb) => ipcRenderer.on('ai:token', (_e, token) => cb(token)),
   onAIDone:  (cb) => ipcRenderer.on('ai:done',  (_e, data)  => cb(data)),

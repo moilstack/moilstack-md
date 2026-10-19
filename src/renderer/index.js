@@ -546,6 +546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ThemeManager.applyStoredTheme();
   SidebarManager.initSidebarToggles();
   SearchPanel.init();
+  InShort.init();
   FileTreeManager.initFolderDropdown();
   RecentsPanel.applyExplorerMode();
 

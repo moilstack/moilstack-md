@@ -206,7 +206,7 @@ const RenameFromContent = (() => {
         `Tags already used in this folder: ${known.length ? known.join(', ') : '(none yet)'}\n\n` +
         `Start of the document:\n"""\n${head.slice(0, AI_CHARS)}\n"""` },
     ]
-    const reply = (await aiService.getResponse(messages, model) || '').trim()
+    const reply = (await aiService.complete(messages, model) || '').trim()
     const strip = t => String(t).replace(/^["'`*]+|["'`*.]+$/g, '').trim()
 
     // Prefer the JSON object; fall back to treating the first line as the title

@@ -53,6 +53,18 @@ const AIActions = (() => {
       chatPrefill: '' },
 
     // ── Document actions (toolbar ✨ AI) ─────────────
+    { id: 'doc-explain',  label: 'Explain', scope: 'document', apply: 'show-only',
+      prompt: 'Explain this document in simple, everyday language so someone can quickly ' +
+              'understand it without reading the whole thing. Avoid jargon; if a technical ' +
+              'term is essential, explain it in a few words.',
+      format: [
+        'Reply in plain text (no Markdown symbols like #, * or **), using this layout:',
+        'In short: one or two sentences on what the document is and why it matters.',
+        'Key points:',
+        '• 3 to 6 short bullet points covering the main ideas, steps or decisions.',
+        'If there are actions, deadlines or open questions, add a final line starting "What to do:".',
+        'Keep the whole reply under 200 words. Do not rewrite or quote the document at length.',
+      ] },
     { id: 'doc-summary',  label: 'Summarize (TL;DR at top)', scope: 'document', apply: 'insert-top',
       prompt: 'Write a TL;DR of this document in 1–3 sentences. Output ONLY a single Markdown ' +
               'blockquote that starts with "> **TL;DR:** ".' },
@@ -180,6 +192,7 @@ const AIActions = (() => {
   }
 
   function _outputFormat(action) {
+    if (action.format) return action.format;   // action-specific layout (e.g. doc-explain)
     const doc = action.scope === 'document';
     switch (action.apply) {
       case 'show-only':
@@ -406,6 +419,7 @@ const AIActions = (() => {
       // A plain chat reply with the chat's own Copy button.
       const { row, bubbleEl } = _job.turn;
       bubbleEl.classList.remove('bubble--waiting');
+      bubbleEl.classList.add('bubble--plain');   // keep the reply's line breaks
       bubbleEl.textContent = result;
       row.dataset.aiText = result;
       row.insertAdjacentHTML('beforeend',

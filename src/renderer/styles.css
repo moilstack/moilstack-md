@@ -6070,3 +6070,99 @@ select.form-input {
 .theme-menu__item.is-current .theme-menu__check { visibility: visible; }
 .theme-menu__item.is-current .theme-menu__name { font-weight: 600; }
 .theme-menu__sep { height: 1px; margin: 4px 6px; background: var(--divider); }
+
+/* Plain-text AI replies (✨ AI → Explain): keep line breaks and bullets */
+.bubble.bubble--plain { white-space: pre-wrap; }
+
+/* ─── Preview "In short" banner (inShort.js) ────────────────────── */
+/* Lines up with .preview-content (800px column, 32px side padding) */
+.in-short {
+  max-width: 736px;
+  margin: 20px auto -8px;
+  margin-left: max(32px, calc((100% - 736px) / 2));
+  margin-right: max(32px, calc((100% - 736px) / 2));
+  padding: 10px 14px 12px;
+  background: color-mix(in srgb, var(--primary) 7%, var(--preview-bg));
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  border-radius: 10px;
+  animation: in-short-in 220ms ease-out;
+}
+[data-preview-width="full"] .in-short { max-width: none; margin-left: 32px; margin-right: 32px; }
+.in-short.hidden { display: none; }
+
+@keyframes in-short-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.in-short__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.in-short__icon { font-size: 12px; }
+.in-short--loading .in-short__icon { animation: in-short-pulse 1.2s ease-in-out infinite; }
+@keyframes in-short-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.85); }
+}
+.in-short__title {
+  flex: 1;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.in-short__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+.in-short:hover .in-short__btn,
+.in-short__btn:focus-visible { opacity: 1; }
+.in-short__btn:hover { background: var(--hover-bg); color: var(--text-primary); }
+.in-short--loading .in-short__refresh { display: none; }
+
+.in-short__body {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+.in-short--error .in-short__body { color: var(--text-secondary); font-size: 12.5px; }
+
+/* Loading: two shimmering lines */
+.in-short__shimmer {
+  display: block;
+  height: 10px;
+  margin: 6px 0;
+  border-radius: 5px;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--text-secondary) 12%, transparent) 0%,
+    color-mix(in srgb, var(--primary) 22%, transparent) 50%,
+    color-mix(in srgb, var(--text-secondary) 12%, transparent) 100%);
+  background-size: 200% 100%;
+  animation: in-short-shimmer 1.3s linear infinite;
+}
+.in-short__shimmer--short { width: 62%; }
+@keyframes in-short-shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .in-short, .in-short__shimmer, .in-short--loading .in-short__icon { animation: none; }
+}

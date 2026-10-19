@@ -1196,6 +1196,32 @@ function registerIpcHandlers() {
     }
   })
 
+  registerAiComplete()
+}
+
+/* ── AI: complete (background, non-streaming) ─────────────────────────
+   Same backends as ai:ask, but tokens are collected here and the full
+   text is returned from the invoke. Nothing is sent on the shared
+   ai:token / ai:done / ai:error channels, so a background request (e.g.
+   the Preview "In short" banner) can't interfere with the chat.
+   Returns { text } or { error }.
+   ──────────────────────────────────────────────────────────────────── */
+function registerAiComplete() {
+  ipcMain.handle('ai:complete', async (_event, { model, messages, cwd }) => {
+    let text = ''
+    const collect = (channel, data) => { if (channel === 'ai:token') text += data }
+    try {
+      if (model.type === 'ollama')         await _handleOllama(model, messages, collect)
+      else if (model.type === 'api')       await _handleApi(model, messages, collect)
+      else if (model.type === 'anthropic') await _handleAnthropic(model, messages, collect)
+      else if (model.type === 'cli')       await _handleCli(model, messages, collect, cwd)
+      else throw new Error(`Model type "${model.type}" is not supported in this version`)
+      return { text }
+    } catch (err) {
+      console.error('[ai:complete]', err)
+      return { error: err.message || String(err) }
+    }
+  })
 }
 
 /* ── Private AI dispatch helpers ──────────────────────────────────────────

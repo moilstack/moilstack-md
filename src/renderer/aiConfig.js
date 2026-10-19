@@ -570,6 +570,10 @@ const AIConfigManager = (() => {
     const quickEditSel = document.getElementById('quickEditPreview')
     if (quickEditSel) quickEditSel.value = localStorage.getItem('quickEditPreview') || 'on'
 
+    // Seed the In Short banner selector (default: on)
+    const inShortSel = document.getElementById('inShortBanner')
+    if (inShortSel) inShortSel.value = localStorage.getItem('inShortBanner') || 'on'
+
     // Seed the preview-width selector (default: readable)
     _applyPreviewWidth(localStorage.getItem('previewWidth') || 'readable')
 
@@ -811,6 +815,11 @@ const AIConfigManager = (() => {
     /* ── Preview width selector ──────────────────────────────────── */
     document.getElementById('previewWidth')?.addEventListener('change', e => {
       _applyPreviewWidth(e.target.value)
+    })
+
+    document.getElementById('inShortBanner')?.addEventListener('change', e => {
+      localStorage.setItem('inShortBanner', e.target.value)
+      if (typeof InShort !== 'undefined') InShort.applySetting()
     })
 
     /* Header button flips between readable and full width */
