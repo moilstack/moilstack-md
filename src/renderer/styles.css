@@ -6166,3 +6166,57 @@ select.form-input {
 @media (prefers-reduced-motion: reduce) {
   .in-short, .in-short__shimmer, .in-short--loading .in-short__icon { animation: none; }
 }
+
+/* ─── Suggest Folder dialog (suggestFolder.js; reuses .label-modal) ─ */
+.suggest-folder .label-modal { width: min(440px, calc(100vw - 48px)); }
+.suggest-folder__hint,
+.suggest-folder__reason,
+.suggest-folder__status { margin: 0 0 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); }
+.suggest-folder__reason { color: var(--text-primary); }
+.suggest-folder__status { min-height: 18px; margin-bottom: 0; }
+.suggest-folder__error { margin: 0; font-size: 12.5px; color: var(--text-secondary); }
+.suggest-folder__label {
+  margin-bottom: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--section-header);
+}
+.suggest-folder__row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.suggest-folder__icon { flex: none; color: var(--icon-folder); }
+.suggest-folder__input { flex: 1; min-width: 0; }
+.suggest-folder__badge {
+  flex: none;
+  padding: 1px 8px;
+  font-size: 11px;
+  line-height: 18px;
+  border-radius: 999px;
+}
+.suggest-folder__badge.is-existing { color: var(--active-file-text); background: var(--active-file-bg); }
+.suggest-folder__badge.is-new {
+  color: var(--restore-btn-text);
+  background: var(--restore-btn-bg);
+}
+.suggest-folder .label-modal { width: min(480px, calc(100vw - 48px)); }
+.suggest-folder__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.suggest-folder__card.is-selected {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+.suggest-folder__card > input[type=radio] { margin-top: 3px; accent-color: var(--primary); }
+.suggest-folder__card-main { flex: 1; min-width: 0; }
+.suggest-folder__card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.suggest-folder__card-title { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+.suggest-folder__card .suggest-folder__row { margin-bottom: 4px; }
+.suggest-folder__card .suggest-folder__reason { margin: 0; font-size: 12px; color: var(--text-secondary); }
+.suggest-folder__badge.is-rec { color: var(--active-file-text); background: var(--active-file-bg); }

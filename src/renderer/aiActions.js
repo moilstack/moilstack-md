@@ -65,9 +65,6 @@ const AIActions = (() => {
         'If there are actions, deadlines or open questions, add a final line starting "What to do:".',
         'Keep the whole reply under 200 words. Do not rewrite or quote the document at length.',
       ] },
-    { id: 'doc-summary',  label: 'Summarize (TL;DR at top)', scope: 'document', apply: 'insert-top',
-      prompt: 'Write a TL;DR of this document in 1–3 sentences. Output ONLY a single Markdown ' +
-              'blockquote that starts with "> **TL;DR:** ".' },
     { id: 'doc-toc',      label: 'Generate table of contents', scope: 'document', apply: 'insert-top',
       local: text => buildToc(text) },
     { id: 'doc-format',   label: 'Fix Markdown formatting', scope: 'document', apply: 'replace',
@@ -77,8 +74,6 @@ const AIActions = (() => {
               'valid table syntax.' },
     { id: 'doc-proofread', label: 'Proofread', scope: 'document', apply: 'suggestions',
       prompt: 'Proofread this document for spelling, grammar, punctuation and clarity problems.' },
-    { id: 'doc-tags',     label: 'Suggest tags', scope: 'document', apply: 'tags',
-      prompt: 'Suggest up to 5 short, lowercase topic tags for this document.' },
     { id: 'doc-simplify', label: 'Simplify for readability', scope: 'document', apply: 'replace',
       prompt: 'Rewrite the prose in plain, simple language with shorter sentences. Keep every ' +
               'heading, list, table, link and code block, and keep all facts.' },

@@ -136,6 +136,8 @@ const ContextMenus = (() => {
         RenameFromContent.renameFile(filePath);
       } else if (action === 'rename-with-ai') {
         RenameFromContent.renameFile(filePath, { useAI: true });
+      } else if (action === 'suggest-folder') {
+        SuggestFolder.show(filePath);
       } else if (action === 'tags') {
         TagModal.show([], filePath);
       } else if (action === 'delete') {

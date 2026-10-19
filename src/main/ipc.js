@@ -665,6 +665,11 @@ function registerIpcHandlers() {
       const fileName = path.basename(filePath)
       const newPath  = path.join(targetFolderPath, fileName)
       if (filePath === newPath) return { ok: true, newPath }
+      // fs.rename silently replaces an existing file — refuse instead
+      try {
+        await fs.access(newPath)
+        return { ok: false, error: `"${fileName}" already exists in the target folder.` }
+      } catch { /* target is free */ }
       await fs.rename(filePath, newPath)
       return { ok: true, newPath }
     } catch (err) {

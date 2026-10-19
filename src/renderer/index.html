@@ -832,6 +832,14 @@
       </svg>
       Rename with AI
     </button>
+    <button class="file-ctx-item" data-file-action="suggest-folder" title="Ask AI which folder this file belongs in">
+      <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+        <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
+              stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        <path d="M6 8h4M8.5 6.5 10 8l-1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Suggest Folder (AI)…
+    </button>
     <button class="file-ctx-item" data-file-action="tags" title="View and edit this file's tags">
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M1.5 2.5v4l6 6 5-5-6-6h-4a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
@@ -1654,6 +1662,7 @@
   <!-- ── Core rendering modules ────────────────────────────────────── -->
   <script src="aiService.js"></script>
   <script src="inShort.js"></script>
+  <script src="suggestFolder.js"></script>
   <script src="../../node_modules/katex/dist/katex.min.js"></script>
   <script src="markdownRenderer.js"></script>
   <script src="editorCore.js"></script>
