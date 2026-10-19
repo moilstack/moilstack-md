@@ -9,4 +9,6 @@
 (function () {
   var saved = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
+  document.documentElement.setAttribute(
+    'data-preview-width', localStorage.getItem('previewWidth') || 'readable');
 })();

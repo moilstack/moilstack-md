@@ -570,6 +570,9 @@ const AIConfigManager = (() => {
     const quickEditSel = document.getElementById('quickEditPreview')
     if (quickEditSel) quickEditSel.value = localStorage.getItem('quickEditPreview') || 'on'
 
+    // Seed the preview-width selector (default: readable)
+    _applyPreviewWidth(localStorage.getItem('previewWidth') || 'readable')
+
     // Seed the explorer-mode selector with the saved preference (default: root-only)
     const savedExplorerMode = localStorage.getItem('explorerMode') || 'multi-level'
     const explorerModeSel   = document.getElementById('explorerMode')
@@ -632,6 +635,19 @@ const AIConfigManager = (() => {
     if (typeof window.invalidateEditorRuler === 'function') window.invalidateEditorRuler()
 
     if (persist) localStorage.setItem('editorFontFamily', family)
+  }
+
+  /** Apply + persist the preview width, keeping the settings select and header button in sync. */
+  function _applyPreviewWidth(value) {
+    localStorage.setItem('previewWidth', value)
+    document.documentElement.setAttribute('data-preview-width', value)
+    const sel = document.getElementById('previewWidth')
+    if (sel) sel.value = value
+    const btn = document.getElementById('btn-toggle-preview-width')
+    if (btn) {
+      btn.classList.toggle('icon-btn--active', value === 'full')
+      btn.setAttribute('aria-pressed', String(value === 'full'))
+    }
   }
 
   function _wireEvents() {
@@ -784,6 +800,17 @@ const AIConfigManager = (() => {
     document.getElementById('quickEditPreview')?.addEventListener('change', e => {
       localStorage.setItem('quickEditPreview', e.target.value)
       if (typeof QuickEdit !== 'undefined') QuickEdit.applySetting()
+    })
+
+    /* ── Preview width selector ──────────────────────────────────── */
+    document.getElementById('previewWidth')?.addEventListener('change', e => {
+      _applyPreviewWidth(e.target.value)
+    })
+
+    /* Header button flips between readable and full width */
+    document.getElementById('btn-toggle-preview-width')?.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-preview-width')
+      _applyPreviewWidth(current === 'full' ? 'readable' : 'full')
     })
 
     /* ── Explorer mode selector ────────────────────────────────────── */
