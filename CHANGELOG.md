@@ -21,14 +21,25 @@ All notable new features and critical fixes for MoilStack .md.
 - **Resizable Explorer** — drag the divider between the Explorer and the editor. Double-click resets it; ←/→ resize from the keyboard. The width is remembered.
 - **Open File icon** beside the Recent Files header in the Explorer.
 - **Toolbar tooltips** — the editor toolbar buttons show a styled tooltip quickly on hover.
+- **"In short" banner in Preview** — a one- or two-sentence AI summary of the open file at the top of Preview, with a loading shimmer while it's written. On by default (Settings → Editor → In Short Banner) and hidden when no AI model is set up. Summaries are remembered per file until it changes; ↻ refreshes, × hides it for that file. Switching files quickly never shows a summary on the wrong file.
+- **✨ AI → Explain** — a plain-language overview of the whole document (in short, key points, what to do) in the AI Assistant. The document isn't changed.
+- **Suggest Folder (AI)…** in the file right-click menu — the AI looks at your folders and the start of the file, then offers the best existing folder and a new folder name, each with a reason, with its pick marked *Recommended*. Choose or edit either, then *Move*, *Create & Move* or *Cancel*.
+- **Clear button in search** — a small × clears the search text; selected tags stay.
 
 ### Changed
 - **One "New" command** — the ☰ menu has a single *New* (`Ctrl+N`) that creates a file in the Explorer's folder; the separate untitled *New* item is gone. `Ctrl+Shift+N` still works. In Recent Only mode it starts an untitled file.
 - **Root folder only Explorer** shows the tag count badge instead of a row of `#tag` pills.
 - Removed the app icon from the header, before the folder name.
+- **New app icon** — an indigo `.md` wordmark on a rounded square, replacing the document-with-M icon. All sizes regenerated (Windows, Store, Linux, macOS source).
+- **Search matches any word** — `Claude Key` now finds files with "Claude" or "Key", with files containing more of the words (side by side, or in the file name) listed first. Use quotes (`"Claude Key"`) for an exact phrase. Every matched word is highlighted, and partial matches show which words are missing.
+- **Preview text sizes are consistent** — code (inline and blocks) and table text now follow the body text size instead of fixed sizes, and blockquote text uses the normal text colour.
+- **Preview width button** uses a page icon that shows the current width; its tooltip says what a click will do.
+- **Shorter ✨ AI menu** — removed *Summarize (TL;DR at top)* and *Suggest tags*.
+- AI background tasks (In short, Rename with AI, Suggest Folder) use their own request channel, so they never interrupt a chat reply that's streaming.
 
 ### Fixed
 - **Renaming no longer overwrites an existing file** — renaming to a name already used in the folder is refused instead of silently replacing the other file. Case-only renames still work.
+- **Moving no longer overwrites an existing file** — moving a file (including drag and drop) into a folder that already has a file with the same name is refused instead of replacing it.
 
 ---
 
