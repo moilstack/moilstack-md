@@ -4,6 +4,34 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Theme picker** — the theme button opens a menu of all themes with colour swatches and a ✓ on the current one, instead of cycling one theme per click. Light and dark themes are grouped.
+- **Seven new themes** — Xcode Light, GitHub Light, One Light and Paper (light); Nord, Forest and Midnight (dark).
+- **Theme-matched file icons** — Markdown, text-file and folder icons (and folder names) use colours from the current theme's palette.
+- **Rename from Content** — right-click a file to suggest a name from its frontmatter `title:`, first heading or first line. Only the first 4 KB of the file is read. The usual rename box opens pre-filled.
+- **Rename with AI** — the active AI model suggests a short name from the start of the file.
+- **Rename a whole folder from content** — the Explorer header button (or a sub-folder's right-click menu) opens a review list of current → suggested names with editable names and tags. Nothing changes until you click Rename; *Suggest with AI* fills in AI names.
+- **Tag suggestions while renaming** — existing tags plus `#hashtags` near the top, or AI tags that reuse tags already used in the folder (up to 3 per file). Saved straight to the file's frontmatter when the rename is confirmed.
+- **Tags… in the file right-click menu** — edit any file's tags as pills: × to remove, type to add, with suggestions from tags already used in the folder.
+- **Tag badge in the Explorer** — files with tags show a tag icon and count (hover to see them), in both Multi-level and Root folder only modes.
+- **Search dialog** — clicking the header search box (or `Ctrl+Shift+F`) opens a dialog with the search box and every tag in the folder as clickable chips. Pick several tags and match *Any* or *All*; combine with text search.
+- **Preview width** — Settings → Editor → Preview Width (current width or full width), plus a toolbar button next to Focus mode. Its page icon shows the current width.
+- **Resizable Explorer** — drag the divider between the Explorer and the editor. Double-click resets it; ←/→ resize from the keyboard. The width is remembered.
+- **Open File icon** beside the Recent Files header in the Explorer.
+- **Toolbar tooltips** — the editor toolbar buttons show a styled tooltip quickly on hover.
+
+### Changed
+- **One "New" command** — the ☰ menu has a single *New* (`Ctrl+N`) that creates a file in the Explorer's folder; the separate untitled *New* item is gone. `Ctrl+Shift+N` still works. In Recent Only mode it starts an untitled file.
+- **Root folder only Explorer** shows the tag count badge instead of a row of `#tag` pills.
+- Removed the app icon from the header, before the folder name.
+
+### Fixed
+- **Renaming no longer overwrites an existing file** — renaming to a name already used in the folder is refused instead of silently replacing the other file. Case-only renames still work.
+
+---
+
 ## [1.1.6] - 2026-10-12
 
 ### Fixed
