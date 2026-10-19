@@ -736,6 +736,25 @@ function registerIpcHandlers() {
    * filename/content — lets a user look up files by tag specifically rather
    * than relying on the tag word happening to also appear in the text.
    */
+  /**
+   * Split a search query into terms: words, plus "quoted phrases" kept whole.
+   *   'Claude Key'        → ['claude', 'key']
+   *   '"Claude Key" api'  → ['claude key', 'api']
+   */
+  function _searchTerms(q) {
+    const terms = []
+    for (const m of q.matchAll(/"([^"]+)"|(\S+)/g)) {
+      const t = (m[1] ?? m[2]).trim().toLowerCase()
+      if (t && !terms.includes(t)) terms.push(t)
+    }
+    return terms
+  }
+
+  /**
+   * Match one file against a query. A file matches if its name or content
+   * contains ANY of the terms; `score` ranks files with more of the terms
+   * (and terms in the file name) higher.
+   */
   async function _matchFile(fullPath, fileName, q) {
     let content = ''
     try { content = await fs.readFile(fullPath, 'utf8') } catch { return null }
@@ -746,29 +765,59 @@ function registerIpcHandlers() {
       if (!wanted) return null
       const tags = _extractTags(content)
       if (!tags.some(t => t.toLowerCase().includes(wanted))) return null
-      return { filePath: fullPath, fileName, snippet: `Tags: ${tags.join(', ')}`, matchType: 'tag' }
+      return { filePath: fullPath, fileName, snippet: `Tags: ${tags.join(', ')}`, matchType: 'tag', score: 1 }
     }
 
-    const nameMatch = fileName.toLowerCase().includes(q)
-    const contentMatch = content.toLowerCase().includes(q)
-    if (!nameMatch && !contentMatch) return null
+    const terms = _searchTerms(q)
+    if (!terms.length) return null
+    const lowerName = fileName.toLowerCase()
+    const lowerContent = content.toLowerCase()
 
+    const inName = terms.filter(t => lowerName.includes(t))
+    const inContent = terms.filter(t => lowerContent.includes(t))
+    const matched = terms.filter(t => inName.includes(t) || inContent.includes(t))
+    if (!matched.length) return null
+
+    // More distinct terms first; the whole query as a phrase and name hits break ties
+    const phrase = terms.length > 1 && (lowerName.includes(q) || lowerContent.includes(q))
+    const score = matched.length * 10 + (phrase ? 5 : 0) + inName.length * 2
+
+    // Snippet: the line holding the most terms (first such line), else the first line
     let snippet = ''
-    if (contentMatch) {
-      const idx = content.toLowerCase().indexOf(q)
-      const lineStart = content.lastIndexOf('\n', idx) + 1
-      const lineEnd   = content.indexOf('\n', idx)
-      snippet = content.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim()
+    if (inContent.length) {
+      let best = -1
+      for (const line of content.split('\n')) {
+        const l = line.toLowerCase()
+        const n = inContent.filter(t => l.includes(t)).length
+        if (n > best) { best = n; snippet = line }
+        if (n === inContent.length) break
+      }
+      snippet = snippet.trim()
     } else {
       snippet = content.split('\n').find(l => l.trim()) || ''
     }
     snippet = snippet.replace(/^#+\s*/, '').slice(0, 120)
 
-    return { filePath: fullPath, fileName, snippet, matchType: nameMatch ? 'name' : 'content' }
+    return {
+      filePath: fullPath, fileName, snippet,
+      matchType: inName.length ? 'name' : 'content',
+      matched, total: terms.length, score,
+    }
+  }
+
+  /** Best matches first; stable for equal scores (keeps folder order). */
+  function _rank(results, max = 30) {
+    return results
+      .map((r, i) => ({ r, i }))
+      .sort((a, b) => (b.r.score - a.r.score) || (a.i - b.i))
+      .slice(0, max)
+      .map(x => x.r)
   }
 
   /**
    * search:files — full-text + filename search across a folder tree.
+   * Files containing ANY of the query's words match; files with more of
+   * them rank first. "Quoted phrases" are matched as a whole.
    * A query starting with `#` or `tag:` (e.g. `#project`) matches only
    * against frontmatter tags instead — see _matchFile.
    *
@@ -779,17 +828,19 @@ function registerIpcHandlers() {
    */
   ipcMain.handle('search:files', async (_event, { folderPath, query }) => {
     if (!folderPath || !query) return { results: [] }
-    const q = query.toLowerCase()
+    const q = query.trim().toLowerCase()
     const results = []
+    // Matches are ranked, so gather them all (up to a sane cap) before trimming to 30
+    const MAX_MATCHES = 500
 
     async function walk(dir) {
-      if (results.length >= 30) return
+      if (results.length >= MAX_MATCHES) return
       let entries
       try { entries = await fs.readdir(dir, { withFileTypes: true }) }
       catch { return }
 
       for (const e of entries) {
-        if (results.length >= 30) break
+        if (results.length >= MAX_MATCHES) break
         if (e.name.startsWith('.')) continue
         const fullPath = path.join(dir, e.name)
         if (e.isDirectory()) {
@@ -802,7 +853,7 @@ function registerIpcHandlers() {
     }
 
     await walk(folderPath)
-    return { results }
+    return { results: _rank(results) }
   })
 
   /**
@@ -816,16 +867,15 @@ function registerIpcHandlers() {
    */
   ipcMain.handle('search:recent-files', async (_event, { filePaths, query }) => {
     if (!Array.isArray(filePaths) || !filePaths.length || !query) return { results: [] }
-    const q = query.toLowerCase()
+    const q = query.trim().toLowerCase()
     const results = []
 
     for (const fullPath of filePaths) {
-      if (results.length >= 30) break
       const result = await _matchFile(fullPath, path.basename(fullPath), q)
       if (result) results.push(result)
     }
 
-    return { results }
+    return { results: _rank(results) }
   })
 
   /* ── AI Config CRUD ─────────────────────────────────────────────────

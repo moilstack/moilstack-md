@@ -26,21 +26,34 @@ const SearchPanel = (() => {
   let _searchRun     = 0
 
   let _trigger, _overlay, _input, _tagsWrap, _tagsRow, _list, _status
+  let _syncClear = () => {}
 
   function _esc(str) {
     return String(str).replace(/[&<>"']/g, c =>
       ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))
   }
 
+  /** Query → terms: words, with "quoted phrases" kept whole (same rule as the search). */
+  function _terms(query) {
+    const out = []
+    for (const m of String(query || '').matchAll(/"([^"]+)"|(\S+)/g)) {
+      const t = (m[1] ?? m[2]).trim()
+      if (t && !out.some(x => x.toLowerCase() === t.toLowerCase())) out.push(t)
+    }
+    return out
+  }
+
+  /** Escape `text` and wrap every occurrence of any query term in <mark>. */
   function _highlight(text, query) {
-    if (!query) return _esc(text)
-    const idx = text.toLowerCase().indexOf(query.toLowerCase())
-    if (idx === -1) return _esc(text)
-    return (
-      _esc(text.slice(0, idx)) +
-      '<mark>' + _esc(text.slice(idx, idx + query.length)) + '</mark>' +
-      _esc(text.slice(idx + query.length))
-    )
+    const terms = _terms(query).sort((a, b) => b.length - a.length)
+    if (!terms.length) return _esc(text)
+    const re = new RegExp(terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gi')
+    let out = '', last = 0
+    for (const m of text.matchAll(re)) {
+      out += _esc(text.slice(last, m.index)) + '<mark>' + _esc(m[0]) + '</mark>'
+      last = m.index + m[0].length
+    }
+    return out + _esc(text.slice(last))
   }
 
   function _isCustomMode() {
@@ -166,8 +179,16 @@ const SearchPanel = (() => {
         : ''
       const snippet = r.matchType === 'tag' ? '' : (r.snippet || '')
 
+      // Partial match (some words missing) → say which, so the ranking makes sense
+      const missing = r.total > 1 && r.matched && r.matched.length < r.total
+        ? _terms(query).filter(t => !r.matched.includes(t.toLowerCase()))
+        : []
+      const missingHTML = missing.length
+        ? `<span class="search-result-item__missing">Missing: ${missing.map(t => `<s>${_esc(t)}</s>`).join(' ')}</span>`
+        : ''
+
       item.innerHTML = `
-        <span class="search-result-item__name">${_highlight(r.fileName, query)}</span>
+        <span class="search-result-item__name">${_highlight(r.fileName, query)}</span>${missingHTML}
         ${snippet ? `<span class="search-result-item__snippet">${_highlight(snippet, query)}</span>` : ''}
         ${tagsHTML}
       `
@@ -252,6 +273,7 @@ const SearchPanel = (() => {
     if (!_overlay) return
     _overlay.classList.remove('hidden')
     _renderTags()
+    _syncClear()
     _input.focus()
     _input.select()
     _run()
@@ -277,6 +299,11 @@ const SearchPanel = (() => {
           </svg>
           <input class="search-dialog__input" type="text" placeholder="Search file names and content…"
                  autocomplete="off" spellcheck="false" aria-label="Search">
+          <button type="button" class="search-dialog__clear hidden" title="Clear search" aria-label="Clear search">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+              <path d="M2 2l6 6M8 2 2 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </button>
           <span class="search-dialog__status"></span>
           <kbd class="header-search__kbd">Esc</kbd>
         </div>
@@ -295,7 +322,17 @@ const SearchPanel = (() => {
     _status   = _overlay.querySelector('.search-dialog__status')
 
     _overlay.addEventListener('mousedown', e => { if (e.target === _overlay) close() })
-    _input.addEventListener('input', _run)
+    const clearBtn = _overlay.querySelector('.search-dialog__clear')
+    const syncClear = () => clearBtn.classList.toggle('hidden', !_input.value)
+    _input.addEventListener('input', () => { syncClear(); _run() })
+    clearBtn.addEventListener('mousedown', e => e.preventDefault())   // keep focus in the box
+    clearBtn.addEventListener('click', () => {
+      _input.value = ''
+      syncClear()
+      _run()
+      _input.focus()
+    })
+    _syncClear = syncClear
     _input.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown') { e.preventDefault(); _setActive(_activeIndex + 1) }
       else if (e.key === 'ArrowUp') { e.preventDefault(); _setActive(_activeIndex - 1) }

@@ -6220,3 +6220,21 @@ select.form-input {
 .suggest-folder__card .suggest-folder__row { margin-bottom: 4px; }
 .suggest-folder__card .suggest-folder__reason { margin: 0; font-size: 12px; color: var(--text-secondary); }
 .suggest-folder__badge.is-rec { color: var(--active-file-text); background: var(--active-file-bg); }
+.search-result-item__missing { font-size: 11px; color: var(--section-header); }
+.search-result-item__missing s { margin-left: 3px; }
+.search-dialog__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-secondary) 14%, transparent);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.search-dialog__clear:hover { color: var(--text-primary); background: color-mix(in srgb, var(--text-secondary) 26%, transparent); }
+.search-dialog__clear.hidden { display: none; }
