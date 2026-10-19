@@ -131,8 +131,6 @@
                  type="search" placeholder="Search files…" autocomplete="off" spellcheck="false"/>
           <kbd class="header-search__kbd">Ctrl+Shift+F</kbd>
         </label>
-        <!-- Results dropdown -->
-        <div id="search-results-dropdown" class="search-dropdown hidden" role="listbox"></div>
       </div>
     </div>
 
@@ -161,7 +159,7 @@
         </button>
       </div>
 
-      <button id="theme-toggle" title="Cycle Light / Dim / Dark theme">
+      <button id="theme-toggle" title="Choose theme">
         <svg id="theme-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
              xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
@@ -169,6 +167,9 @@
                 stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span id="theme-label">Dark</span>
+        <svg class="theme-toggle__caret" width="8" height="8" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </button>
       <button id="btnSettings" title="Settings" class="header-settings-btn header-settings-btn--icon">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -256,6 +257,14 @@
             </svg>
           </button>
 
+          <!-- Rename files from content (opened folder) -->
+          <button class="icon-btn" title="Rename files from content" id="btn-rename-from-content">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 3.5h7M2 7h5M2 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              <path d="M10.5 6.5l2 2-3.5 3.5H7v-2l3.5-3.5Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
           <!-- Collapse All button -->
           <button class="icon-btn" title="Collapse All" id="btn-collapse-all">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
@@ -288,6 +297,7 @@
 
       <!-- Recent Files (untitled draft + files opened/saved outside the active folder) -->
       <div class="recents-section" id="recents-section">
+        <div class="recents-header-row">
         <button class="recents-header" id="recents-header" type="button" aria-expanded="true">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
                xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="recents-header__chevron">
@@ -297,10 +307,26 @@
           <span class="sidebar-section__label">Recent Files</span>
           <span class="recents-count" id="recents-count">0</span>
         </button>
+        <!-- Open any file (Ctrl+O) — sits beside the header, not inside it -->
+        <button class="icon-btn recents-open-btn" id="btn-recents-open-file" type="button"
+                title="Open File… (Ctrl+O)" aria-label="Open file">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3.5 1.5h6l3 3v10h-9z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M9.5 1.5v3h3" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M8 7.5v5M5.8 10.3 8 12.5l2.2-2.2" stroke="currentColor" stroke-width="1.2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        </div>
         <div class="recents-list" id="recents-list"></div>
       </div>
 
     </aside><!-- /left-sidebar -->
+
+    <!-- Drag to resize the Explorer; double-click to reset -->
+    <div class="sidebar-resizer" id="sidebarResizer" role="separator"
+         aria-orientation="vertical" aria-label="Resize Explorer" tabindex="0"
+         title="Drag to resize · Double-click to reset"></div>
 
     <!-- ── Middle Section: Editor + Preview ────────────────────────── -->
     <main class="main-content">
@@ -806,6 +832,27 @@
       </svg>
       Rename
     </button>
+    <button class="file-ctx-item" data-file-action="rename-from-content" title="Suggest a name from the file's title or first heading">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 3.5h7M2 7h5M2 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M10.5 6.5l2 2-3.5 3.5H7v-2l3.5-3.5Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+      </svg>
+      Rename from Content
+    </button>
+    <button class="file-ctx-item" data-file-action="rename-with-ai" title="Ask the AI model to suggest a name from the start of the file">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M7 1.5l1.2 3.3L11.5 6 8.2 7.2 7 10.5 5.8 7.2 2.5 6l3.3-1.2L7 1.5Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M11.5 10v3M10 11.5h3" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+      Rename with AI
+    </button>
+    <button class="file-ctx-item" data-file-action="tags" title="View and edit this file's tags">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M1.5 2.5v4l6 6 5-5-6-6h-4a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+        <circle cx="4.5" cy="4.5" r="1" fill="currentColor"/>
+      </svg>
+      Tags…
+    </button>
     <button class="file-ctx-item" data-file-action="open-in-explorer">
       <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
         <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
@@ -867,6 +914,13 @@
       New Sub-folder
     </button>
     <div class="file-ctx-divider"></div>
+    <button class="file-ctx-item" data-folder-action="rename-from-content" title="Rename the files in this folder from their titles">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 3.5h7M2 7h5M2 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M10.5 6.5l2 2-3.5 3.5H7v-2l3.5-3.5Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+      </svg>
+      Rename Files from Content…
+    </button>
     <button class="file-ctx-item" data-folder-action="open-in-explorer">
       <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
         <path d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.379a1 1 0 0 1 .707.293L7.293 4H12.5A1 1 0 0 1 13.5 5v6a1 1 0 0 1-1 1h-10A1 1 0 0 1 1.5 11V3.5Z"
@@ -1454,12 +1508,45 @@
       </div>
       <div class="label-modal__body">
         <p class="tag-modal__hint">
-          Comma-separated. Saved to this file's frontmatter — shown in Root-only Explorer and
-          searchable with <code>#tag</code> or <code>tag:name</code>.
+          Type a tag and press Enter (or pick one already used in this folder). Click × to
+          remove. Saved to this file's frontmatter and searchable with <code>#tag</code>
+          or <code>tag:name</code>.
         </p>
-        <input type="text" id="tagModalInput" class="form-input" placeholder="work, project">
+        <div id="tagModalTags"></div>
         <div class="label-modal__actions">
           <button id="btnSaveTags" class="btn btn-primary btn-sm">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Rename Files from Content Modal ───────────────────────────────── -->
+  <div id="renameContentOverlay" class="label-modal-overlay hidden"
+       role="dialog" aria-modal="true" aria-label="Rename files from content">
+    <div class="label-modal">
+      <div class="label-modal__header">
+        <span class="label-modal__title">Rename Files from Content</span>
+        <button id="btnCloseRenameContent" class="settings-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="label-modal__body">
+        <p class="tag-modal__hint">
+          Names come from each file's <code>title:</code>, first heading, or first line —
+          or click <strong>Suggest with AI</strong> to have your AI model name them from
+          the start of each file. Suggested tags appear under each name. Edit names or
+          tags, untick files to skip them, then apply.
+        </p>
+        <div id="renameContentList" class="rename-content-list"></div>
+        <div class="label-modal__actions rename-content-actions">
+          <span id="renameContentSummary" class="rename-content-summary"></span>
+          <button id="btnAiRenameContent" class="btn btn-outline btn-sm"
+                  title="Ask the AI model for a name for each file (reads only the first part of each file)">✨ Suggest with AI</button>
+          <button id="btnCancelRenameContent" class="btn btn-outline btn-sm">Cancel</button>
+          <button id="btnApplyRenameContent" class="btn btn-primary btn-sm">Rename</button>
         </div>
       </div>
     </div>
@@ -1554,8 +1641,10 @@
   <script src="findReplaceWidget.js"></script>
   <script src="aiActions.js"></script>
   <script src="contextMenus.js"></script>
+  <script src="tagInput.js"></script>
   <script src="tagModal.js"></script>
   <script src="versionHistoryModal.js"></script>
+  <script src="renameFromContent.js"></script>
   <script src="fileOperations.js"></script>
   <script src="fileTreeManager.js"></script>
   <script src="recentsPanel.js"></script>

@@ -8,7 +8,13 @@ const FileOperations = (() => {
 
   /* ── Inline rename ────────────────────────────────────────────────── */
 
-  function startInlineRename(filePath) {
+  /**
+   * @param {string}   [initialName]  Prefill (e.g. a name suggested from content).
+   * @param {function} [onConfirm]    Awaited with the file's (old) path once the
+   *                                  user confirms with Enter/blur, just before
+   *                                  the rename — not on Esc.
+   */
+  function startInlineRename(filePath, initialName, onConfirm) {
     const list = document.getElementById('file-list');
     if (!list) return;
 
@@ -26,13 +32,13 @@ const FileOperations = (() => {
     const input = document.createElement('input');
     input.type         = 'text';
     input.className    = 'file-rename-input';
-    input.value        = originalName;
+    input.value        = initialName || originalName;
     input.spellcheck   = false;
     input.autocomplete = 'off';
     nameSpan.replaceWith(input);
 
-    const dotIdx = originalName.lastIndexOf('.');
-    input.setSelectionRange(0, dotIdx > 0 ? dotIdx : originalName.length);
+    const dotIdx = input.value.lastIndexOf('.');
+    input.setSelectionRange(0, dotIdx > 0 ? dotIdx : input.value.length);
     input.focus();
 
     async function confirmRename() {
@@ -42,8 +48,11 @@ const FileOperations = (() => {
 
       if (!newName || newName === originalName) {
         input.replaceWith(nameSpan);
+        if (newName) await onConfirm?.(filePath);
         return;
       }
+
+      await onConfirm?.(filePath);
 
       const result = await window.electronAPI?.renameFile(filePath, newName);
       if (!result?.ok) {

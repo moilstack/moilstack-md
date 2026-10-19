@@ -54,6 +54,12 @@ const HamburgerMenu = (() => {
     if (result?.filePath) await openSingleFile(result.filePath);
   });
 
+  // Open File icon in the Recent Files header (Explorer)
+  document.getElementById('btn-recents-open-file')?.addEventListener('click', async () => {
+    const result = await window.electronAPI?.openFile();
+    if (result?.filePath) await openSingleFile(result.filePath);
+  });
+
   document.getElementById('hmenu-open-folder')?.addEventListener('click', async () => {
     closeHamburgerMenu();
     const result = await window.electronAPI?.openFolder();
@@ -143,7 +149,15 @@ const HamburgerMenu = (() => {
     FileTreeManager.collapseAll();
   });
 
-  /* ── Open Folder button (sidebar header) ──────────────────────────── */
+  /* ── Rename Files from Content button (sidebar header) ─────────────── */
+  // Acts on the files directly in the opened folder (sub-folders have
+  // their own "Rename Files from Content…" in the folder right-click menu).
+  document.getElementById('btn-rename-from-content')?.addEventListener('click', () => {
+    const folder = sessionStorage.getItem('lastFolder');
+    if (folder) RenameFromContent.renameFolder(folder);
+  });
+
+    /* ── Open Folder button (sidebar header) ──────────────────────────── */
   document.getElementById('btn-open-folder')?.addEventListener('click', async () => {
     if (window.electronAPI?.openFolder) {
       const result = await window.electronAPI.openFolder();

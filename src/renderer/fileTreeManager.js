@@ -102,7 +102,17 @@ const FileTreeManager = (() => {
     return '';
   }
 
-  function _fileItemHTML(filePath, fileName, pinned, depth, firstLine) {
+  /** Small tag icon after a file name; hover lists the tags. */
+  function _tagIndicatorHTML(tags) {
+    if (!tags || !tags.length) return '';
+    const list = _escHtml(tags.map(t => '#' + t).join(', '));
+    return `<span class="file-item__tag-ind" title="${list}" aria-label="Tags: ${list}">` +
+      `<svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">` +
+      `<path d="M1.5 2.5v4l6 6 5-5-6-6h-4a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>` +
+      `<circle cx="4.5" cy="4.5" r="1" fill="currentColor"/></svg>${tags.length}</span>`;
+  }
+
+  function _fileItemHTML(filePath, fileName, pinned, depth, firstLine, tags) {
     const escapedPath = filePath.replace(/"/g, '&quot;');
     const indent = (depth || 0) * 12;
     if (firstLine) {
@@ -114,6 +124,7 @@ const FileTreeManager = (() => {
         <div class="file-item__tree-row">
           ${_fileIconSVG(fileName)}
           <span>${fileName}</span>
+          ${_tagIndicatorHTML(tags)}
           <button class="file-pin-btn file-pin-btn--active"
                   data-pin-path="${escapedPath}"
                   title="Unpin file" aria-pressed="true">
@@ -130,6 +141,7 @@ const FileTreeManager = (() => {
            style="padding-left:${14 + indent}px">
         ${_fileIconSVG(fileName)}
         <span>${fileName}</span>
+        ${_tagIndicatorHTML(tags)}
         <button class="file-pin-btn${pinned ? ' file-pin-btn--active' : ''}"
                 data-pin-path="${escapedPath}"
                 title="${pinned ? 'Unpin file' : 'Pin file'}"
@@ -275,7 +287,7 @@ const FileTreeManager = (() => {
           html += _renderTreeEntries(entry.children, depth + 1, pinnedPaths);
         }
       } else {
-        html += _fileItemHTML(entry.path, entry.name, pinnedPaths.has(entry.path), depth);
+        html += _fileItemHTML(entry.path, entry.name, pinnedPaths.has(entry.path), depth, undefined, entry.tags);
       }
     }
     return html;
@@ -383,7 +395,7 @@ const FileTreeManager = (() => {
       html += `<div class="file-list-section-header">Pinned</div>`;
       html += pinnedFiles.map(f => rootOnly
         ? _flatFileItemHTML(f, true, labelsMap[f.path])
-        : _fileItemHTML(f.path, f.name, true, 0, pinnedFirstLines[f.path])
+        : _fileItemHTML(f.path, f.name, true, 0, pinnedFirstLines[f.path], f.tags)
       ).join('');
     }
 

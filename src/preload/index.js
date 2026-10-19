@@ -48,6 +48,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   moveFile: (filePath, targetFolderPath) =>
     ipcRenderer.invoke('file:move', filePath, targetFolderPath),
 
+  // Read only the start of a file (for content-based rename suggestions)
+  readFileHead: (filePath, maxBytes) => ipcRenderer.invoke('file:read-head', filePath, maxBytes),
+
   // Rename a file on disk
   renameFile: (oldPath, newName) =>
     ipcRenderer.invoke('file:rename', oldPath, newName),

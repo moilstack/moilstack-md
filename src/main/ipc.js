@@ -411,6 +411,17 @@ function registerIpcHandlers() {
             try {
               node.modified = (await fs.stat(fullPath)).mtimeMs
             } catch { /* leave modified undefined */ }
+            if (!withMeta) {
+              // Tags live in frontmatter at the top — the first 4 KB is enough
+              let fh
+              try {
+                fh = await fs.open(fullPath, 'r')
+                const buf = Buffer.alloc(4096)
+                const { bytesRead } = await fh.read(buf, 0, buf.length, 0)
+                const tags = _extractTags(buf.toString('utf8', 0, bytesRead))
+                if (tags.length) node.tags = tags
+              } catch { /* no tags */ } finally { await fh?.close() }
+            }
             if (withMeta) {
               try {
                 const raw = await fs.readFile(fullPath, 'utf8')
@@ -492,6 +503,27 @@ function registerIpcHandlers() {
       return { content }
     } catch {
       return null
+    }
+  })
+
+  /**
+   * file:read-head — read only the first `maxBytes` of a file (default 4 KB).
+   * Used to suggest a filename from content without loading whole files.
+   * Returns { content } or null on failure.
+   */
+  ipcMain.handle('file:read-head', async (_event, filePath, maxBytes = 4096) => {
+    let handle
+    try {
+      handle = await fs.open(filePath, 'r')
+      const buf = Buffer.alloc(Math.min(Math.max(maxBytes, 256), 65536))
+      const { bytesRead } = await handle.read(buf, 0, buf.length, 0)
+      // A multi-byte character cut at the end decodes as U+FFFD — drop it.
+      const content = _stripBOM(buf.toString('utf8', 0, bytesRead)).replace(/\uFFFD+$/, '')
+      return { content }
+    } catch {
+      return null
+    } finally {
+      await handle?.close()
     }
   })
 
@@ -652,6 +684,16 @@ function registerIpcHandlers() {
       if (!safeName) return { ok: false, error: 'Invalid filename.' }
       const finalName = /\.[a-zA-Z0-9]+$/.test(safeName) ? safeName : `${safeName}.md`
       const newPath  = path.join(dir, finalName)
+      if (newPath === oldPath) return { ok: true, newPath }
+      // fs.rename silently replaces an existing file — refuse instead.
+      // A case-only change (notes.md → Notes.md) is the same file on
+      // case-insensitive file systems, so let that through.
+      if (newPath.toLowerCase() !== oldPath.toLowerCase()) {
+        try {
+          await fs.access(newPath)
+          return { ok: false, error: `"${finalName}" already exists.` }
+        } catch { /* target is free */ }
+      }
       await fs.rename(oldPath, newPath)
       return { ok: true, newPath }
     } catch (err) {
