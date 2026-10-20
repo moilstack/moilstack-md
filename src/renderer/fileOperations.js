@@ -130,6 +130,66 @@ const FileOperations = (() => {
     });
   }
 
+  /**
+   * Rename a folder in place: swaps its tree row's name for an input.
+   * Enter/blur confirms, Escape cancels. The open document is saved first
+   * and re-pointed if it lives inside the renamed folder.
+   */
+  function promptRenameFolder(folderPath) {
+    const row = [...document.querySelectorAll('#file-list .folder-row')]
+      .find(r => r.dataset.folderPath === folderPath);
+    const nameEl = row?.querySelector('.folder-row__name');
+    if (!nameEl) return;
+
+    const oldName = nameEl.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'new-section-input folder-rename-input';
+    input.value = oldName;
+    input.maxLength = 60;
+    input.spellcheck = false;
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    // Clicks inside the input must not toggle the folder's collapse state
+    input.addEventListener('click', e => e.stopPropagation());
+
+    let done = false;
+    const finish = async (commit) => {
+      if (done) return;
+      done = true;
+      const name = input.value.trim();
+      input.replaceWith(nameEl);
+      if (!commit || !name || name === oldName) return;
+
+      if (!(await SaveManager.silentSave())) {
+        StatusBar.showToast('Could not save current file — folder not renamed.');
+        return;
+      }
+      const result = await window.electronAPI?.renameFolder(folderPath, name);
+      if (!result?.ok) { StatusBar.showToast(result?.error || 'Could not rename folder.'); return; }
+
+      // Keep the open document pointing at its new location
+      const newPath = result.newPath;
+      const p = currentFile?.path;
+      if (p && (p.startsWith(folderPath + '/') || p.startsWith(folderPath + '\\'))) {
+        currentFile.path = newPath + p.slice(folderPath.length);
+      }
+      const rootFolder = sessionStorage.getItem('lastFolder');
+      if (rootFolder) await FileTreeManager.setActiveFolder(rootFolder);
+      FileTreeManager.restoreActiveItem?.();
+      StatusBar.showToast(`Folder renamed to "${name}".`);
+    };
+
+    input.addEventListener('blur', () => finish(true));
+    input.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter')  { e.preventDefault(); finish(true); }
+      if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+  }
+
   // New Folder button in sidebar header — disabled in Root folder only mode,
   // since that view doesn't show sub-folders (see FileTreeManager.updateFolderToolbarButtons).
   document.getElementById('btn-new-folder')?.addEventListener('click', () => {
@@ -245,6 +305,7 @@ const FileOperations = (() => {
   return {
     startInlineRename,
     promptNewFolder,
+    promptRenameFolder,
     showNewFileInput,
     hideNewFileInput,
     confirmNewFile,

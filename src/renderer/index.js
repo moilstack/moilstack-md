@@ -95,6 +95,7 @@ if (focusModeBtn) focusModeBtn.addEventListener('click', () => toggleFocusMode()
  * and AI context label.
  */
 function selectFile(el, filePath, lines, chars) {
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(filePath);
   document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
   if (el) el.classList.add('active');
 

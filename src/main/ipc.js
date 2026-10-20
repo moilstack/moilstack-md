@@ -473,6 +473,69 @@ function registerIpcHandlers() {
   })
 
   /**
+   * folder:rename — rename a folder in place (same parent directory).
+   * Refuses if a folder/file with the new name already exists.
+   * Returns { ok: true, newPath } or { ok: false, error }.
+   */
+  ipcMain.handle('folder:rename', async (_event, oldPath, newName) => {
+    try {
+      const safeName = path.basename((newName || '').trim())
+      if (!safeName || safeName === '.' || safeName === '..') return { ok: false, error: 'Invalid folder name.' }
+      const newPath = path.join(path.dirname(oldPath), safeName)
+      if (newPath === oldPath) return { ok: true, newPath }
+      // Case-only renames are the same folder on case-insensitive file systems
+      if (newPath.toLowerCase() !== oldPath.toLowerCase()) {
+        try {
+          await fs.access(newPath)
+          return { ok: false, error: `"${safeName}" already exists.` }
+        } catch { /* target is free */ }
+      }
+      await fs.rename(oldPath, newPath)
+      return { ok: true, newPath }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  // OS bookkeeping files that don't make a folder "non-empty"
+  const _FOLDER_JUNK = new Set(['.DS_Store', 'Thumbs.db', 'desktop.ini'])
+
+  async function _folderIsEmpty(folderPath) {
+    const names = await fs.readdir(folderPath)
+    return names.every(n => _FOLDER_JUNK.has(n))
+  }
+
+  /**
+   * folder:is-empty — checks the disk, not the explorer tree (which only
+   * lists .md/.txt files, so a folder of PDFs or images would look empty).
+   * Returns { empty: boolean } or { error }.
+   */
+  ipcMain.handle('folder:is-empty', async (_event, folderPath) => {
+    try {
+      return { empty: await _folderIsEmpty(folderPath) }
+    } catch (err) {
+      return { error: err.message }
+    }
+  })
+
+  /**
+   * folder:trash-empty — move a folder to the Recycle Bin, but only if it is
+   * empty on disk (re-checked here, so a file added after the confirm is safe).
+   * Returns { ok: true } or { ok: false, error }.
+   */
+  ipcMain.handle('folder:trash-empty', async (_event, folderPath) => {
+    try {
+      if (!(await _folderIsEmpty(folderPath))) {
+        return { ok: false, error: 'Folder is not empty — move or delete its contents first.' }
+      }
+      await shell.trashItem(folderPath)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  /**
    * file:read-base64 — read a binary file and return it as a base64 string.
    *
    * Returns { base64: string, mime: string } or null on error.

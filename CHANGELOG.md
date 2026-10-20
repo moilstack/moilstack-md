@@ -4,7 +4,7 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
-## [Unreleased]
+## [1.1.7] - 2026-10-20
 
 ### Added
 - **Theme picker** — the theme button opens a menu of all themes with colour swatches and a ✓ on the current one, instead of cycling one theme per click. Light and dark themes are grouped.
@@ -25,6 +25,10 @@ All notable new features and critical fixes for MoilStack .md.
 - **✨ AI → Explain** — a plain-language overview of the whole document (in short, key points, what to do) in the AI Assistant. The document isn't changed.
 - **Suggest Folder (AI)…** in the file right-click menu — the AI looks at your folders and the start of the file, then offers the best existing folder and a new folder name, each with a reason, with its pick marked *Recommended*. Choose or edit either, then *Move*, *Create & Move* or *Cancel*.
 - **Clear button in search** — a small × clears the search text; selected tags stay.
+- **Folder Tasks** — a checklist button in the header shows the open-task count for the open folder (red when a task is overdue). Click it for a full-width Tasks view: quick add with priority (High/Med/Low) and an optional target date, created date added automatically. Tick to complete, click a task's text to edit it, click its priority to change it, × to delete (with confirmation). Overdue tasks come first; completed ones sit in a collapsed *Completed* section. Saved as `_tasks.md` in the folder.
+- **Folder Ideas** — a lightbulb button with the idea count opens an Ideas view for jotting down ideas (text and created date). **→ Task** moves an idea to Tasks. Saved as `_ideas.md` in the folder.
+- **Tasks/Ideas files stay editable** — `_tasks.md` and `_ideas.md` show in the Explorer; opening one shows its view, and *Edit raw* opens the Markdown. Hand edits are respected: lines the view doesn't recognise stay where they are, indented lines under an item stay with it (shown under it), and the view notes how many lines it isn't showing.
+- **Rename Folder…** in the folder right-click menu — renames the folder in place in the Explorer. An open file inside it keeps working.
 
 ### Changed
 - **One "New" command** — the ☰ menu has a single *New* (`Ctrl+N`) that creates a file in the Explorer's folder; the separate untitled *New* item is gone. `Ctrl+Shift+N` still works. In Recent Only mode it starts an untitled file.
@@ -40,6 +44,7 @@ All notable new features and critical fixes for MoilStack .md.
 ### Fixed
 - **Renaming no longer overwrites an existing file** — renaming to a name already used in the folder is refused instead of silently replacing the other file. Case-only renames still work.
 - **Moving no longer overwrites an existing file** — moving a file (including drag and drop) into a folder that already has a file with the same name is refused instead of replacing it.
+- **Delete Folder only deletes empty folders** — the option is always in the folder menu, and the folder is checked on disk first. Previously a folder holding only PDFs, images or other non-Markdown files looked empty and could be sent to the Recycle Bin with its contents; now you get a "Folder is not empty" message instead.
 
 ---
 

@@ -25,6 +25,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createFolder: (parentPath, folderName) =>
     ipcRenderer.invoke('folder:create', parentPath, folderName),
 
+  // Rename a folder in place → { ok, newPath } | { ok: false, error }
+  renameFolder: (folderPath, newName) => ipcRenderer.invoke('folder:rename', folderPath, newName),
+
+  // Whether a folder is empty on disk (any file type counts) → { empty } | { error }
+  isFolderEmpty: (folderPath) => ipcRenderer.invoke('folder:is-empty', folderPath),
+
+  // Move a folder to the Recycle Bin only if it is empty on disk
+  trashEmptyFolder: (folderPath) => ipcRenderer.invoke('folder:trash-empty', folderPath),
+
   // Read the content of a file
   readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
 

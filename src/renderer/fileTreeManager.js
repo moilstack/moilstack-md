@@ -440,7 +440,11 @@ const FileTreeManager = (() => {
     /* ── File click — open in editor ────────────────────────────────── */
     list.querySelectorAll('.file-item').forEach(item => {
       item.addEventListener('click', async () => {
-        if (item.classList.contains('active')) return;
+        if (item.classList.contains('active')) {
+          // Already open — just bring it back if the Tasks/Ideas view is covering it
+          if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(item.dataset.path);
+          return;
+        }
         await SaveManager.silentSave();
 
         list.querySelectorAll('.file-item.active').forEach(el => el.classList.remove('active'));
@@ -579,6 +583,7 @@ const FileTreeManager = (() => {
     sessionStorage.setItem('lastFolder', folderPath);
 
     _updateFolderToolbarButtons();
+    if (typeof FolderLists !== 'undefined') FolderLists.loadFolder(folderPath);
 
     if (window.electronAPI?.readFolder) {
       const rootOnly = _getExplorerMode() === 'root-only';
