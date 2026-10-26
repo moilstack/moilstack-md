@@ -232,6 +232,18 @@ if (typeof document !== 'undefined') {
 }
 
 /**
+ * Notes text → indented lines under an item. A plain blank line would end the
+ * item in the file, so paragraph breaks are written as indented blank lines;
+ * leading/trailing blank lines and runs of blanks are trimmed.
+ */
+function _noteLines(text) {
+  const lines = text.replace(/\r/g, '').split('\n').map(l => l.replace(/\s+$/, ''))
+  while (lines.length && !lines[0]) lines.shift();
+  while (lines.length && !lines[lines.length - 1]) lines.pop();
+  return lines.filter((l, i) => l || lines[i - 1]).map(l => '    ' + l);
+}
+
+/**
  * @param {object} cfg
  *   key, title, fileName, noun, buttonId, emptyText
  *   parse(line) → item | null          serialise(item) → line
@@ -244,6 +256,10 @@ if (typeof document !== 'undefined') {
  *   panelParts(item, api) → Element[]  extra fields in the details panel
  *                                      api: { changed(), remove(), cont() }
  *   sort(a, b)                         order of open items
+ *   confirmDelete                      ask before deleting (Undo is still offered)
+ *   deleteTip                          extra line in that dialog
+ *   singleBody                         the item is one block of text (first line + its indented lines):
+ *                                      shown whole on the row and edited in one box, no separate notes
  *   hasSubtasks                        indented "- [ ]" lines are a checklist in the panel
  *   groups / groupOf(item) → key       split open items into sections (in groups' order)
  *   filters                            extra filter chips: [{ key, label, test(item) }]
@@ -321,7 +337,8 @@ function createFolderList(cfg) {
       if (seq !== _loadSeq) return;
       let last = null; // the item entry indented lines attach to
       for (const line of (res?.content ?? '').split(/\r?\n/)) {
-        if (last && /^\s+\S/.test(line)) { last.cont.push(line); continue; }
+        // Indented lines belong to the item above, including indented blank lines (paragraph breaks in notes)
+        if (last && /^[ \t]+(\S|$)/.test(line)) { last.cont.push(line); continue; }
         const it = cfg.parse(line);
         if (it) {
           last = { item: it, line, snap: _snap(it), cont: [] };
@@ -396,10 +413,26 @@ function createFolderList(cfg) {
   function _setNotes(item, text) {
     const e = _entryOf(item);
     if (!e) return;
-    // Blank lines would end the item in the file, so they're dropped; subtasks stay after the notes
-    e.cont = [...text.split('\n').filter(l => l.trim()).map(l => '    ' + l.replace(/\s+$/, '')),
-      ...e.cont.filter(_isSub)];
+    e.cont = [..._noteLines(text), ...e.cont.filter(_isSub)];
   }
+
+  /** The whole text of a singleBody item: its line plus the lines under it. */
+  function _fullText(item) {
+    const rest = _notesOf(item).replace(/\s+$/, '');
+    return rest ? `${item.text}\n${rest}` : item.text;
+  }
+
+  /** Split edited text back into the item's line and the lines under it. */
+  function _setFullText(item, text) {
+    const lines = text.replace(/\r/g, '').replace(/^\s*\n/, '').split('\n');
+    const first = (lines.shift() || '').replace(/\s+/g, ' ').trim();
+    if (!first) return false; // keep the old text rather than an empty item
+    item.text = first;
+    _setNotes(item, lines.join('\n'));
+    return true;
+  }
+
+  const _expanded = new WeakSet(); // rows showing all their text
 
   /* ── Rendering ─────────────────────────────────────────────────── */
 
@@ -417,7 +450,7 @@ function createFolderList(cfg) {
 
   const _api = (item) => ({
     changed: _changed,
-    remove: () => _remove(item),
+    remove: () => _remove(item, { confirmFirst: false }), // moving elsewhere, not deleting
     cont: () => _entryOf(item)?.cont ?? [],
   });
 
@@ -452,9 +485,32 @@ function createFolderList(cfg) {
       li.append(icon);
     }
 
-    li.append(_flEl('span', 'task-row__text', item.text));
+    const notesText = _notesOf(item).trim();
+    if (cfg.singleBody) {
+      // The whole text, cut off after 3 lines with "Show more"
+      const body = _flEl('div', 'task-row__body');
+      const text = _flEl('div', 'task-row__text task-row__text--body' + (_expanded.has(item) ? '' : ' task-row__text--clamp'), _fullText(item));
+      body.append(text);
+      if (notesText) {
+        const more = _flEl('button', 'task-row__more', _expanded.has(item) ? 'Show less' : 'Show more');
+        more.type = 'button';
+        more.addEventListener('click', () => {
+          _expanded.has(item) ? _expanded.delete(item) : _expanded.add(item);
+          _renderList();
+        });
+        body.append(more);
+        // Only offer it when the text is actually cut off
+        requestAnimationFrame(() => {
+          if (!_expanded.has(item) && text.scrollHeight <= text.clientHeight + 1) more.remove();
+        });
+      }
+      li.append(body);
+      li.classList.add('task-row--body');
+    } else {
+      li.append(_flEl('span', 'task-row__text', item.text));
+    }
 
-    if (_notesOf(item).trim()) {
+    if (notesText && !cfg.singleBody) {
       const n = _flEl('span', 'task-row__notes');
       n.title = _notesOf(item);
       n.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -490,9 +546,23 @@ function createFolderList(cfg) {
     return li;
   }
 
-  /** Delete with an Undo toast instead of a confirm dialog. */
-  function _remove(item) {
+  /** Delete after asking (when the list wants that), with an Undo toast after. */
+  async function _remove(item, { confirmFirst = true } = {}) {
+    if (cfg.confirmDelete && confirmFirst) {
+      const name = item.text.length > 80 ? item.text.slice(0, 80) + '…' : item.text;
+      const ok = typeof ConfirmDialog !== 'undefined'
+        ? await ConfirmDialog.ask({
+            title: `Delete ${cfg.noun}?`,
+            message: `“${name}” will be removed from ${cfg.fileName}.`,
+            note: cfg.deleteTip || '',
+            okLabel: 'Delete',
+            danger: true,
+          })
+        : confirm(`Delete ${cfg.noun} "${name}"?`);
+      if (!ok) return false;
+    }
     const entry = _entryOf(item);
+    if (!entry) return false; // already gone (e.g. changed while the dialog was open)
     const at = _entries.indexOf(entry);
     _items.splice(_items.indexOf(item), 1);
     _entries.splice(at, 1); // its notes go with it
@@ -508,6 +578,7 @@ function createFolderList(cfg) {
         },
       },
     });
+    return true;
   }
 
   /** Does an item pass the search box and the active chip? */
@@ -615,7 +686,7 @@ function createFolderList(cfg) {
     _selected = item;
     _renderList();
     _renderPanel();
-    _panel.querySelector('.fl-panel__title')?.focus();
+    _panel.querySelector('.fl-panel__title, .fl-panel__body')?.focus();
   }
 
   function _closePanel() {
@@ -696,6 +767,21 @@ function createFolderList(cfg) {
     if (item.completed) meta.push(`Completed ${_flFmtDate(item.completed)}`);
     meta.push('Saves automatically');
     const foot = _flEl('div', 'fl-panel__foot', meta.join(' · '));
+
+    if (cfg.singleBody) {
+      // One box for the whole text instead of a title and notes
+      const body = _flEl('textarea', 'fl-panel__notes fl-panel__body');
+      body.setAttribute('aria-label', Noun);
+      body.value = _fullText(item);
+      body.addEventListener('input', () => {
+        _autoGrow(body);
+        if (_setFullText(item, body.value)) _changedSoon();
+      });
+      body.addEventListener('blur', () => { body.value = _fullText(item); });
+      _panel.replaceChildren(...[top, body, fields, subsBox, foot].filter(Boolean));
+      requestAnimationFrame(() => _autoGrow(body));
+      return;
+    }
 
     _panel.replaceChildren(...[top, title, fields, subsBox, notesLabel, foot].filter(Boolean));
     requestAnimationFrame(() => { _autoGrow(title); _autoGrow(notes); });
@@ -782,7 +868,8 @@ function createFolderList(cfg) {
           <div class="fl-main">
             <form class="tasks-add">
               <textarea class="tasks-add__input" rows="1" autocomplete="off"
-                        placeholder="${cfg.addPlaceholder || `Add ${/^[aeiou]/i.test(cfg.noun) ? 'an' : 'a'} ${cfg.noun}… (Enter)`}"></textarea>
+                        placeholder="${cfg.addPlaceholder || `Add ${/^[aeiou]/i.test(cfg.noun) ? 'an' : 'a'} ${cfg.noun}… (Enter)`}"
+                        title="Enter to add · Shift+Enter for a new line (saved as notes)"></textarea>
               <button class="btn btn-primary btn-sm" type="submit">Add</button>
             </form>
             <div class="fl-preview hidden"></div>
@@ -813,7 +900,7 @@ function createFolderList(cfg) {
     const input = form.querySelector('textarea');
     const preview = _view.querySelector('.fl-preview');
     const updatePreview = () => {
-      const el = cfg.addPreview?.(input.value);
+      const el = cfg.addPreview?.(input.value.split('\n')[0]);
       preview.replaceChildren(...(el ? [el] : []));
       preview.classList.toggle('hidden', !el);
     };
@@ -827,23 +914,30 @@ function createFolderList(cfg) {
     _view.querySelectorAll('.fl-raw').forEach(b => b.addEventListener('click', _openRaw));
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const text = input.value.replace(/\s+/g, ' ').trim();
+      // First line is the item; any lines after it (Shift+Enter) become its notes
+      const [first, ...more] = input.value.replace(/\r/g, '').trim().split('\n');
+      const text = (first || '').replace(/\s+/g, ' ').trim();
       if (!text) return;
       const item = cfg.newItem(text);
       if (!item.text) return;
-      _push(item);
+      _push(item, _noteLines(more.join('\n')));
       input.value = '';
       _autoGrow(input);
       updatePreview();
       _changed();
     });
-    // The text box grows with its text; Enter adds instead of starting a new line
+    // The text box grows with its text. Enter adds; Shift+Enter or Alt+Enter starts a new line.
     input.addEventListener('input', () => { _autoGrow(input); updatePreview(); });
     form.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.isComposing && e.target.tagName !== 'BUTTON') {
-        e.preventDefault();
-        form.requestSubmit();
+      if (e.key !== 'Enter' || e.isComposing || e.target.tagName === 'BUTTON') return;
+      if (e.shiftKey) return; // the textarea adds the line break itself
+      e.preventDefault();
+      if (e.altKey) {
+        input.setRangeText('\n', input.selectionStart, input.selectionEnd, 'end');
+        input.dispatchEvent(new Event('input'));
+        return;
       }
+      form.requestSubmit();
     });
   }
 
@@ -946,8 +1040,10 @@ function createFolderList(cfg) {
         if (item) {
           e.preventDefault();
           const next = rows[at + 1]?._flItem || rows[at - 1]?._flItem;
-          _remove(item);
-          [..._view.querySelectorAll('.task-row')].find(r => r._flItem === next)?.focus();
+          _remove(item).then((removed) => {
+            if (!removed) { row.isConnected && row.focus(); return; } // cancelled
+            [..._view.querySelectorAll('.task-row')].find(r => r._flItem === next)?.focus();
+          });
         }
         break;
     }
@@ -996,6 +1092,7 @@ const Tasks = (() => {
     emptyText: 'No open tasks 🎉',
     hasDone: true,
     hasSubtasks: true,
+    confirmDelete: true,
     groups: [
       { key: 'overdue', label: 'Overdue', alert: true },
       { key: 'today', label: 'Today' },
@@ -1184,7 +1281,7 @@ const Ideas = (() => {
     go.addEventListener('click', async (e) => {
       e.stopPropagation();
       _flCloseMenu();
-      const notes = cont().filter(l => l.trim());
+      const notes = [...cont()];
       if (idea.created) notes.push(`    From idea added ${idea.created}`);
       await Tasks.addItem({
         text: idea.text, done: false, priority, due, tags: [...(idea.tags || [])],
@@ -1210,7 +1307,10 @@ const Ideas = (() => {
     emptyText: 'No ideas yet 💡',
     hasDone: false,
     doneTitle: 'Used and parked',
-    addPlaceholder: 'Add an idea… (use #tag to group)',
+    singleBody: true,
+    confirmDelete: true,
+    deleteTip: 'To keep it out of the way instead, set its status to Parked.',
+    addPlaceholder: 'Write an idea… (Shift+Enter for a new line)',
     leadIconHTML: `
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
         <path d="M7.5 1.5a4 4 0 0 0-2.4 7.2c.5.4.9 1 .9 1.6v.2h3v-.2c0-.6.4-1.2.9-1.6a4 4 0 0 0-2.4-7.2Z"
@@ -1314,5 +1414,5 @@ const FolderLists = {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Tasks, Ideas, FolderLists, createFolderList, parseQuickAdd };
+  module.exports = { Tasks, Ideas, FolderLists, createFolderList, parseQuickAdd, _noteLines };
 }

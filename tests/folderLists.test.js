@@ -37,3 +37,17 @@ describe('parseQuickAdd', () => {
     expect(parseQuickAdd('Email bob@x.com about todays plan')).toMatchObject({ due: null });
   });
 });
+
+describe('_noteLines', () => {
+  const { _noteLines } = require('../src/renderer/folderLists.js');
+
+  test('indents lines and keeps one blank line between paragraphs', () => {
+    expect(_noteLines('\nFirst para\nmore\n\n\n\nSecond para\n\n')).toEqual([
+      '    First para', '    more', '    ', '    Second para',
+    ]);
+  });
+
+  test('empty text gives no lines', () => {
+    expect(_noteLines('  \n\n')).toEqual([]);
+  });
+});

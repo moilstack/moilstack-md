@@ -96,6 +96,8 @@ const TagModal = (() => {
 
   /** Path of the file open in the editor (the Explorer's active item), or null. */
   function _activePath() {
+    // The open file — not the Explorer highlight, which can briefly vanish while the list redraws
+    try { if (typeof currentFile !== 'undefined' && currentFile?.path) return currentFile.path; } catch { /* not loaded */ }
     return document.querySelector('#file-list .file-item.active')?.dataset.path || null;
   }
 

@@ -19,8 +19,14 @@ All notable new features and critical fixes for MoilStack .md.
 - **Ideas: smarter → Task** — opens a small popup to pick priority and target date. By default the idea is kept and marked Used; the task gets the idea's tags and notes plus a "From idea" line.
 - **Recent Files with Tasks/Ideas open** — clicking a file in Recent Files (including the one already open) now closes the Tasks or Ideas view and shows the file.
 - **Tag suggestions in In Short** — the In Short banner now shows the file's tags and suggests 2–3 more from the same AI call, reusing tags already used in the folder. Click *+ #tag* (or *Add all*) to add it to the file's frontmatter. Adding tags doesn't trigger a new summary.
+- **Ideas are one block of text** — write an idea as several lines or paragraphs (Shift+Enter or Alt+Enter for a new line, Enter to add). The list shows the whole text cut off after 3 lines, with *Show more*, and the side panel edits it in one large box. There are no separate notes for ideas.
+- **Multi-line tasks** — in the Tasks add box, Shift+Enter (or Alt+Enter) starts a new line. The first line is the task, and the rest becomes its notes. Paragraph breaks in task notes are kept.
 - **Start in Tasks** — Settings → On Launch has a new *Start in Tasks* option that opens the folder's Tasks view when the app starts (falls back to the Scratchpad when no folder is open).
-- **Undo** — deleting or completing a task or idea shows a toast with Undo, replacing the delete confirmation.
+- **Undo and delete confirmation** — deleting a task or idea asks first in an app-styled dialog (Enter to delete, Esc to cancel), then shows a toast with Undo. Completing a task also offers Undo.
+
+
+### Fixed
+- **Open file losing its Explorer highlight after saving** — the highlight was restored before the Explorer finished redrawing. Because of this, a second tag added from In Short (or a tag added during rename) could be written to disk and then overwritten by the editor's copy.
 
 ---
 

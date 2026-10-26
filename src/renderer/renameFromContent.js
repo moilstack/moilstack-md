@@ -278,7 +278,7 @@ const RenameFromContent = (() => {
    * editor and then saved, so the disk copy (which a rename reopens) has them.
    */
   async function _writeTags(path, tags) {
-    const isOpen = path === document.querySelector('#file-list .file-item.active')?.dataset.path
+    const isOpen = path === (currentFile?.path || document.querySelector('#file-list .file-item.active')?.dataset.path)
     const result = await TagModal.applyTagsToFile(path, tags)
     if (result?.ok) _learnTags(tags)
     if (result?.ok && isOpen) {
@@ -509,7 +509,7 @@ const RenameFromContent = (() => {
     _busy = true
     _applyBtn.disabled = true
 
-    const activePath = document.querySelector('#file-list .file-item.active')?.dataset.path
+    const activePath = currentFile?.path || document.querySelector('#file-list .file-item.active')?.dataset.path
     let newActivePath = null
     let failed = 0
 

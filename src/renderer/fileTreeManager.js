@@ -339,8 +339,7 @@ const FileTreeManager = (() => {
 
   function collapseAll() {
     StorageManager.collapseAllFolders(_cachedTree);
-    renderFileTree();
-    restoreActiveItem();
+    renderFileTree().then(restoreActiveItem);
   }
 
   function touchFile(filePath, firstLine, tags) {
@@ -350,8 +349,8 @@ const FileTreeManager = (() => {
       if (firstLine !== undefined) file.firstLine = firstLine;
       if (tags !== undefined) file.tags = tags;
       _resortTree(_cachedTree);
-      renderFileTree();
-      restoreActiveItem();
+      // renderFileTree is async — re-mark the open file once the new rows exist
+      renderFileTree().then(restoreActiveItem);
     }
   }
 
@@ -414,8 +413,7 @@ const FileTreeManager = (() => {
     list.querySelectorAll('.folder-row').forEach(row => {
       row.addEventListener('click', () => {
         StorageManager.toggleFolderCollapse(row.dataset.folderPath);
-        renderFileTree();
-        restoreActiveItem();
+        renderFileTree().then(restoreActiveItem);
       });
       row.addEventListener('contextmenu', e => {
         e.preventDefault();
