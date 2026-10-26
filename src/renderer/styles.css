@@ -6536,3 +6536,22 @@ select.form-input {
   font: inherit; font-size: 10px; padding: 0 4px; margin-right: 3px;
   border: 1px solid var(--border); border-radius: 3px; background: var(--hover-bg);
 }
+
+/* Ideas: star, status, → Task popup (folderLists.js) */
+.idea-row__star {
+  border: none; background: none; padding: 0 2px; cursor: pointer;
+  font-size: 15px; line-height: 1; color: var(--text-secondary); opacity: 0.5;
+}
+.task-row:hover .idea-row__star { opacity: 0.9; }
+.idea-row__star--on, .task-row:hover .idea-row__star--on { color: #f59e0b; opacity: 1; }
+.idea-row__status {
+  font-size: 11px; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
+  background: var(--hover-bg); color: var(--text-secondary);
+}
+.idea-row__status--exploring { background: color-mix(in srgb, #0d9488 14%, transparent); color: #0d9488; }
+.idea-row__status--used { background: color-mix(in srgb, #16a34a 14%, transparent); color: #16a34a; }
+.fl-menu--form { padding: 12px; width: 280px; }
+.fl-totask { display: flex; flex-direction: column; gap: 12px; }
+.fl-totask__title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.fl-totask__keep { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+.fl-totask .btn { align-self: flex-end; height: 28px; }

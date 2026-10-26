@@ -15,6 +15,9 @@ All notable new features and critical fixes for MoilStack .md.
 - **Search and filters for Tasks and Ideas** — a search box (matches text, tags, notes and subtasks) and chips for All, each #tag with its count, and High priority.
 - **Subtasks** — a checklist in the task panel with a progress bar, and a "2/5" count on the task row. Saved as indented `- [ ]` lines under the task.
 - **Keyboard shortcuts in Tasks and Ideas** — N new, / search, ↑↓ (or J/K) move, Enter or E open, Space complete, Del delete, Esc close. Shown at the bottom of the list.
+- **Ideas: tags, star and status** — add `#tags` when typing an idea, star the good ones (★, shown first), and set a status: New, Exploring, Parked or Used. Parked and Used ideas move to a collapsed "Used and parked" section instead of being deleted. Filter chips for tags, ★ Starred and Exploring.
+- **Ideas: smarter → Task** — opens a small popup to pick priority and target date. By default the idea is kept and marked Used; the task gets the idea's tags and notes plus a "From idea" line.
+- **Recent Files with Tasks/Ideas open** — clicking a file in Recent Files (including the one already open) now closes the Tasks or Ideas view and shows the file.
 - **Undo** — deleting or completing a task or idea shows a toast with Undo, replacing the delete confirmation.
 
 ---

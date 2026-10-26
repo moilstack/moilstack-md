@@ -166,12 +166,62 @@ function _flDateMenu(anchor, current, onPick) {
   menu.append(pick);
   if (current) add('Clear date', null, 'fl-menu__item--danger');
 
+  _flPlace(menu, anchor);
+}
+
+/** Show `menu` under `anchor` (above it if there's no room), as the one open popup. */
+function _flPlace(menu, anchor) {
   document.body.append(menu);
   const r = anchor.getBoundingClientRect();
-  const w = menu.offsetWidth;
+  const w = menu.offsetWidth, h = menu.offsetHeight;
   menu.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - w - 8))}px`;
-  menu.style.top = `${r.bottom + 4}px`;
+  menu.style.top = `${r.bottom + 4 + h > window.innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4}px`;
   _flMenu = menu;
+}
+
+/** Tags editor for the details panel: removable chips plus an input. */
+function _flTagsField(t, changed) {
+  const tagLabel = _flEl('div', 'fl-panel__label', 'Tags');
+  const tagRow = _flEl('div', 'fl-panel__row');
+  (t.tags || []).forEach(x => {
+    const c = _flEl('span', 'task-row__tag fl-tag', `#${x}`);
+    const rm = _flEl('button', 'fl-tag__x', '×');
+    rm.type = 'button';
+    rm.title = `Remove #${x}`;
+    rm.addEventListener('click', () => { t.tags = t.tags.filter(y => y !== x); changed(); });
+    c.append(rm);
+    tagRow.append(c);
+  });
+  const tagIn = document.createElement('input');
+  tagIn.className = 'fl-tag__input';
+  tagIn.placeholder = '+ tag';
+  const addTag = () => {
+    const v = tagIn.value.trim().replace(/^#/, '').toLowerCase();
+    tagIn.value = '';
+    if (!/^[a-z][\w/-]*$/.test(v) || t.tags?.includes(v)) return;
+    t.tags = [...(t.tags || []), v];
+    changed();
+    _panelFocus('.fl-tag__input');
+  };
+  tagIn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',' || e.key === ' ') { e.preventDefault(); addTag(); }
+  });
+  tagIn.addEventListener('blur', () => { if (tagIn.value.trim()) addTag(); });
+  tagRow.append(tagIn);
+  tagLabel.append(tagRow);
+  return tagLabel;
+}
+
+/** A three-or-more-way switch: options [[value, label]], calls onPick(value). */
+function _flSeg(options, current, onPick, cls = '') {
+  const seg = _flEl('div', 'fl-seg');
+  for (const [v, label] of options) {
+    const b = _flEl('button', `fl-seg__btn ${cls}${v}` + (current === v ? ' fl-seg__btn--on' : ''), label);
+    b.type = 'button';
+    b.addEventListener('click', () => onPick(v));
+    seg.append(b);
+  }
+  return seg;
 }
 
 if (typeof document !== 'undefined') {
@@ -185,7 +235,8 @@ if (typeof document !== 'undefined') {
  * @param {object} cfg
  *   key, title, fileName, noun, buttonId, emptyText
  *   parse(line) → item | null          serialise(item) → line
- *   hasDone                            items with .done go to a "Completed" section
+ *   hasDone                            a checkbox; items with .done go to a "Completed" section
+ *   doneTitle                          title for that section (lists without a checkbox can still have one)
  *   leadIconHTML                       icon at the start of each row (lists without a checkbox)
  *   addPreview(text) → Element|null    shown under the text box as you type
  *   newItem(text) → item               build an item from the quick-add text
@@ -530,9 +581,9 @@ function createFolderList(cfg) {
     note.querySelector('span').textContent =
       `${unshown} line${unshown > 1 ? 's' : ''} in ${cfg.fileName} ${unshown > 1 ? "aren't" : "isn't"} ${cfg.noun}${unshown > 1 ? 's' : ''} and ${unshown > 1 ? 'are' : 'is'} not shown here ·`;
 
-    if (cfg.hasDone) {
+    if (cfg.hasDone || cfg.doneTitle) {
       q('.fl-done-list').replaceChildren(...done.map(_rowEl));
-      q('.fl-done-summary').textContent = `Completed (${done.length})`;
+      q('.fl-done-summary').textContent = `${cfg.doneTitle || 'Completed'} (${done.length})`;
       q('.tasks-done').classList.toggle('hidden', !done.length);
     }
     if (focused) [..._view.querySelectorAll('.task-row')].find(r => r._flItem === focused)?.focus();
@@ -742,9 +793,9 @@ function createFolderList(cfg) {
             <div class="fl-note hidden"><span></span>
               <button class="tasks-view__link fl-raw" type="button">Edit raw</button></div>
             <ul class="tasks-list fl-open"></ul>
-            ${cfg.hasDone ? `
+            ${cfg.hasDone || cfg.doneTitle ? `
             <details class="tasks-done">
-              <summary class="fl-done-summary">Completed (0)</summary>
+              <summary class="fl-done-summary">${cfg.doneTitle || 'Completed'} (0)</summary>
               <ul class="tasks-list fl-done-list"></ul>
             </details>` : ''}
             <div class="fl-keys">
@@ -1061,35 +1112,7 @@ const Tasks = (() => {
       if (isOverdue(t)) dueRow.append(_flEl('span', 'task-row__due task-row__due--overdue', 'Overdue'));
       dueLabel.append(dueRow);
 
-      // Tags: removable chips plus an input
-      const tagLabel = _flEl('div', 'fl-panel__label', 'Tags');
-      const tagRow = _flEl('div', 'fl-panel__row');
-      (t.tags || []).forEach(x => {
-        const c = _flEl('span', 'task-row__tag fl-tag', `#${x}`);
-        const rm = _flEl('button', 'fl-tag__x', '×');
-        rm.type = 'button';
-        rm.title = `Remove #${x}`;
-        rm.addEventListener('click', () => { t.tags = t.tags.filter(y => y !== x); changed(); });
-        c.append(rm);
-        tagRow.append(c);
-      });
-      const tagIn = document.createElement('input');
-      tagIn.className = 'fl-tag__input';
-      tagIn.placeholder = '+ tag';
-      const addTag = () => {
-        const v = tagIn.value.trim().replace(/^#/, '').toLowerCase();
-        tagIn.value = '';
-        if (!/^[a-z][\w/-]*$/.test(v) || t.tags?.includes(v)) return;
-        t.tags = [...(t.tags || []), v];
-        changed();
-        _panelFocus('.fl-tag__input');
-      };
-      tagIn.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ',' || e.key === ' ') { e.preventDefault(); addTag(); }
-      });
-      tagIn.addEventListener('blur', () => { if (tagIn.value.trim()) addTag(); });
-      tagRow.append(tagIn);
-      tagLabel.append(tagRow);
+      const tagLabel = _flTagsField(t, changed);
 
       return [prioLabel, dueLabel, tagLabel];
     },
@@ -1119,8 +1142,64 @@ function _panelFocus(sel) {
 /* ── Ideas ───────────────────────────────────────────────────────── */
 
 const Ideas = (() => {
-  // A plain list item that isn't a checkbox: "- Offline mode  ➕ 2026-10-20"
+  // A plain list item that isn't a checkbox:
+  //   "- Offline mode #app  ⭐  🔖exploring  ➕ 2026-10-20"
   const IDEA_RE = /^\s*[-*]\s+(?!\[[ xX]\]\s)(.*\S.*)$/;
+  const STATUS = [['new', 'New'], ['exploring', 'Exploring'], ['parked', 'Parked'], ['used', 'Used']];
+  const STATUS_LABEL = Object.fromEntries(STATUS);
+  const isArchived = (st) => st === 'parked' || st === 'used';
+
+  function setStatus(idea, st) {
+    idea.status = st;
+    idea.done = isArchived(st);
+  }
+
+  /** Popup for "→ Task": priority, target date, keep the idea. */
+  function toTaskPopup(anchor, idea, { remove, cont, changed }) {
+    let priority = 'med', due = null, keep = true;
+    const form = _flEl('div', 'fl-totask');
+    form.append(_flEl('div', 'fl-totask__title', 'Create a task from this idea'));
+
+    const prioLabel = _flEl('div', 'fl-panel__label', 'Priority');
+    const renderPrio = () => prioLabel.replaceChildren(document.createTextNode('Priority'),
+      _flSeg([['high', 'High'], ['med', 'Med'], ['low', 'Low']], priority, (v) => { priority = v; renderPrio(); }, 'fl-seg__btn--'));
+    renderPrio();
+
+    const dueLabel = _flEl('div', 'fl-panel__label', 'Target date');
+    const nextWeek = _flNextWeekday(1) === _flToday() ? _flAddDays(7) : _flNextWeekday(1);
+    const renderDue = () => dueLabel.replaceChildren(document.createTextNode('Target date'),
+      _flSeg([['', 'None'], [_flToday(), 'Today'], [_flAddDays(1), 'Tomorrow'], [nextWeek, 'Next week']],
+        due || '', (v) => { due = v || null; renderDue(); }));
+    renderDue();
+
+    const keepLabel = _flEl('label', 'fl-totask__keep');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = keep;
+    cb.addEventListener('change', () => { keep = cb.checked; });
+    keepLabel.append(cb, document.createTextNode('Keep the idea (marked Used)'));
+
+    const go = _flEl('button', 'btn btn-primary btn-sm', 'Create task');
+    go.type = 'button';
+    go.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      _flCloseMenu();
+      const notes = cont().filter(l => l.trim());
+      if (idea.created) notes.push(`    From idea added ${idea.created}`);
+      await Tasks.addItem({
+        text: idea.text, done: false, priority, due, tags: [...(idea.tags || [])],
+        created: _flToday(), completed: null,
+      }, notes);
+      if (keep) { setStatus(idea, 'used'); changed(); StatusBar.showToast('Task created · idea marked Used'); }
+      else { remove(); StatusBar.showToast('Moved to Tasks'); }
+    });
+
+    form.append(prioLabel, dueLabel, keepLabel, go);
+    const menu = _flEl('div', 'fl-menu fl-menu--form');
+    menu.append(form);
+    menu.addEventListener('click', (e) => e.stopPropagation());
+    _flPlace(menu, anchor);
+  }
 
   return createFolderList({
     key: 'ideas',
@@ -1130,46 +1209,98 @@ const Ideas = (() => {
     buttonId: 'btn-ideas',
     emptyText: 'No ideas yet 💡',
     hasDone: false,
+    doneTitle: 'Used and parked',
+    addPlaceholder: 'Add an idea… (use #tag to group)',
     leadIconHTML: `
       <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
         <path d="M7.5 1.5a4 4 0 0 0-2.4 7.2c.5.4.9 1 .9 1.6v.2h3v-.2c0-.6.4-1.2.9-1.6a4 4 0 0 0-2.4-7.2Z"
               fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
         <path d="M6 12.5h3M6.5 14h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
       </svg>`,
+    filters: [
+      { key: 'starred', label: '★ Starred', test: (i) => i.star },
+      { key: 'exploring', label: 'Exploring', test: (i) => i.status === 'exploring' },
+    ],
 
     parse(line) {
       const m = line.match(IDEA_RE);
       if (!m) return null;
       const s = { rest: m[1] };
       const created = _flTake(s, /➕\s*(\d{4}-\d{2}-\d{2})/);
-      return { text: s.rest.replace(/\s+/g, ' ').trim(), created, done: false };
+      const status = (_flTake(s, /🔖\s*(new|exploring|parked|used)\b/i) || 'new').toLowerCase();
+      const star = !!_flTake(s, /(⭐)/);
+      const tags = _flTakeTags(s);
+      const idea = { text: s.rest.replace(/\s+/g, ' ').trim(), tags, star, status, created, done: false };
+      idea.done = isArchived(status);
+      return idea.text ? idea : null;
     },
 
-    serialise: (it) => `- ${it.text}${it.created ? `  ➕ ${it.created}` : ''}`,
-
-    newItem: (text) => ({ text, created: _flToday(), done: false }),
-
-    rowParts(idea, { remove, cont }) {
-      const toTask = _flEl('button', 'idea-row__to-task', '→ Task');
-      toTask.type = 'button';
-      toTask.title = 'Move this idea to Tasks';
-      toTask.addEventListener('click', async () => {
-        // Hashtags in the idea become task tags
-        const s = { rest: idea.text };
-        const tags = _flTakeTags(s);
-        await Tasks.addItem({
-          text: s.rest.replace(/\s+/g, ' ').trim() || idea.text, done: false, priority: 'med',
-          due: null, tags, created: _flToday(), completed: null,
-        }, cont()); // notes under the idea travel with it
-        remove();
-        StatusBar.showToast('Moved to Tasks');
-      });
-      return [toTask];
+    serialise(it) {
+      let line = `- ${it.text}`;
+      if (it.tags?.length) line += ' ' + it.tags.map(x => `#${x}`).join(' ');
+      if (it.star) line += '  ⭐';
+      if (it.status && it.status !== 'new') line += `  🔖${it.status}`;
+      if (it.created) line += `  ➕ ${it.created}`;
+      return line;
     },
 
-    sort: (a, b) => (b.created || '').localeCompare(a.created || ''),
+    addPreview(text) {
+      const s = { rest: ` ${text} ` };
+      const tags = _flTakeTags(s);
+      if (!tags.length) return null;
+      const row = _flEl('div', 'fl-preview__row');
+      row.append(_flEl('span', 'fl-preview__label', 'Will add:'),
+        _flEl('span', 'fl-preview__text', s.rest.replace(/\s+/g, ' ').trim() || '(no text)'));
+      tags.forEach(t => row.append(_flEl('span', 'task-row__tag', `#${t}`)));
+      return row;
+    },
 
-    badge: (items) => ({ count: items.length, alert: false }),
+    newItem(text) {
+      const s = { rest: ` ${text} ` };
+      const tags = _flTakeTags(s);
+      return { text: s.rest.replace(/\s+/g, ' ').trim(), tags, star: false, status: 'new', created: _flToday(), done: false };
+    },
+
+    rowParts(idea, api) {
+      const parts = (idea.tags || []).map(x => _flEl('span', 'task-row__tag', `#${x}`));
+      if (idea.status !== 'new') {
+        parts.push(_flEl('span', `idea-row__status idea-row__status--${idea.status}`, STATUS_LABEL[idea.status]));
+      }
+      const star = _flEl('button', 'idea-row__star' + (idea.star ? ' idea-row__star--on' : ''), idea.star ? '★' : '☆');
+      star.type = 'button';
+      star.title = idea.star ? 'Unstar' : 'Star';
+      star.addEventListener('click', () => { idea.star = !idea.star; api.changed(); });
+      parts.push(star);
+      if (idea.status !== 'used') {
+        const toTask = _flEl('button', 'idea-row__to-task', '→ Task');
+        toTask.type = 'button';
+        toTask.title = 'Create a task from this idea';
+        toTask.addEventListener('click', (e) => { e.stopPropagation(); toTaskPopup(toTask, idea, api); });
+        parts.push(toTask);
+      }
+      return parts;
+    },
+
+    panelParts(idea, { changed }) {
+      const starLabel = _flEl('label', 'fl-totask__keep');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!idea.star;
+      cb.addEventListener('change', () => { idea.star = cb.checked; changed(); });
+      starLabel.append(cb, document.createTextNode('★ Starred'));
+
+      const stLabel = _flEl('div', 'fl-panel__label', 'Status');
+      stLabel.append(_flSeg(STATUS, idea.status, (v) => { setStatus(idea, v); changed(); }));
+
+      return [starLabel, stLabel, _flTagsField(idea, changed)];
+    },
+
+    // Starred first, then exploring, then newest
+    sort: (a, b) => (b.star - a.star)
+      || ((b.status === 'exploring') - (a.status === 'exploring'))
+      || (b.created || '').localeCompare(a.created || ''),
+
+    badge: (items) => ({ count: items.filter(i => !i.done).length, alert: false }),
   });
 })();
 

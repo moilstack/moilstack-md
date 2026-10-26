@@ -225,6 +225,7 @@ async function openRecentFile(filePath) {
     EditorCore.triggerUpdate();
   }
   SaveManager.markClean();
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(filePath); // close Tasks/Ideas if open
 
   const name = filePath.split(/[\\/]/).pop() || filePath;
   currentFile = { name, path: filePath };
@@ -276,6 +277,7 @@ async function restoreDraftFile() {
 
   document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
 
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(null); // close Tasks/Ideas if open
   currentFile = { name: 'untitled.md', path: null };
   StatusBar.updateFilename('untitled.md');
   StatusBar.updateChatContextFile('untitled.md');
@@ -353,6 +355,7 @@ function _resetToBlankUntitled() {
 
   document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
 
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(null); // close Tasks/Ideas if open
   currentFile = { name: 'untitled.md', path: null };
   StatusBar.updateFilename('untitled.md');
   StatusBar.updateChatContextFile('untitled.md');
