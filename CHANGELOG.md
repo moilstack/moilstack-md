@@ -26,6 +26,7 @@ All notable new features and critical fixes for MoilStack .md.
 
 
 ### Fixed
+- **Tasks and Ideas in sub-folders** — clicking a `_tasks.md` or `_ideas.md` in any sub-folder now opens its Tasks or Ideas page (the title shows which folder). Before, those files opened as plain text, and the pages only showed the top-level folder's list. The header buttons still show the open folder's list, and *→ Task* adds the task in the idea's own folder.
 - **macOS: opening a .md file from Finder showed an empty app** — files sent by Finder (Open With, double-click, drag onto the Dock icon) now open, both when the app is starting and when it's already running.
 - **Open file losing its Explorer highlight after saving** — the highlight was restored before the Explorer finished redrawing. Because of this, a second tag added from In Short (or a tag added during rename) could be written to disk and then overwritten by the editor's copy.
 

@@ -266,7 +266,8 @@ function _noteLines(text) {
  *   badge(items) → { count, alert }    header badge
  */
 function createFolderList(cfg) {
-  let _folder = null;
+  let _folder = null;    // folder whose list is loaded (the open folder, or a sub-folder whose file you clicked)
+  let _root = null;      // the folder open in the Explorer — the header button shows this one
   let _items = [];
   // The file, line by line, in order:
   //   { raw }                         a line the app doesn't recognise — kept as-is
@@ -365,12 +366,28 @@ function createFolderList(cfg) {
     if (_isShown()) { if (_folder) _renderView(); else close(); }
   }
 
-  /** Add an item from outside the view (e.g. an idea promoted to a task). */
-  async function addItem(item, cont = []) {
-    if (!_folder) return;
-    await loadFolder(_folder); // don't clobber edits made since the last load
+  /** The Explorer's folder changed: show its list on the header button. */
+  function setRoot(folderPath) {
+    _root = folderPath || null;
+    return loadFolder(_root);
+  }
+
+  /** Back to the open folder's list (after looking at a sub-folder's). */
+  function _backToRoot() {
+    if (_root && _folder !== _root) loadFolder(_root);
+  }
+
+  /**
+   * Add an item from outside the view (e.g. an idea promoted to a task),
+   * into `folder`'s list (default: the one loaded now).
+   */
+  async function addItem(item, cont = [], folder = null) {
+    const target = folder || _folder;
+    if (!target) return;
+    await loadFolder(target); // don't clobber edits made since the last load
     _push(item, cont);
-    _changed();
+    _changed(); // the write starts now, for this folder's file
+    if (!_isShown()) _backToRoot();
   }
 
   const _snap = (item) => JSON.stringify(item);
@@ -449,6 +466,7 @@ function createFolderList(cfg) {
   }
 
   const _api = (item) => ({
+    folder: () => _folder,
     changed: _changed,
     remove: () => _remove(item, { confirmFirst: false }), // moving elsewhere, not deleting
     cont: () => _entryOf(item)?.cont ?? [],
@@ -957,14 +975,17 @@ function createFolderList(cfg) {
     _flush();
     _view?.classList.add('hidden');
     $btn()?.classList.remove('tasks-pill--active');
+    _backToRoot(); // the header button counts the open folder's list again
   }
 
-  async function open() {
-    if (!_folder) return;
+  /** Show the list for `folder` (default: the folder open in the Explorer). */
+  async function open(folder = null) {
+    const target = folder || _root || _folder;
+    if (!target) return;
     FolderLists.hideAllExcept(api);
     // Unsaved raw edits to this file in the editor must hit disk before we read it
-    if (_isOwnFile(currentFile?.path)) await SaveManager.silentSave();
-    await loadFolder(_folder); // pick up edits made to the file in the editor
+    if (currentFile?.path && currentFile.path === _flJoin(target, cfg.fileName)) await SaveManager.silentSave();
+    await loadFolder(target); // pick up edits made to the file in the editor
     _renderView();
     _view.classList.remove('hidden');
     $btn()?.classList.add('tasks-pill--active');
@@ -987,7 +1008,12 @@ function createFolderList(cfg) {
 
   /** Called from selectFile() whenever a document is opened. */
   function onFileSelected(filePath) {
-    if (_isOwnFile(filePath) && filePath !== _rawPath) { open(); return; }
+    // A _tasks.md / _ideas.md in any folder (not only the open one) opens its list
+    const name = filePath ? filePath.split(/[\\/]/).pop() : '';
+    if (name === cfg.fileName && filePath !== _rawPath) {
+      open(filePath.slice(0, filePath.length - name.length).replace(/[\\/]+$/, ''));
+      return;
+    }
     if (filePath !== _rawPath) _rawPath = null;
     if (_isShown()) _hide();
   }
@@ -1053,7 +1079,7 @@ function createFolderList(cfg) {
   else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  const api = { loadFolder, open, close, onFileSelected, addItem, hide: _hide };
+  const api = { loadFolder, setRoot, open, close, onFileSelected, addItem, hide: _hide };
   return api;
 }
 
@@ -1252,7 +1278,7 @@ const Ideas = (() => {
   }
 
   /** Popup for "→ Task": priority, target date, keep the idea. */
-  function toTaskPopup(anchor, idea, { remove, cont, changed }) {
+  function toTaskPopup(anchor, idea, { remove, cont, changed, folder }) {
     let priority = 'med', due = null, keep = true;
     const form = _flEl('div', 'fl-totask');
     form.append(_flEl('div', 'fl-totask__title', 'Create a task from this idea'));
@@ -1286,7 +1312,7 @@ const Ideas = (() => {
       await Tasks.addItem({
         text: idea.text, done: false, priority, due, tags: [...(idea.tags || [])],
         created: _flToday(), completed: null,
-      }, notes);
+      }, notes, folder()); // into the same folder as the idea
       if (keep) { setStatus(idea, 'used'); changed(); StatusBar.showToast('Task created · idea marked Used'); }
       else { remove(); StatusBar.showToast('Moved to Tasks'); }
     });
@@ -1408,7 +1434,7 @@ const Ideas = (() => {
 
 const FolderLists = {
   all: () => [Tasks, Ideas],
-  loadFolder: (folderPath) => FolderLists.all().forEach(l => l.loadFolder(folderPath)),
+  loadFolder: (folderPath) => FolderLists.all().forEach(l => l.setRoot(folderPath)),
   onFileSelected: (filePath) => FolderLists.all().forEach(l => l.onFileSelected(filePath)),
   hideAllExcept: (keep) => FolderLists.all().forEach(l => { if (l !== keep) l.hide(); }),
 };

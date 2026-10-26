@@ -691,7 +691,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // there are no tasks to show, so the Scratchpad is all you get.
     await newUntitledFile();
     if (savedFolder && typeof Tasks !== 'undefined') {
-      await Tasks.loadFolder(savedFolder); // make sure the folder is set before opening
+      await Tasks.setRoot(savedFolder); // make sure the folder is set before opening
       await Tasks.open();
     }
   } else if (launchBehavior === 'first-file') {
