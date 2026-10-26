@@ -18,6 +18,7 @@ All notable new features and critical fixes for MoilStack .md.
 - **Ideas: tags, star and status** — add `#tags` when typing an idea, star the good ones (★, shown first), and set a status: New, Exploring, Parked or Used. Parked and Used ideas move to a collapsed "Used and parked" section instead of being deleted. Filter chips for tags, ★ Starred and Exploring.
 - **Ideas: smarter → Task** — opens a small popup to pick priority and target date. By default the idea is kept and marked Used; the task gets the idea's tags and notes plus a "From idea" line.
 - **Recent Files with Tasks/Ideas open** — clicking a file in Recent Files (including the one already open) now closes the Tasks or Ideas view and shows the file.
+- **Start in Tasks** — Settings → On Launch has a new *Start in Tasks* option that opens the folder's Tasks view when the app starts (falls back to the Scratchpad when no folder is open).
 - **Undo** — deleting or completing a task or idea shows a toast with Undo, replacing the delete confirmation.
 
 ---

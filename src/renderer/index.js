@@ -610,7 +610,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // and the "start blank" preference — there's real work to hand back.
   const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();
 
-  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled' && launchBehavior !== 'first-file') {
+  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled' && launchBehavior !== 'first-file' && launchBehavior !== 'tasks') {
     WelcomeScreen.showWelcomeScreen();
   }
 
@@ -686,6 +686,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     SaveManager.markDirty();
   } else if (launchBehavior === 'untitled') {
     await newUntitledFile();
+  } else if (launchBehavior === 'tasks') {
+    // "Start in Tasks" — the Scratchpad sits underneath; with no folder open
+    // there are no tasks to show, so the Scratchpad is all you get.
+    await newUntitledFile();
+    if (savedFolder && typeof Tasks !== 'undefined') {
+      await Tasks.loadFolder(savedFolder); // make sure the folder is set before opening
+      await Tasks.open();
+    }
   } else if (launchBehavior === 'first-file') {
     // "Open first file in Explorer" — take the top-most file row as shown in
     // the sidebar (pinned files first, then the active folder's tree/list),
