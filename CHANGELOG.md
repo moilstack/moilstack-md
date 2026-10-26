@@ -26,6 +26,7 @@ All notable new features and critical fixes for MoilStack .md.
 
 
 ### Fixed
+- **macOS: opening a .md file from Finder showed an empty app** — files sent by Finder (Open With, double-click, drag onto the Dock icon) now open, both when the app is starting and when it's already running.
 - **Open file losing its Explorer highlight after saving** — the highlight was restored before the Explorer finished redrawing. Because of this, a second tag added from In Short (or a tag added during rename) could be written to disk and then overwritten by the editor's copy.
 
 ---
