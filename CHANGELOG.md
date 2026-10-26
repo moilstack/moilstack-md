@@ -11,6 +11,10 @@ All notable new features and critical fixes for MoilStack .md.
 - **Task details side panel** — click a task to edit its text, priority, target date, tags and notes in a panel beside the list. Notes are saved as indented lines under the task in `_tasks.md`. Esc closes it. Ideas get the same panel for text and notes.
 - **Task tags** — `#tags` show as chips on each task and can be added or removed in the panel.
 - **Date menu on tasks** — click a task's date (or "+ date") for Today, Tomorrow, Next week, Pick date… or Clear.
+- **Task groups** — open tasks are grouped as Overdue, Today, Next 7 days, Later and No date. Click a group heading to collapse it; this is remembered.
+- **Search and filters for Tasks and Ideas** — a search box (matches text, tags, notes and subtasks) and chips for All, each #tag with its count, and High priority.
+- **Subtasks** — a checklist in the task panel with a progress bar, and a "2/5" count on the task row. Saved as indented `- [ ]` lines under the task.
+- **Keyboard shortcuts in Tasks and Ideas** — N new, / search, ↑↓ (or J/K) move, Enter or E open, Space complete, Del delete, Esc close. Shown at the bottom of the list.
 - **Undo** — deleting or completing a task or idea shows a toast with Undo, replacing the delete confirmation.
 
 ---

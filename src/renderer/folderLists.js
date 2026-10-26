@@ -193,6 +193,9 @@ if (typeof document !== 'undefined') {
  *   panelParts(item, api) → Element[]  extra fields in the details panel
  *                                      api: { changed(), remove(), cont() }
  *   sort(a, b)                         order of open items
+ *   hasSubtasks                        indented "- [ ]" lines are a checklist in the panel
+ *   groups / groupOf(item) → key       split open items into sections (in groups' order)
+ *   filters                            extra filter chips: [{ key, label, test(item) }]
  *   badge(items) → { count, alert }    header badge
  */
 function createFolderList(cfg) {
@@ -211,6 +214,16 @@ function createFolderList(cfg) {
   let _panel = null;
   let _selected = null;  // item shown in the side panel
   let _saveTimer = null;
+  let _query = '';       // search box text
+  let _filter = null;    // active chip: '#tag' or a cfg.filters key
+  let _collapsed = new Set(_loadCollapsed());
+
+  function _loadCollapsed() {
+    try { return JSON.parse(localStorage.getItem(`fl-collapsed-${cfg.key}`)) || []; } catch { return []; }
+  }
+  function _saveCollapsed() {
+    try { localStorage.setItem(`fl-collapsed-${cfg.key}`, JSON.stringify([..._collapsed])); } catch { /* ignore */ }
+  }
 
   const $btn = () => document.getElementById(cfg.buttonId);
   const _filePath = () => _flJoin(_folder, cfg.fileName);
@@ -304,9 +317,27 @@ function createFolderList(cfg) {
   const _unshownCount = () =>
     _entries.filter(e => !e.item && e.raw.trim() && !/^\s*#{1,6}\s/.test(e.raw)).length;
 
+  // Indented checkbox lines under an item are its subtasks; other indented lines its notes
+  const _SUB_RE = /^\s+[-*]\s+\[( |x|X)\]\s+(.*)$/;
+  const _isSub = (l) => !!cfg.hasSubtasks && _SUB_RE.test(l);
+
+  function _subsOf(item) {
+    return (_entryOf(item)?.cont ?? []).filter(_isSub).map(l => {
+      const m = l.match(_SUB_RE);
+      return { done: m[1] !== ' ', text: m[2].trim() };
+    });
+  }
+
+  function _setSubs(item, subs) {
+    const e = _entryOf(item);
+    if (!e) return;
+    e.cont = [...e.cont.filter(l => !_isSub(l)),
+      ...subs.filter(x => x.text.trim()).map(x => `    - [${x.done ? 'x' : ' '}] ${x.text.trim()}`)];
+  }
+
   /** An item's notes as editable text: its indented lines with the shared indent removed. */
   function _notesOf(item) {
-    const lines = _entryOf(item)?.cont ?? [];
+    const lines = (_entryOf(item)?.cont ?? []).filter(l => !_isSub(l));
     const indent = Math.min(...lines.filter(l => l.trim()).map(l => l.match(/^\s*/)[0].length));
     return lines.map(l => l.slice(Number.isFinite(indent) ? indent : 0)).join('\n');
   }
@@ -314,8 +345,9 @@ function createFolderList(cfg) {
   function _setNotes(item, text) {
     const e = _entryOf(item);
     if (!e) return;
-    // Blank lines would end the item in the file, so they're dropped
-    e.cont = text.split('\n').filter(l => l.trim()).map(l => '    ' + l.replace(/\s+$/, ''));
+    // Blank lines would end the item in the file, so they're dropped; subtasks stay after the notes
+    e.cont = [...text.split('\n').filter(l => l.trim()).map(l => '    ' + l.replace(/\s+$/, '')),
+      ...e.cont.filter(_isSub)];
   }
 
   /* ── Rendering ─────────────────────────────────────────────────── */
@@ -354,6 +386,7 @@ function createFolderList(cfg) {
     li.className = 'task-row' + (item.done ? ' task-row--done' : '') + (item === _selected ? ' task-row--selected' : '');
     li.tabIndex = 0;
     li.title = 'Open details';
+    li._flItem = item;
 
     if (cfg.hasDone) {
       const cb = document.createElement('input');
@@ -376,6 +409,14 @@ function createFolderList(cfg) {
       n.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M3 2.5h10v11H3z M5.5 6h5M5.5 8.5h5M5.5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       li.append(n);
+    }
+
+    const subs = _subsOf(item);
+    if (subs.length) {
+      const n = subs.filter(x => x.done).length;
+      const c = _flEl('span', 'task-row__subs' + (n === subs.length ? ' task-row__subs--all' : ''), `${n}/${subs.length}`);
+      c.title = subs.map(x => `${x.done ? '☑' : '☐'} ${x.text}`).join('\n');
+      li.append(c);
     }
 
     li.append(...cfg.rowParts(item, _api(item)));
@@ -418,15 +459,71 @@ function createFolderList(cfg) {
     });
   }
 
+  /** Does an item pass the search box and the active chip? */
+  function _matches(item) {
+    if (_filter?.startsWith('#')) { if (!item.tags?.includes(_filter.slice(1))) return false; }
+    else if (_filter) { if (!cfg.filters?.find(f => f.key === _filter)?.test(item)) return false; }
+    const words = _query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return true;
+    const hay = [item.text, ...(item.tags || []).map(t => '#' + t), _notesOf(item),
+      ..._subsOf(item).map(x => x.text)].join(' ').toLowerCase();
+    return words.every(w => hay.includes(w));
+  }
+
+  function _renderFilters() {
+    const bar = _view.querySelector('.fl-chips');
+    const open = _items.filter(it => !it.done);
+    const counts = new Map();
+    open.forEach(it => (it.tags || []).forEach(t => counts.set(t, (counts.get(t) || 0) + 1)));
+    // Forget a chip whose tag no longer exists
+    if (_filter?.startsWith('#') && !counts.has(_filter.slice(1))) _filter = null;
+    const chips = [['', `All ${open.length}`]];
+    [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .forEach(([t, n]) => chips.push([`#${t}`, `#${t} ${n}`]));
+    (cfg.filters || []).forEach(f => chips.push([f.key, f.label]));
+    bar.classList.toggle('hidden', chips.length < 2);
+    bar.replaceChildren(...chips.map(([key, label]) => {
+      const b = _flEl('button', 'fl-filter' + ((_filter || '') === key ? ' fl-filter--on' : ''), label);
+      b.type = 'button';
+      b.addEventListener('click', () => { _filter = _filter === key || !key ? null : key; _renderList(); });
+      return b;
+    }));
+  }
+
   function _renderList() {
     const q = (sel) => _view.querySelector(sel);
-    const open = _items.filter(it => !it.done).sort(cfg.sort);
-    const done = _items.filter(it => it.done)
+    // Keep keyboard focus on the same item across re-renders
+    const focused = document.activeElement?._flItem;
+    _renderFilters();
+    const filtering = !!(_filter || _query.trim());
+    const open = _items.filter(it => !it.done && _matches(it)).sort(cfg.sort);
+    const done = _items.filter(it => it.done && _matches(it))
       .sort((a, b) => (b.completed || '').localeCompare(a.completed || ''));
 
     const openList = q('.fl-open');
-    openList.replaceChildren(...open.map(_rowEl));
-    if (!open.length) openList.append(_flEl('li', 'tasks-empty', cfg.emptyText));
+    openList.replaceChildren();
+    if (cfg.groupOf) {
+      for (const g of cfg.groups) {
+        const inGroup = open.filter(it => cfg.groupOf(it) === g.key);
+        if (!inGroup.length) continue;
+        const shut = _collapsed.has(g.key) && !filtering;
+        const head = _flEl('li', 'fl-group' + (g.alert ? ' fl-group--alert' : '') + (shut ? ' fl-group--shut' : ''));
+        const btn = _flEl('button', 'fl-group__btn', `${g.label} · ${inGroup.length}`);
+        btn.type = 'button';
+        btn.setAttribute('aria-expanded', String(!shut));
+        btn.addEventListener('click', () => {
+          _collapsed.has(g.key) ? _collapsed.delete(g.key) : _collapsed.add(g.key);
+          _saveCollapsed();
+          _renderList();
+        });
+        head.append(btn);
+        openList.append(head);
+        if (!shut) openList.append(...inGroup.map(_rowEl));
+      }
+    } else {
+      openList.append(...open.map(_rowEl));
+    }
+    if (!open.length) openList.append(_flEl('li', 'tasks-empty', filtering ? `No matching ${cfg.noun}s` : cfg.emptyText));
     const unshown = _unshownCount();
     const note = q('.fl-note');
     note.classList.toggle('hidden', !unshown);
@@ -438,6 +535,7 @@ function createFolderList(cfg) {
       q('.fl-done-summary').textContent = `Completed (${done.length})`;
       q('.tasks-done').classList.toggle('hidden', !done.length);
     }
+    if (focused) [..._view.querySelectorAll('.task-row')].find(r => r._flItem === focused)?.focus();
   }
 
   function _changed() {
@@ -478,8 +576,7 @@ function createFolderList(cfg) {
     if (_view) {
       _renderList();
       // Put focus back on the row that was open
-      const rows = [..._view.querySelectorAll('.task-row')];
-      rows.find(r => r.querySelector('.task-row__text')?.textContent === was.text)?.focus();
+      [..._view.querySelectorAll('.task-row')].find(r => r._flItem === was)?.focus();
     }
   }
 
@@ -530,6 +627,8 @@ function createFolderList(cfg) {
     const fields = _flEl('div', 'fl-panel__fields');
     fields.append(...(cfg.panelParts?.(item, _api(item)) ?? []));
 
+    const subsBox = cfg.hasSubtasks ? _subtasksEl(item) : null;
+
     const notesLabel = _flEl('label', 'fl-panel__label', 'Notes');
     const notes = _flEl('textarea', 'fl-panel__notes');
     notes.placeholder = 'Add notes…';
@@ -547,8 +646,66 @@ function createFolderList(cfg) {
     meta.push('Saves automatically');
     const foot = _flEl('div', 'fl-panel__foot', meta.join(' · '));
 
-    _panel.replaceChildren(top, title, fields, notesLabel, foot);
+    _panel.replaceChildren(...[top, title, fields, subsBox, notesLabel, foot].filter(Boolean));
     requestAnimationFrame(() => { _autoGrow(title); _autoGrow(notes); });
+  }
+
+  /** Checklist editor for an item's subtasks. */
+  function _subtasksEl(item) {
+    const subs = _subsOf(item);
+    const box = _flEl('div', 'fl-panel__label');
+    const done = subs.filter(x => x.done).length;
+    box.append(_flEl('span', null, subs.length ? `Subtasks · ${done}/${subs.length}` : 'Subtasks'));
+    if (subs.length) {
+      const bar = _flEl('div', 'fl-subs__bar');
+      const fill = _flEl('div', 'fl-subs__fill');
+      fill.style.width = `${Math.round((done / subs.length) * 100)}%`;
+      bar.append(fill);
+      box.append(bar);
+    }
+    const list = _flEl('div', 'fl-subs');
+    subs.forEach((sub, i) => {
+      const row = _flEl('div', 'fl-sub' + (sub.done ? ' fl-sub--done' : ''));
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = sub.done;
+      cb.addEventListener('change', () => { subs[i].done = cb.checked; _setSubs(item, subs); _changed(); });
+      const text = document.createElement('input');
+      text.className = 'fl-sub__text';
+      text.value = sub.text;
+      text.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); text.blur(); }
+        if (e.key === 'Escape') { e.stopPropagation(); text.value = sub.text; text.blur(); }
+      });
+      text.addEventListener('change', () => {
+        const v = text.value.replace(/\s+/g, ' ').trim();
+        if (!v) subs.splice(i, 1); else subs[i].text = v;
+        _setSubs(item, subs);
+        _changed();
+      });
+      const rm = _flEl('button', 'fl-sub__x', '×');
+      rm.type = 'button';
+      rm.title = 'Remove subtask';
+      rm.addEventListener('click', () => { subs.splice(i, 1); _setSubs(item, subs); _changed(); });
+      row.append(cb, text, rm);
+      list.append(row);
+    });
+    const add = document.createElement('input');
+    add.className = 'fl-sub__new';
+    add.placeholder = '+ Add subtask';
+    add.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const v = add.value.replace(/\s+/g, ' ').trim();
+      if (!v) return;
+      subs.push({ done: false, text: v });
+      _setSubs(item, subs);
+      _changed();
+      _panelFocus('.fl-sub__new'); // ready for the next one
+    });
+    list.append(add);
+    box.append(list);
+    return box;
   }
 
   /* ── View (overlays the editor area) ───────────────────────────── */
@@ -578,6 +735,10 @@ function createFolderList(cfg) {
               <button class="btn btn-primary btn-sm" type="submit">Add</button>
             </form>
             <div class="fl-preview hidden"></div>
+            <div class="fl-filterbar">
+              <div class="fl-chips hidden"></div>
+              <input class="fl-search" type="search" placeholder="Search  ( / )" aria-label="Search ${cfg.noun}s"/>
+            </div>
             <div class="fl-note hidden"><span></span>
               <button class="tasks-view__link fl-raw" type="button">Edit raw</button></div>
             <ul class="tasks-list fl-open"></ul>
@@ -586,6 +747,10 @@ function createFolderList(cfg) {
               <summary class="fl-done-summary">Completed (0)</summary>
               <ul class="tasks-list fl-done-list"></ul>
             </details>` : ''}
+            <div class="fl-keys">
+              <span><kbd>N</kbd> new</span><span><kbd>/</kbd> search</span><span><kbd>↑</kbd><kbd>↓</kbd> move</span>
+              <span><kbd>Enter</kbd> open</span>${cfg.hasDone ? '<span><kbd>Space</kbd> complete</span>' : ''}<span><kbd>Del</kbd> delete</span><span><kbd>Esc</kbd> close</span>
+            </div>
           </div>
           <aside class="fl-panel hidden" aria-label="${cfg.noun} details"></aside>
         </div>
@@ -601,6 +766,12 @@ function createFolderList(cfg) {
       preview.replaceChildren(...(el ? [el] : []));
       preview.classList.toggle('hidden', !el);
     };
+    const search = _view.querySelector('.fl-search');
+    search.addEventListener('input', () => { _query = search.value; _renderList(); });
+    search.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && search.value) { e.stopPropagation(); search.value = ''; _query = ''; _renderList(); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); _view.querySelector('.task-row')?.focus(); }
+    });
     _view.querySelector('.fl-close').addEventListener('click', close);
     _view.querySelectorAll('.fl-raw').forEach(b => b.addEventListener('click', _openRaw));
     form.addEventListener('submit', (e) => {
@@ -680,10 +851,55 @@ function createFolderList(cfg) {
     _buildView();
     $btn()?.addEventListener('click', () => (_isShown() ? close() : open()));
     document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape' || !_isShown() || e.target.isContentEditable) return;
-      if (_selected) { _closePanel(); return; } // first Esc closes the panel
-      close();
+      if (!_isShown() || e.target.isContentEditable || e.defaultPrevented) return;
+      if (e.key === 'Escape') {
+        if (_selected) { _closePanel(); return; } // first Esc closes the panel
+        close();
+        return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.target.closest?.('input, textarea, select')) return; // typing somewhere
+      _onKey(e);
     });
+  }
+
+  /** List shortcuts: N new, / search, ↑↓ move, Space complete, E open, Del delete. */
+  function _onKey(e) {
+    const rows = [..._view.querySelectorAll('.task-row')];
+    const row = e.target.closest?.('.task-row');
+    const item = row?._flItem;
+    const at = rows.indexOf(row);
+    const go = (i) => rows[Math.max(0, Math.min(rows.length - 1, i))]?.focus();
+    switch (e.key) {
+      case 'n': case 'N':
+        e.preventDefault(); _view.querySelector('.tasks-add__input').focus(); break;
+      case '/':
+        e.preventDefault(); _view.querySelector('.fl-search').focus(); break;
+      case 'ArrowDown': case 'j':
+        e.preventDefault(); go(at < 0 ? 0 : at + 1); break;
+      case 'ArrowUp': case 'k':
+        e.preventDefault(); go(at < 0 ? 0 : at - 1); break;
+      case ' ':
+        if (item && cfg.hasDone) {
+          e.preventDefault();
+          const next = rows[at + 1]?._flItem || rows[at - 1]?._flItem;
+          _setDone(item, !item.done);
+          // The row moves to the other list, so keep focus in place
+          [..._view.querySelectorAll('.task-row')].find(r => r._flItem === next)?.focus();
+        }
+        break;
+      case 'e': case 'E':
+        if (item) { e.preventDefault(); _select(item); }
+        break;
+      case 'Delete': case 'Backspace':
+        if (item) {
+          e.preventDefault();
+          const next = rows[at + 1]?._flItem || rows[at - 1]?._flItem;
+          _remove(item);
+          [..._view.querySelectorAll('.task-row')].find(r => r._flItem === next)?.focus();
+        }
+        break;
+    }
   }
 
   if (typeof document === 'undefined') { /* loaded by tests */ }
@@ -728,6 +944,21 @@ const Tasks = (() => {
     buttonId: 'btn-tasks',
     emptyText: 'No open tasks 🎉',
     hasDone: true,
+    hasSubtasks: true,
+    groups: [
+      { key: 'overdue', label: 'Overdue', alert: true },
+      { key: 'today', label: 'Today' },
+      { key: 'week', label: 'Next 7 days' },
+      { key: 'later', label: 'Later' },
+      { key: 'none', label: 'No date' },
+    ],
+    groupOf(t) {
+      if (!t.due) return 'none';
+      if (t.due < _flToday()) return 'overdue';
+      if (t.due === _flToday()) return 'today';
+      return t.due <= _flAddDays(7) ? 'week' : 'later';
+    },
+    filters: [{ key: 'high', label: 'High priority', test: (t) => t.priority === 'high' }],
     addPlaceholder: 'Add a task… (try !high, tomorrow, #tag)',
 
     parse(line) {
@@ -881,7 +1112,8 @@ const Tasks = (() => {
 
 /** Re-focus an element in the open panel after it re-renders. */
 function _panelFocus(sel) {
-  requestAnimationFrame(() => document.querySelector(`.tasks-view:not(.hidden) .fl-panel ${sel}`)?.focus());
+  // The panel re-renders synchronously, so the new element is already there
+  document.querySelector(`.tasks-view:not(.hidden) .fl-panel ${sel}`)?.focus();
 }
 
 /* ── Ideas ───────────────────────────────────────────────────────── */
