@@ -4,6 +4,17 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Task quick-add syntax** — type `Call bank !high tomorrow #finance` and the priority, date and tags are picked out. A "Will add" line under the box shows what was understood. Dates: today, tomorrow, next week, in 3 days, weekday names, or YYYY-MM-DD. The separate Priority and date fields next to the box are gone.
+- **Task details side panel** — click a task to edit its text, priority, target date, tags and notes in a panel beside the list. Notes are saved as indented lines under the task in `_tasks.md`. Esc closes it. Ideas get the same panel for text and notes.
+- **Task tags** — `#tags` show as chips on each task and can be added or removed in the panel.
+- **Date menu on tasks** — click a task's date (or "+ date") for Today, Tomorrow, Next week, Pick date… or Clear.
+- **Undo** — deleting or completing a task or idea shows a toast with Undo, replacing the delete confirmation.
+
+---
+
 ## [1.1.7] - 2026-10-20
 
 ### Added
