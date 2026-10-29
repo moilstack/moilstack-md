@@ -6,30 +6,6 @@ All notable new features and critical fixes for MoilStack .md.
 
 ## [Unreleased]
 
-### Added
-- **Task quick-add syntax** — type `Call bank !high tomorrow #finance` and the priority, date and tags are picked out. A "Will add" line under the box shows what was understood. Dates: today, tomorrow, next week, in 3 days, weekday names, or YYYY-MM-DD. The separate Priority and date fields next to the box are gone.
-- **Task details side panel** — click a task to edit its text, priority, target date, tags and notes in a panel beside the list. Notes are saved as indented lines under the task in `_tasks.md`. Esc closes it. Ideas get the same panel for text and notes.
-- **Task tags** — `#tags` show as chips on each task and can be added or removed in the panel.
-- **Date menu on tasks** — click a task's date (or "+ date") for Today, Tomorrow, Next week, Pick date… or Clear.
-- **Task groups** — open tasks are grouped as Overdue, Today, Next 7 days, Later and No date. Click a group heading to collapse it; this is remembered.
-- **Search and filters for Tasks and Ideas** — a search box (matches text, tags, notes and subtasks) and chips for All, each #tag with its count, and High priority.
-- **Subtasks** — a checklist in the task panel with a progress bar, and a "2/5" count on the task row. Saved as indented `- [ ]` lines under the task.
-- **Keyboard shortcuts in Tasks and Ideas** — N new, / search, ↑↓ (or J/K) move, Enter or E open, Space complete, Del delete, Esc close. Shown at the bottom of the list.
-- **Ideas: tags, star and status** — add `#tags` when typing an idea, star the good ones (★, shown first), and set a status: New, Exploring, Parked or Used. Parked and Used ideas move to a collapsed "Used and parked" section instead of being deleted. Filter chips for tags, ★ Starred and Exploring.
-- **Ideas: smarter → Task** — opens a small popup to pick priority and target date. By default the idea is kept and marked Used; the task gets the idea's tags and notes plus a "From idea" line.
-- **Recent Files with Tasks/Ideas open** — clicking a file in Recent Files (including the one already open) now closes the Tasks or Ideas view and shows the file.
-- **Tag suggestions in In Short** — the In Short banner now shows the file's tags and suggests 2–3 more from the same AI call, reusing tags already used in the folder. Click *+ #tag* (or *Add all*) to add it to the file's frontmatter. Adding tags doesn't trigger a new summary.
-- **Ideas are one block of text** — write an idea as several lines or paragraphs (Shift+Enter or Alt+Enter for a new line, Enter to add). The list shows the whole text cut off after 3 lines, with *Show more*, and the side panel edits it in one large box. There are no separate notes for ideas.
-- **Multi-line tasks** — in the Tasks add box, Shift+Enter (or Alt+Enter) starts a new line. The first line is the task, and the rest becomes its notes. Paragraph breaks in task notes are kept.
-- **Start in Tasks** — Settings → On Launch has a new *Start in Tasks* option that opens the folder's Tasks view when the app starts (falls back to the Scratchpad when no folder is open).
-- **Undo and delete confirmation** — deleting a task or idea asks first in an app-styled dialog (Enter to delete, Esc to cancel), then shows a toast with Undo. Completing a task also offers Undo.
-
-
-### Fixed
-- **Tasks and Ideas in sub-folders** — clicking a `_tasks.md` or `_ideas.md` in any sub-folder now opens its Tasks or Ideas page (the title shows which folder). Before, those files opened as plain text, and the pages only showed the top-level folder's list. The header buttons still show the open folder's list, and *→ Task* adds the task in the idea's own folder.
-- **macOS: opening a .md file from Finder showed an empty app** — files sent by Finder (Open With, double-click, drag onto the Dock icon) now open, both when the app is starting and when it's already running.
-- **Open file losing its Explorer highlight after saving** — the highlight was restored before the Explorer finished redrawing. Because of this, a second tag added from In Short (or a tag added during rename) could be written to disk and then overwritten by the editor's copy.
-
 ---
 
 ## [1.1.7] - 2026-10-20
@@ -57,6 +33,12 @@ All notable new features and critical fixes for MoilStack .md.
 - **Folder Ideas** — a lightbulb button with the idea count opens an Ideas view for jotting down ideas (text and created date). **→ Task** moves an idea to Tasks. Saved as `_ideas.md` in the folder.
 - **Tasks/Ideas files stay editable** — `_tasks.md` and `_ideas.md` show in the Explorer; opening one shows its view, and *Edit raw* opens the Markdown. Hand edits are respected: lines the view doesn't recognise stay where they are, indented lines under an item stay with it (shown under it), and the view notes how many lines it isn't showing.
 - **Rename Folder…** in the folder right-click menu — renames the folder in place in the Explorer. An open file inside it keeps working.
+- **Better Tasks** — quick-add syntax (`Call bank !high tomorrow #finance` picks out priority, date and tags), multi-line tasks, and a side panel to edit text, priority, date, tags, notes and subtasks (with a progress count). Tasks are grouped as Overdue, Today, Next 7 days, Later and No date, with a quick date menu on each task.
+- **Better Ideas** — an idea is one block of text that can span several lines, with `#tags`, a ★ star and a status (New, Exploring, Parked, Used). *→ Task* asks for priority and date, and keeps the idea marked Used.
+- **Search, filters and shortcuts in Tasks and Ideas** — a search box, tag and priority filter chips, and keyboard shortcuts (N, /, ↑↓, Enter, Space, Del, Esc).
+- **Undo and delete confirmation** — deleting a task or idea asks first, and deleting or completing one can be undone.
+- **Tag suggestions in In Short** — add suggested tags to the file with one click.
+- **Start in Tasks** — a new On Launch option that opens the folder's Tasks view.
 
 ### Changed
 - **One "New" command** — the ☰ menu has a single *New* (`Ctrl+N`) that creates a file in the Explorer's folder; the separate untitled *New* item is gone. `Ctrl+Shift+N` still works. In Recent Only mode it starts an untitled file.
@@ -73,6 +55,9 @@ All notable new features and critical fixes for MoilStack .md.
 - **Renaming no longer overwrites an existing file** — renaming to a name already used in the folder is refused instead of silently replacing the other file. Case-only renames still work.
 - **Moving no longer overwrites an existing file** — moving a file (including drag and drop) into a folder that already has a file with the same name is refused instead of replacing it.
 - **Delete Folder only deletes empty folders** — the option is always in the folder menu, and the folder is checked on disk first. Previously a folder holding only PDFs, images or other non-Markdown files looked empty and could be sent to the Recycle Bin with its contents; now you get a "Folder is not empty" message instead.
+- **Tasks and Ideas in sub-folders** — clicking a `_tasks.md` or `_ideas.md` in any sub-folder now opens its Tasks or Ideas page (the title shows which folder). Before, those files opened as plain text, and the pages only showed the top-level folder's list. The header buttons still show the open folder's list, and *→ Task* adds the task in the idea's own folder.
+- **macOS: opening a .md file from Finder showed an empty app** — files sent by Finder (Open With, double-click, drag onto the Dock icon) now open, both when the app is starting and when it's already running.
+- **Open file losing its Explorer highlight after saving** — the highlight was restored before the Explorer finished redrawing. Because of this, a second tag added from In Short (or a tag added during rename) could be written to disk and then overwritten by the editor's copy.
 
 ---
 
