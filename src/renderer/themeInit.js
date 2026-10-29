@@ -9,4 +9,9 @@
 (function () {
   var saved = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
+  // Saved Explorer width (set by dragging the divider — sidebarManager.js)
+  var sidebarWidth = parseInt(localStorage.getItem('sidebarWidth') || '', 10);
+  if (sidebarWidth) document.documentElement.style.setProperty('--sidebar-width', sidebarWidth + 'px');
+  document.documentElement.setAttribute(
+    'data-preview-width', localStorage.getItem('previewWidth') || 'readable');
 })();

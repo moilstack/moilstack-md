@@ -255,6 +255,8 @@ const RecentsPanel = (() => {
     // dismiss it and switch to edit mode — the row is "active" because the
     // untitled buffer is already loaded, but the overlay is hiding the editor.
     if (row.classList.contains('active')) {
+      // Already open — just bring it back if the Tasks/Ideas view is covering it
+      if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(row.dataset.path || null);
       if (row.dataset.role === 'draft') {
         const welcomeScreen = document.getElementById('welcome-screen');
         if (welcomeScreen && !welcomeScreen.classList.contains('hidden')) {

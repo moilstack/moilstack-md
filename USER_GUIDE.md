@@ -51,8 +51,7 @@ Right-click a file in the Explorer → **Version History…**:
 | `Ctrl+K` | ✨ AI custom prompt for the selected text |
 | `Ctrl+\`` | Switch Edit / Preview / Split |
 | `Ctrl+O` | Open folder |
-| `Ctrl+N` | New untitled file |
-| `Ctrl+Shift+N` | New file in the Explorer's active folder |
+| `Ctrl+N` | New file in the Explorer's active folder (untitled file in Recent Only mode) |
 | `Ctrl+F` | Find & replace |
 | `Ctrl+Shift+F` | Search files and content |
 | `Enter` / `Alt+Enter` | Send chat message / new line in chat |

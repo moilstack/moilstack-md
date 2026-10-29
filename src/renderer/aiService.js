@@ -68,6 +68,19 @@ const aiService = {
       })
     })
   },
+
+  /**
+   * Background request: resolves with the full reply text, no streaming.
+   * Safe to run while the chat is streaming — it uses its own IPC channel
+   * (ai:complete) instead of the shared ai:token/ai:done listeners.
+   * @returns {Promise<string>} rejects with an Error on backend failure
+   */
+  async complete(messages, model) {
+    const cwd = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('lastFolder')) || null
+    const res = await window.electronAPI.completeAI({ model, messages, cwd })
+    if (res?.error) throw new Error(res.error)
+    return res?.text || ''
+  },
 }
 
 // CommonJS export — picked up by Jest; ignored when loaded as a browser script

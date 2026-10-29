@@ -95,6 +95,7 @@ if (focusModeBtn) focusModeBtn.addEventListener('click', () => toggleFocusMode()
  * and AI context label.
  */
 function selectFile(el, filePath, lines, chars) {
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(filePath);
   document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
   if (el) el.classList.add('active');
 
@@ -224,6 +225,7 @@ async function openRecentFile(filePath) {
     EditorCore.triggerUpdate();
   }
   SaveManager.markClean();
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(filePath); // close Tasks/Ideas if open
 
   const name = filePath.split(/[\\/]/).pop() || filePath;
   currentFile = { name, path: filePath };
@@ -275,6 +277,7 @@ async function restoreDraftFile() {
 
   document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
 
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(null); // close Tasks/Ideas if open
   currentFile = { name: 'untitled.md', path: null };
   StatusBar.updateFilename('untitled.md');
   StatusBar.updateChatContextFile('untitled.md');
@@ -352,6 +355,7 @@ function _resetToBlankUntitled() {
 
   document.querySelectorAll('.file-item.active').forEach(f => f.classList.remove('active'));
 
+  if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(null); // close Tasks/Ideas if open
   currentFile = { name: 'untitled.md', path: null };
   StatusBar.updateFilename('untitled.md');
   StatusBar.updateChatContextFile('untitled.md');
@@ -455,17 +459,10 @@ document.addEventListener('keydown', async e => {
   }
 });
 
-// Ctrl+N — new untitled file (notepad-style; no folder or sidebar required)
+// Ctrl+N (and the old Ctrl+Shift+N) — new file in the Explorer's active folder.
+// In Recent Only mode there's no folder, so it starts an untitled file instead.
 document.addEventListener('keydown', async e => {
-  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'n') {
-    e.preventDefault();
-    await newUntitledFile();
-  }
-});
-
-// Ctrl+Shift+N — new file in the explorer (creates a file on disk in the active folder)
-document.addEventListener('keydown', async e => {
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
     e.preventDefault();
     await FileOperations.triggerExplorerNewFile();
   }
@@ -553,6 +550,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ThemeManager.applyStoredTheme();
   SidebarManager.initSidebarToggles();
   SearchPanel.init();
+  InShort.init();
   FileTreeManager.initFolderDropdown();
   RecentsPanel.applyExplorerMode();
 
@@ -612,7 +610,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // and the "start blank" preference — there's real work to hand back.
   const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();
 
-  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled' && launchBehavior !== 'first-file') {
+  if (!_openFileParam && !_pendingDraft && launchBehavior !== 'untitled' && launchBehavior !== 'first-file' && launchBehavior !== 'tasks') {
     WelcomeScreen.showWelcomeScreen();
   }
 
@@ -688,6 +686,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     SaveManager.markDirty();
   } else if (launchBehavior === 'untitled') {
     await newUntitledFile();
+  } else if (launchBehavior === 'tasks') {
+    // "Start in Tasks" — the Scratchpad sits underneath; with no folder open
+    // there are no tasks to show, so the Scratchpad is all you get.
+    await newUntitledFile();
+    if (savedFolder && typeof Tasks !== 'undefined') {
+      await Tasks.setRoot(savedFolder); // make sure the folder is set before opening
+      await Tasks.open();
+    }
   } else if (launchBehavior === 'first-file') {
     // "Open first file in Explorer" — take the top-most file row as shown in
     // the sidebar (pinned files first, then the active folder's tree/list),

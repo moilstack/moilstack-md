@@ -213,6 +213,19 @@ if (!gotLock) {
     createWindow(args)
   })
 
+  // ── macOS: files opened from Finder ─────────────────────────────────────────
+  // On macOS, "Open With" / double-click doesn't put the file in argv like
+  // Windows does — the app gets an 'open-file' event instead, which can fire
+  // before the app is ready (cold start) or any time after (already running).
+  let _appReady = false
+  const _pendingOpenFiles = []   // files opened before the first window exists
+
+  app.on('open-file', (event, filePath) => {
+    event.preventDefault()
+    if (!_appReady) { _pendingOpenFiles.push(filePath); return }
+    createWindow({ filePath })    // same as a second launch on Windows: a new window
+  })
+
   // ── App lifecycle ───────────────────────────────────────────────────────────
 
   app.whenReady().then(async () => {
@@ -236,8 +249,14 @@ if (!gotLock) {
     // Accepts an optional args object: { filePath?, folderPath? }
     ipcMain.handle('app:new-window', (_e, args) => { createWindow(args || {}) })
 
-    // First window — pass any file/folder from the CLI args
-    createWindow(getArgsFromArgv(process.argv))
+    // First window — pass any file/folder from the CLI args, or the first file
+    // Finder asked us to open while we were starting up (macOS)
+    const startArgs = getArgsFromArgv(process.argv)
+    if (!startArgs.filePath && _pendingOpenFiles.length) startArgs.filePath = _pendingOpenFiles.shift()
+    createWindow(startArgs)
+    // Any further files opened at the same time get a window each
+    for (const filePath of _pendingOpenFiles.splice(0)) createWindow({ filePath })
+    _appReady = true
 
     startReleaseCheck()
 

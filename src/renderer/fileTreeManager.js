@@ -102,7 +102,17 @@ const FileTreeManager = (() => {
     return '';
   }
 
-  function _fileItemHTML(filePath, fileName, pinned, depth, firstLine) {
+  /** Small tag icon after a file name; hover lists the tags. */
+  function _tagIndicatorHTML(tags) {
+    if (!tags || !tags.length) return '';
+    const list = _escHtml(tags.map(t => '#' + t).join(', '));
+    return `<span class="file-item__tag-ind" title="${list}" aria-label="Tags: ${list}">` +
+      `<svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true">` +
+      `<path d="M1.5 2.5v4l6 6 5-5-6-6h-4a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>` +
+      `<circle cx="4.5" cy="4.5" r="1" fill="currentColor"/></svg>${tags.length}</span>`;
+  }
+
+  function _fileItemHTML(filePath, fileName, pinned, depth, firstLine, tags) {
     const escapedPath = filePath.replace(/"/g, '&quot;');
     const indent = (depth || 0) * 12;
     if (firstLine) {
@@ -114,6 +124,7 @@ const FileTreeManager = (() => {
         <div class="file-item__tree-row">
           ${_fileIconSVG(fileName)}
           <span>${fileName}</span>
+          ${_tagIndicatorHTML(tags)}
           <button class="file-pin-btn file-pin-btn--active"
                   data-pin-path="${escapedPath}"
                   title="Unpin file" aria-pressed="true">
@@ -130,6 +141,7 @@ const FileTreeManager = (() => {
            style="padding-left:${14 + indent}px">
         ${_fileIconSVG(fileName)}
         <span>${fileName}</span>
+        ${_tagIndicatorHTML(tags)}
         <button class="file-pin-btn${pinned ? ' file-pin-btn--active' : ''}"
                 data-pin-path="${escapedPath}"
                 title="${pinned ? 'Unpin file' : 'Pin file'}"
@@ -143,8 +155,6 @@ const FileTreeManager = (() => {
     const escapedPath = file.path.replace(/"/g, '&quot;');
     const tags = file.tags || [];
     const preview = file.firstLine || '';
-    const tagsHTML = tags.map(t => `<span class="file-tag">${_escHtml('#' + t)}</span>`).join('');
-    const tagsTitle = tags.length ? ` title="${_escHtml(tags.map(t => '#' + t).join(', '))}"` : '';
     const labelDot = label
       ? `<svg class="file-item__label-dot" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="4" cy="4" r="4" fill="${label.color}"/></svg>`
       : '';
@@ -156,7 +166,7 @@ const FileTreeManager = (() => {
           ${_fileIconSVG(file.name)}
           <span class="file-item__name">${file.name}</span>
           ${labelDot}
-          ${tagsHTML ? `<div class="file-item__tags"${tagsTitle}>${tagsHTML}</div>` : ''}
+          ${_tagIndicatorHTML(tags)}
           <button class="file-pin-btn${pinned ? ' file-pin-btn--active' : ''}"
                   data-pin-path="${escapedPath}"
                   title="${pinned ? 'Unpin file' : 'Pin file'}"
@@ -275,7 +285,7 @@ const FileTreeManager = (() => {
           html += _renderTreeEntries(entry.children, depth + 1, pinnedPaths);
         }
       } else {
-        html += _fileItemHTML(entry.path, entry.name, pinnedPaths.has(entry.path), depth);
+        html += _fileItemHTML(entry.path, entry.name, pinnedPaths.has(entry.path), depth, undefined, entry.tags);
       }
     }
     return html;
@@ -329,8 +339,7 @@ const FileTreeManager = (() => {
 
   function collapseAll() {
     StorageManager.collapseAllFolders(_cachedTree);
-    renderFileTree();
-    restoreActiveItem();
+    renderFileTree().then(restoreActiveItem);
   }
 
   function touchFile(filePath, firstLine, tags) {
@@ -340,8 +349,8 @@ const FileTreeManager = (() => {
       if (firstLine !== undefined) file.firstLine = firstLine;
       if (tags !== undefined) file.tags = tags;
       _resortTree(_cachedTree);
-      renderFileTree();
-      restoreActiveItem();
+      // renderFileTree is async — re-mark the open file once the new rows exist
+      renderFileTree().then(restoreActiveItem);
     }
   }
 
@@ -383,7 +392,7 @@ const FileTreeManager = (() => {
       html += `<div class="file-list-section-header">Pinned</div>`;
       html += pinnedFiles.map(f => rootOnly
         ? _flatFileItemHTML(f, true, labelsMap[f.path])
-        : _fileItemHTML(f.path, f.name, true, 0, pinnedFirstLines[f.path])
+        : _fileItemHTML(f.path, f.name, true, 0, pinnedFirstLines[f.path], f.tags)
       ).join('');
     }
 
@@ -404,8 +413,7 @@ const FileTreeManager = (() => {
     list.querySelectorAll('.folder-row').forEach(row => {
       row.addEventListener('click', () => {
         StorageManager.toggleFolderCollapse(row.dataset.folderPath);
-        renderFileTree();
-        restoreActiveItem();
+        renderFileTree().then(restoreActiveItem);
       });
       row.addEventListener('contextmenu', e => {
         e.preventDefault();
@@ -430,7 +438,11 @@ const FileTreeManager = (() => {
     /* ── File click — open in editor ────────────────────────────────── */
     list.querySelectorAll('.file-item').forEach(item => {
       item.addEventListener('click', async () => {
-        if (item.classList.contains('active')) return;
+        if (item.classList.contains('active')) {
+          // Already open — just bring it back if the Tasks/Ideas view is covering it
+          if (typeof FolderLists !== 'undefined') FolderLists.onFileSelected(item.dataset.path);
+          return;
+        }
         await SaveManager.silentSave();
 
         list.querySelectorAll('.file-item.active').forEach(el => el.classList.remove('active'));
@@ -569,6 +581,7 @@ const FileTreeManager = (() => {
     sessionStorage.setItem('lastFolder', folderPath);
 
     _updateFolderToolbarButtons();
+    if (typeof FolderLists !== 'undefined') FolderLists.loadFolder(folderPath);
 
     if (window.electronAPI?.readFolder) {
       const rootOnly = _getExplorerMode() === 'root-only';

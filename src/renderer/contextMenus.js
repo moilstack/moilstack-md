@@ -132,6 +132,14 @@ const ContextMenus = (() => {
         window.electronAPI?.showInExplorer(filePath);
       } else if (action === 'rename') {
         FileOperations.startInlineRename(filePath);
+      } else if (action === 'rename-from-content') {
+        RenameFromContent.renameFile(filePath);
+      } else if (action === 'rename-with-ai') {
+        RenameFromContent.renameFile(filePath, { useAI: true });
+      } else if (action === 'suggest-folder') {
+        SuggestFolder.show(filePath);
+      } else if (action === 'tags') {
+        TagModal.show([], filePath);
       } else if (action === 'delete') {
         ContextMenus.showDeleteConfirm(filePath);
       } else if (action === 'label') {
@@ -148,22 +156,6 @@ const ContextMenus = (() => {
   let _folderCtxTarget  = null;
   let _folderCtxDepth   = 0;
 
-  function _isFolderEmpty(folderPath) {
-    function _find(nodes) {
-      for (const n of nodes) {
-        if (n.type === 'folder' && n.path === folderPath)
-          return !n.children || n.children.length === 0;
-        if (n.type === 'folder' && n.children) {
-          const result = _find(n.children);
-          if (result !== null) return result;
-        }
-      }
-      return null;
-    }
-    const tree = FileTreeManager.getCachedTree() ?? [];
-    return _find(tree) ?? false;
-  }
-
   function showFolderCtxMenu(folderPath, depth, x, y) {
     if (!folderCtxMenuEl) return;
     _folderCtxTarget = folderPath;
@@ -172,11 +164,6 @@ const ContextMenus = (() => {
     const subBtn = folderCtxMenuEl.querySelector('[data-folder-action="new-subfolder"]');
     if (subBtn) subBtn.classList.toggle('hidden', depth >= 3);
 
-    const isEmpty = _isFolderEmpty(folderPath);
-    const delBtn      = document.getElementById('folder-ctx-delete-btn');
-    const delDivider  = document.getElementById('folder-ctx-delete-divider');
-    if (delBtn)     delBtn.classList.toggle('hidden', !isEmpty);
-    if (delDivider) delDivider.classList.toggle('hidden', !isEmpty);
 
     folderCtxMenuEl.classList.add('visible');
     const mw = folderCtxMenuEl.offsetWidth  || 180;
@@ -191,7 +178,7 @@ const ContextMenus = (() => {
   }
 
   folderCtxMenuEl?.querySelectorAll('[data-folder-action]').forEach(btn => {
-    btn.addEventListener('mousedown', e => {
+    btn.addEventListener('mousedown', async e => {
       e.preventDefault();
       const action     = btn.dataset.folderAction;
       const folderPath = _folderCtxTarget;
@@ -202,9 +189,21 @@ const ContextMenus = (() => {
         window.electronAPI?.showInExplorer(folderPath);
       } else if (action === 'new-file-here') {
         FileOperations.showNewFileInput(folderPath);
+      } else if (action === 'rename-from-content') {
+        RenameFromContent.renameFolder(folderPath);
       } else if (action === 'new-subfolder') {
         FileOperations.promptNewFolder(folderPath);
+      } else if (action === 'rename-folder') {
+        FileOperations.promptRenameFolder(folderPath);
       } else if (action === 'delete-folder') {
+        // Only empty folders can be deleted — checked on disk, since the tree
+        // only lists .md/.txt files and would miss PDFs, images, etc.
+        const res = await window.electronAPI?.isFolderEmpty(folderPath);
+        if (res?.error) { StatusBar.showToast(res.error); return; }
+        if (!res?.empty) {
+          StatusBar.showToast('Folder is not empty — move or delete its contents first.');
+          return;
+        }
         ContextMenus.showDeleteConfirm(folderPath, 'folder');
       }
     });
@@ -246,7 +245,9 @@ const ContextMenus = (() => {
     _hideDeleteConfirm();
     if (!targetPath) return;
 
-    const result = await window.electronAPI?.trashFile(targetPath);
+    const result = type === 'folder'
+      ? await window.electronAPI?.trashEmptyFolder(targetPath)
+      : await window.electronAPI?.trashFile(targetPath);
     if (!result?.ok) {
       StatusBar.showToast(result?.error || `Failed to delete ${type}.`);
       return;

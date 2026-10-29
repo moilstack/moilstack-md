@@ -25,6 +25,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createFolder: (parentPath, folderName) =>
     ipcRenderer.invoke('folder:create', parentPath, folderName),
 
+  // Rename a folder in place → { ok, newPath } | { ok: false, error }
+  renameFolder: (folderPath, newName) => ipcRenderer.invoke('folder:rename', folderPath, newName),
+
+  // Whether a folder is empty on disk (any file type counts) → { empty } | { error }
+  isFolderEmpty: (folderPath) => ipcRenderer.invoke('folder:is-empty', folderPath),
+
+  // Move a folder to the Recycle Bin only if it is empty on disk
+  trashEmptyFolder: (folderPath) => ipcRenderer.invoke('folder:trash-empty', folderPath),
+
   // Read the content of a file
   readFile: (filePath) => ipcRenderer.invoke('file:read', filePath),
 
@@ -47,6 +56,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Move a file into a different folder (same filename, new directory)
   moveFile: (filePath, targetFolderPath) =>
     ipcRenderer.invoke('file:move', filePath, targetFolderPath),
+
+  // Read only the start of a file (for content-based rename suggestions)
+  readFileHead: (filePath, maxBytes) => ipcRenderer.invoke('file:read-head', filePath, maxBytes),
 
   // Rename a file on disk
   renameFile: (oldPath, newName) =>
@@ -111,6 +123,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── AI Streaming ─────────────────────────────────────────────────────
   // Fire the AI request (Ollama or API backend)
   askAI: (payload) => ipcRenderer.invoke('ai:ask', payload),
+
+  // Background AI request — resolves with { text } or { error }; uses no
+  // shared listeners, so it never disturbs a chat stream in progress
+  completeAI: (payload) => ipcRenderer.invoke('ai:complete', payload),
 
   // Register one-way event listeners for streaming tokens
   onAIToken: (cb) => ipcRenderer.on('ai:token', (_e, token) => cb(token)),

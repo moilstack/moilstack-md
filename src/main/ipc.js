@@ -411,6 +411,17 @@ function registerIpcHandlers() {
             try {
               node.modified = (await fs.stat(fullPath)).mtimeMs
             } catch { /* leave modified undefined */ }
+            if (!withMeta) {
+              // Tags live in frontmatter at the top — the first 4 KB is enough
+              let fh
+              try {
+                fh = await fs.open(fullPath, 'r')
+                const buf = Buffer.alloc(4096)
+                const { bytesRead } = await fh.read(buf, 0, buf.length, 0)
+                const tags = _extractTags(buf.toString('utf8', 0, bytesRead))
+                if (tags.length) node.tags = tags
+              } catch { /* no tags */ } finally { await fh?.close() }
+            }
             if (withMeta) {
               try {
                 const raw = await fs.readFile(fullPath, 'utf8')
@@ -462,6 +473,69 @@ function registerIpcHandlers() {
   })
 
   /**
+   * folder:rename — rename a folder in place (same parent directory).
+   * Refuses if a folder/file with the new name already exists.
+   * Returns { ok: true, newPath } or { ok: false, error }.
+   */
+  ipcMain.handle('folder:rename', async (_event, oldPath, newName) => {
+    try {
+      const safeName = path.basename((newName || '').trim())
+      if (!safeName || safeName === '.' || safeName === '..') return { ok: false, error: 'Invalid folder name.' }
+      const newPath = path.join(path.dirname(oldPath), safeName)
+      if (newPath === oldPath) return { ok: true, newPath }
+      // Case-only renames are the same folder on case-insensitive file systems
+      if (newPath.toLowerCase() !== oldPath.toLowerCase()) {
+        try {
+          await fs.access(newPath)
+          return { ok: false, error: `"${safeName}" already exists.` }
+        } catch { /* target is free */ }
+      }
+      await fs.rename(oldPath, newPath)
+      return { ok: true, newPath }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  // OS bookkeeping files that don't make a folder "non-empty"
+  const _FOLDER_JUNK = new Set(['.DS_Store', 'Thumbs.db', 'desktop.ini'])
+
+  async function _folderIsEmpty(folderPath) {
+    const names = await fs.readdir(folderPath)
+    return names.every(n => _FOLDER_JUNK.has(n))
+  }
+
+  /**
+   * folder:is-empty — checks the disk, not the explorer tree (which only
+   * lists .md/.txt files, so a folder of PDFs or images would look empty).
+   * Returns { empty: boolean } or { error }.
+   */
+  ipcMain.handle('folder:is-empty', async (_event, folderPath) => {
+    try {
+      return { empty: await _folderIsEmpty(folderPath) }
+    } catch (err) {
+      return { error: err.message }
+    }
+  })
+
+  /**
+   * folder:trash-empty — move a folder to the Recycle Bin, but only if it is
+   * empty on disk (re-checked here, so a file added after the confirm is safe).
+   * Returns { ok: true } or { ok: false, error }.
+   */
+  ipcMain.handle('folder:trash-empty', async (_event, folderPath) => {
+    try {
+      if (!(await _folderIsEmpty(folderPath))) {
+        return { ok: false, error: 'Folder is not empty — move or delete its contents first.' }
+      }
+      await shell.trashItem(folderPath)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  /**
    * file:read-base64 — read a binary file and return it as a base64 string.
    *
    * Returns { base64: string, mime: string } or null on error.
@@ -486,10 +560,33 @@ function registerIpcHandlers() {
    */
   ipcMain.handle('file:read', async (_event, filePath) => {
     try {
-      const content = await fs.readFile(filePath, 'utf8')
+      // Strip the BOM so the renderer's frontmatter checks (preview, tag
+      // modal, sidebar tags) see the leading `---` and don't render it.
+      const content = _stripBOM(await fs.readFile(filePath, 'utf8'))
       return { content }
     } catch {
       return null
+    }
+  })
+
+  /**
+   * file:read-head — read only the first `maxBytes` of a file (default 4 KB).
+   * Used to suggest a filename from content without loading whole files.
+   * Returns { content } or null on failure.
+   */
+  ipcMain.handle('file:read-head', async (_event, filePath, maxBytes = 4096) => {
+    let handle
+    try {
+      handle = await fs.open(filePath, 'r')
+      const buf = Buffer.alloc(Math.min(Math.max(maxBytes, 256), 65536))
+      const { bytesRead } = await handle.read(buf, 0, buf.length, 0)
+      // A multi-byte character cut at the end decodes as U+FFFD — drop it.
+      const content = _stripBOM(buf.toString('utf8', 0, bytesRead)).replace(/\uFFFD+$/, '')
+      return { content }
+    } catch {
+      return null
+    } finally {
+      await handle?.close()
     }
   })
 
@@ -631,6 +728,11 @@ function registerIpcHandlers() {
       const fileName = path.basename(filePath)
       const newPath  = path.join(targetFolderPath, fileName)
       if (filePath === newPath) return { ok: true, newPath }
+      // fs.rename silently replaces an existing file — refuse instead
+      try {
+        await fs.access(newPath)
+        return { ok: false, error: `"${fileName}" already exists in the target folder.` }
+      } catch { /* target is free */ }
       await fs.rename(filePath, newPath)
       return { ok: true, newPath }
     } catch (err) {
@@ -650,6 +752,16 @@ function registerIpcHandlers() {
       if (!safeName) return { ok: false, error: 'Invalid filename.' }
       const finalName = /\.[a-zA-Z0-9]+$/.test(safeName) ? safeName : `${safeName}.md`
       const newPath  = path.join(dir, finalName)
+      if (newPath === oldPath) return { ok: true, newPath }
+      // fs.rename silently replaces an existing file — refuse instead.
+      // A case-only change (notes.md → Notes.md) is the same file on
+      // case-insensitive file systems, so let that through.
+      if (newPath.toLowerCase() !== oldPath.toLowerCase()) {
+        try {
+          await fs.access(newPath)
+          return { ok: false, error: `"${finalName}" already exists.` }
+        } catch { /* target is free */ }
+      }
       await fs.rename(oldPath, newPath)
       return { ok: true, newPath }
     } catch (err) {
@@ -687,6 +799,25 @@ function registerIpcHandlers() {
    * filename/content — lets a user look up files by tag specifically rather
    * than relying on the tag word happening to also appear in the text.
    */
+  /**
+   * Split a search query into terms: words, plus "quoted phrases" kept whole.
+   *   'Claude Key'        → ['claude', 'key']
+   *   '"Claude Key" api'  → ['claude key', 'api']
+   */
+  function _searchTerms(q) {
+    const terms = []
+    for (const m of q.matchAll(/"([^"]+)"|(\S+)/g)) {
+      const t = (m[1] ?? m[2]).trim().toLowerCase()
+      if (t && !terms.includes(t)) terms.push(t)
+    }
+    return terms
+  }
+
+  /**
+   * Match one file against a query. A file matches if its name or content
+   * contains ANY of the terms; `score` ranks files with more of the terms
+   * (and terms in the file name) higher.
+   */
   async function _matchFile(fullPath, fileName, q) {
     let content = ''
     try { content = await fs.readFile(fullPath, 'utf8') } catch { return null }
@@ -697,29 +828,59 @@ function registerIpcHandlers() {
       if (!wanted) return null
       const tags = _extractTags(content)
       if (!tags.some(t => t.toLowerCase().includes(wanted))) return null
-      return { filePath: fullPath, fileName, snippet: `Tags: ${tags.join(', ')}`, matchType: 'tag' }
+      return { filePath: fullPath, fileName, snippet: `Tags: ${tags.join(', ')}`, matchType: 'tag', score: 1 }
     }
 
-    const nameMatch = fileName.toLowerCase().includes(q)
-    const contentMatch = content.toLowerCase().includes(q)
-    if (!nameMatch && !contentMatch) return null
+    const terms = _searchTerms(q)
+    if (!terms.length) return null
+    const lowerName = fileName.toLowerCase()
+    const lowerContent = content.toLowerCase()
 
+    const inName = terms.filter(t => lowerName.includes(t))
+    const inContent = terms.filter(t => lowerContent.includes(t))
+    const matched = terms.filter(t => inName.includes(t) || inContent.includes(t))
+    if (!matched.length) return null
+
+    // More distinct terms first; the whole query as a phrase and name hits break ties
+    const phrase = terms.length > 1 && (lowerName.includes(q) || lowerContent.includes(q))
+    const score = matched.length * 10 + (phrase ? 5 : 0) + inName.length * 2
+
+    // Snippet: the line holding the most terms (first such line), else the first line
     let snippet = ''
-    if (contentMatch) {
-      const idx = content.toLowerCase().indexOf(q)
-      const lineStart = content.lastIndexOf('\n', idx) + 1
-      const lineEnd   = content.indexOf('\n', idx)
-      snippet = content.slice(lineStart, lineEnd === -1 ? undefined : lineEnd).trim()
+    if (inContent.length) {
+      let best = -1
+      for (const line of content.split('\n')) {
+        const l = line.toLowerCase()
+        const n = inContent.filter(t => l.includes(t)).length
+        if (n > best) { best = n; snippet = line }
+        if (n === inContent.length) break
+      }
+      snippet = snippet.trim()
     } else {
       snippet = content.split('\n').find(l => l.trim()) || ''
     }
     snippet = snippet.replace(/^#+\s*/, '').slice(0, 120)
 
-    return { filePath: fullPath, fileName, snippet, matchType: nameMatch ? 'name' : 'content' }
+    return {
+      filePath: fullPath, fileName, snippet,
+      matchType: inName.length ? 'name' : 'content',
+      matched, total: terms.length, score,
+    }
+  }
+
+  /** Best matches first; stable for equal scores (keeps folder order). */
+  function _rank(results, max = 30) {
+    return results
+      .map((r, i) => ({ r, i }))
+      .sort((a, b) => (b.r.score - a.r.score) || (a.i - b.i))
+      .slice(0, max)
+      .map(x => x.r)
   }
 
   /**
    * search:files — full-text + filename search across a folder tree.
+   * Files containing ANY of the query's words match; files with more of
+   * them rank first. "Quoted phrases" are matched as a whole.
    * A query starting with `#` or `tag:` (e.g. `#project`) matches only
    * against frontmatter tags instead — see _matchFile.
    *
@@ -730,17 +891,19 @@ function registerIpcHandlers() {
    */
   ipcMain.handle('search:files', async (_event, { folderPath, query }) => {
     if (!folderPath || !query) return { results: [] }
-    const q = query.toLowerCase()
+    const q = query.trim().toLowerCase()
     const results = []
+    // Matches are ranked, so gather them all (up to a sane cap) before trimming to 30
+    const MAX_MATCHES = 500
 
     async function walk(dir) {
-      if (results.length >= 30) return
+      if (results.length >= MAX_MATCHES) return
       let entries
       try { entries = await fs.readdir(dir, { withFileTypes: true }) }
       catch { return }
 
       for (const e of entries) {
-        if (results.length >= 30) break
+        if (results.length >= MAX_MATCHES) break
         if (e.name.startsWith('.')) continue
         const fullPath = path.join(dir, e.name)
         if (e.isDirectory()) {
@@ -753,7 +916,7 @@ function registerIpcHandlers() {
     }
 
     await walk(folderPath)
-    return { results }
+    return { results: _rank(results) }
   })
 
   /**
@@ -767,16 +930,15 @@ function registerIpcHandlers() {
    */
   ipcMain.handle('search:recent-files', async (_event, { filePaths, query }) => {
     if (!Array.isArray(filePaths) || !filePaths.length || !query) return { results: [] }
-    const q = query.toLowerCase()
+    const q = query.trim().toLowerCase()
     const results = []
 
     for (const fullPath of filePaths) {
-      if (results.length >= 30) break
       const result = await _matchFile(fullPath, path.basename(fullPath), q)
       if (result) results.push(result)
     }
 
-    return { results }
+    return { results: _rank(results) }
   })
 
   /* ── AI Config CRUD ─────────────────────────────────────────────────
@@ -1152,6 +1314,32 @@ function registerIpcHandlers() {
     }
   })
 
+  registerAiComplete()
+}
+
+/* ── AI: complete (background, non-streaming) ─────────────────────────
+   Same backends as ai:ask, but tokens are collected here and the full
+   text is returned from the invoke. Nothing is sent on the shared
+   ai:token / ai:done / ai:error channels, so a background request (e.g.
+   the Preview "In short" banner) can't interfere with the chat.
+   Returns { text } or { error }.
+   ──────────────────────────────────────────────────────────────────── */
+function registerAiComplete() {
+  ipcMain.handle('ai:complete', async (_event, { model, messages, cwd }) => {
+    let text = ''
+    const collect = (channel, data) => { if (channel === 'ai:token') text += data }
+    try {
+      if (model.type === 'ollama')         await _handleOllama(model, messages, collect)
+      else if (model.type === 'api')       await _handleApi(model, messages, collect)
+      else if (model.type === 'anthropic') await _handleAnthropic(model, messages, collect)
+      else if (model.type === 'cli')       await _handleCli(model, messages, collect, cwd)
+      else throw new Error(`Model type "${model.type}" is not supported in this version`)
+      return { text }
+    } catch (err) {
+      console.error('[ai:complete]', err)
+      return { error: err.message || String(err) }
+    }
+  })
 }
 
 /* ── Private AI dispatch helpers ──────────────────────────────────────────

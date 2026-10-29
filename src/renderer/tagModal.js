@@ -9,7 +9,7 @@
 
 const TagModal = (() => {
   const _overlay  = document.getElementById('tagModalOverlay');
-  const _input    = document.getElementById('tagModalInput');
+  const _tagsBox  = document.getElementById('tagModalTags');
   const _saveBtn  = document.getElementById('btnSaveTags');
   const _closeBtn = document.getElementById('btnCloseTagModal');
 
@@ -78,28 +78,99 @@ const TagModal = (() => {
     return ['---', tagsLine, '---', '', content].join('\n');
   }
 
+  const _title = _overlay?.querySelector('.label-modal__title');
+
+  // Pill editor; suggestions are the tags already used in the opened folder
+  const _input = _tagsBox ? TagInput.create({
+    max: 5,
+    getSuggestions: () => typeof RenameFromContent !== 'undefined' ? RenameFromContent.folderTags() : [],
+    onSubmit: () => _save(),
+  }) : null;
+  _tagsBox?.appendChild(_input.el);
+  let _targetPath = null;   // null → the file open in the editor
+
   function _hide() {
     _overlay?.classList.add('hidden');
+    _targetPath = null;
   }
 
-  /** @param {string[]} [suggested]  Extra tags (e.g. from AI) merged after the existing ones. */
-  function show(suggested = []) {
+  /** Path of the file open in the editor (the Explorer's active item), or null. */
+  function _activePath() {
+    // The open file — not the Explorer highlight, which can briefly vanish while the list redraws
+    try { if (typeof currentFile !== 'undefined' && currentFile?.path) return currentFile.path; } catch { /* not loaded */ }
+    return document.querySelector('#file-list .file-item.active')?.dataset.path || null;
+  }
+
+  /** Existing frontmatter tags in a document's text. */
+  function tagsIn(content) {
+    const parsed = _splitFrontmatter((content || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n'));
+    return parsed ? _getExistingTags(parsed.fmLines) : [];
+  }
+
+  /**
+   * Open the modal.
+   * @param {string[]} [suggested]  Extra tags (e.g. from AI) merged after the existing ones.
+   * @param {string}   [filePath]   A file in the Explorer; defaults to the open file.
+   */
+  async function show(suggested = [], filePath = null) {
     const editor = document.getElementById('mdEditor');
     if (!editor || !_overlay || !_input) return;
 
-    const parsed   = _splitFrontmatter(editor.value);
-    const existing = parsed ? _getExistingTags(parsed.fmLines) : [];
-    _input.value = [...new Set([...existing, ...suggested])].join(', ');
+    // A file other than the open one is read from (and saved to) disk
+    _targetPath = filePath && filePath !== _activePath() ? filePath : null;
+    let content = editor.value;
+    if (_targetPath) {
+      const res = await window.electronAPI?.readFile(_targetPath);
+      if (!res) { StatusBar.showToast('Could not read that file.'); _targetPath = null; return; }
+      content = res.content;
+    }
+
+    const existing = tagsIn(content);
+    if (_title) {
+      _title.textContent = filePath ? `Tags — ${filePath.split(/[\\/]/).pop()}` : 'Add Tags';
+    }
+    _input.setTags([...existing, ...suggested]);
     _overlay.classList.remove('hidden');
     _input.focus();
-    _input.select();
   }
 
-  function _save() {
+  /**
+   * Write `tags` into a file's frontmatter. The open file is changed in the
+   * editor (so an unsaved buffer isn't overwritten); any other file on disk.
+   * Returns { ok, error? }.
+   */
+  async function applyTagsToFile(filePath, tags) {
+    tags = tags.map(t => t.trim()).filter(Boolean).slice(0, 5);
+    if (filePath === _activePath()) {
+      const editor = document.getElementById('mdEditor');
+      const next = _applyTags(editor.value, tags);
+      if (next !== editor.value) EditorCore.setEditorContentNative(next);
+      return { ok: true };
+    }
+    const res = await window.electronAPI?.readFile(filePath);
+    if (!res) return { ok: false, error: 'Could not read the file.' };
+    const next = _applyTags(res.content, tags);
+    if (next === res.content) return { ok: true };
+    return await window.electronAPI?.writeFile(filePath, next) ?? { ok: false, error: 'Write failed.' };
+  }
+
+  async function _save() {
     const editor = document.getElementById('mdEditor');
     if (!editor) { _hide(); return; }
 
-    const tags       = _input.value.split(',').map(t => t.trim()).filter(Boolean).slice(0, 5);
+    const tags       = _input.getTags();
+
+    if (_targetPath) {
+      const path = _targetPath;
+      const result = await applyTagsToFile(path, tags);
+      _hide();
+      if (!result?.ok) { StatusBar.showToast(result?.error || 'Could not save tags.'); return; }
+      // Refresh so Root-only Explorer shows the new tags
+      const folder = sessionStorage.getItem('lastFolder');
+      if (folder) FileTreeManager.setActiveFolder(folder);
+      return;
+    }
+
     const oldContent = editor.value;
     const newContent = _applyTags(oldContent, tags);
     if (newContent !== oldContent) {
@@ -129,13 +200,13 @@ const TagModal = (() => {
 
   _saveBtn?.addEventListener('click', _save);
   _closeBtn?.addEventListener('click', _hide);
-  _input?.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  { e.preventDefault(); _save(); }
-    if (e.key === 'Escape') { e.preventDefault(); _hide(); }
+  // Enter in an empty box saves (TagInput onSubmit); Escape closes
+  _overlay?.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !_overlay.classList.contains('hidden')) { e.preventDefault(); _hide(); }
   });
   _overlay?.addEventListener('click', e => { if (e.target === _overlay) _hide(); });
 
-  return { show };
+  return { show, tagsIn, applyTagsToFile };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

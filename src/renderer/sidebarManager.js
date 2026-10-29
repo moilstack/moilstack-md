@@ -16,6 +16,69 @@ const SidebarManager = (() => {
     }
   }
 
+  /* ── Explorer resize (drag the divider) ───────────────────────────── */
+
+  const SIDEBAR_MIN     = 180;
+  const SIDEBAR_DEFAULT = 280;
+  const MAIN_MIN        = 360;   // always leave this much for the editor/preview
+
+  function _clampWidth(w) {
+    const max = Math.max(SIDEBAR_MIN, window.innerWidth - MAIN_MIN);
+    return Math.round(Math.min(max, Math.max(SIDEBAR_MIN, w)));
+  }
+
+  function setSidebarWidth(w, persist = true) {
+    const width = _clampWidth(w);
+    document.documentElement.style.setProperty('--sidebar-width', `${width}px`);
+    if (persist) localStorage.setItem('sidebarWidth', width);
+    // Editor ruler / line wrapping depend on the editor's width
+    if (typeof window.invalidateEditorRuler === 'function') window.invalidateEditorRuler();
+  }
+
+  (function _initResizer() {
+    const resizer = document.getElementById('sidebarResizer');
+    const sidebar = document.querySelector('.left-sidebar');
+    if (!resizer || !sidebar) return;
+
+    resizer.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const startX = e.clientX;
+      const startW = sidebar.getBoundingClientRect().width;
+      resizer.setPointerCapture(e.pointerId);
+      document.body.classList.add('is-resizing-sidebar');
+
+      const onMove = ev => setSidebarWidth(startW + ev.clientX - startX, false);
+      const onUp = ev => {
+        resizer.releasePointerCapture(ev.pointerId);
+        resizer.removeEventListener('pointermove', onMove);
+        resizer.removeEventListener('pointerup', onUp);
+        resizer.removeEventListener('pointercancel', onUp);
+        document.body.classList.remove('is-resizing-sidebar');
+        setSidebarWidth(sidebar.getBoundingClientRect().width, true);
+      };
+      resizer.addEventListener('pointermove', onMove);
+      resizer.addEventListener('pointerup', onUp);
+      resizer.addEventListener('pointercancel', onUp);
+    });
+
+    resizer.addEventListener('dblclick', () => setSidebarWidth(SIDEBAR_DEFAULT));
+
+    // Keyboard: ←/→ nudge by 16px (Shift: 64px)
+    resizer.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const step = (e.shiftKey ? 64 : 16) * (e.key === 'ArrowLeft' ? -1 : 1);
+      setSidebarWidth(sidebar.getBoundingClientRect().width + step);
+    });
+
+    // Re-clamp a saved width that no longer fits a smaller window
+    window.addEventListener('resize', () => {
+      const saved = parseInt(localStorage.getItem('sidebarWidth') || '', 10);
+      if (saved) setSidebarWidth(saved, false);
+    });
+  })();
+
   function setAIPanelExpanded(expanded, persist = true) {
     const panel  = document.getElementById('aiBottomPanel');
     const fab    = document.getElementById('btn-toggle-ai');

@@ -8,7 +8,13 @@ const FileOperations = (() => {
 
   /* ── Inline rename ────────────────────────────────────────────────── */
 
-  function startInlineRename(filePath) {
+  /**
+   * @param {string}   [initialName]  Prefill (e.g. a name suggested from content).
+   * @param {function} [onConfirm]    Awaited with the file's (old) path once the
+   *                                  user confirms with Enter/blur, just before
+   *                                  the rename — not on Esc.
+   */
+  function startInlineRename(filePath, initialName, onConfirm) {
     const list = document.getElementById('file-list');
     if (!list) return;
 
@@ -26,13 +32,13 @@ const FileOperations = (() => {
     const input = document.createElement('input');
     input.type         = 'text';
     input.className    = 'file-rename-input';
-    input.value        = originalName;
+    input.value        = initialName || originalName;
     input.spellcheck   = false;
     input.autocomplete = 'off';
     nameSpan.replaceWith(input);
 
-    const dotIdx = originalName.lastIndexOf('.');
-    input.setSelectionRange(0, dotIdx > 0 ? dotIdx : originalName.length);
+    const dotIdx = input.value.lastIndexOf('.');
+    input.setSelectionRange(0, dotIdx > 0 ? dotIdx : input.value.length);
     input.focus();
 
     async function confirmRename() {
@@ -42,8 +48,11 @@ const FileOperations = (() => {
 
       if (!newName || newName === originalName) {
         input.replaceWith(nameSpan);
+        if (newName) await onConfirm?.(filePath);
         return;
       }
+
+      await onConfirm?.(filePath);
 
       const result = await window.electronAPI?.renameFile(filePath, newName);
       if (!result?.ok) {
@@ -118,6 +127,66 @@ const FileOperations = (() => {
     input.addEventListener('keydown', e => {
       if (e.key === 'Enter')  { e.preventDefault(); input.blur(); }
       if (e.key === 'Escape') { row.remove(); }
+    });
+  }
+
+  /**
+   * Rename a folder in place: swaps its tree row's name for an input.
+   * Enter/blur confirms, Escape cancels. The open document is saved first
+   * and re-pointed if it lives inside the renamed folder.
+   */
+  function promptRenameFolder(folderPath) {
+    const row = [...document.querySelectorAll('#file-list .folder-row')]
+      .find(r => r.dataset.folderPath === folderPath);
+    const nameEl = row?.querySelector('.folder-row__name');
+    if (!nameEl) return;
+
+    const oldName = nameEl.textContent;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'new-section-input folder-rename-input';
+    input.value = oldName;
+    input.maxLength = 60;
+    input.spellcheck = false;
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    // Clicks inside the input must not toggle the folder's collapse state
+    input.addEventListener('click', e => e.stopPropagation());
+
+    let done = false;
+    const finish = async (commit) => {
+      if (done) return;
+      done = true;
+      const name = input.value.trim();
+      input.replaceWith(nameEl);
+      if (!commit || !name || name === oldName) return;
+
+      if (!(await SaveManager.silentSave())) {
+        StatusBar.showToast('Could not save current file — folder not renamed.');
+        return;
+      }
+      const result = await window.electronAPI?.renameFolder(folderPath, name);
+      if (!result?.ok) { StatusBar.showToast(result?.error || 'Could not rename folder.'); return; }
+
+      // Keep the open document pointing at its new location
+      const newPath = result.newPath;
+      const p = currentFile?.path;
+      if (p && (p.startsWith(folderPath + '/') || p.startsWith(folderPath + '\\'))) {
+        currentFile.path = newPath + p.slice(folderPath.length);
+      }
+      const rootFolder = sessionStorage.getItem('lastFolder');
+      if (rootFolder) await FileTreeManager.setActiveFolder(rootFolder);
+      FileTreeManager.restoreActiveItem?.();
+      StatusBar.showToast(`Folder renamed to "${name}".`);
+    };
+
+    input.addEventListener('blur', () => finish(true));
+    input.addEventListener('keydown', e => {
+      e.stopPropagation();
+      if (e.key === 'Enter')  { e.preventDefault(); finish(true); }
+      if (e.key === 'Escape') { e.preventDefault(); finish(false); }
     });
   }
 
@@ -236,6 +305,7 @@ const FileOperations = (() => {
   return {
     startInlineRename,
     promptNewFolder,
+    promptRenameFolder,
     showNewFileInput,
     hideNewFileInput,
     confirmNewFile,

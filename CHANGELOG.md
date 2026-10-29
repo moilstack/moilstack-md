@@ -4,6 +4,87 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Task quick-add syntax** — type `Call bank !high tomorrow #finance` and the priority, date and tags are picked out. A "Will add" line under the box shows what was understood. Dates: today, tomorrow, next week, in 3 days, weekday names, or YYYY-MM-DD. The separate Priority and date fields next to the box are gone.
+- **Task details side panel** — click a task to edit its text, priority, target date, tags and notes in a panel beside the list. Notes are saved as indented lines under the task in `_tasks.md`. Esc closes it. Ideas get the same panel for text and notes.
+- **Task tags** — `#tags` show as chips on each task and can be added or removed in the panel.
+- **Date menu on tasks** — click a task's date (or "+ date") for Today, Tomorrow, Next week, Pick date… or Clear.
+- **Task groups** — open tasks are grouped as Overdue, Today, Next 7 days, Later and No date. Click a group heading to collapse it; this is remembered.
+- **Search and filters for Tasks and Ideas** — a search box (matches text, tags, notes and subtasks) and chips for All, each #tag with its count, and High priority.
+- **Subtasks** — a checklist in the task panel with a progress bar, and a "2/5" count on the task row. Saved as indented `- [ ]` lines under the task.
+- **Keyboard shortcuts in Tasks and Ideas** — N new, / search, ↑↓ (or J/K) move, Enter or E open, Space complete, Del delete, Esc close. Shown at the bottom of the list.
+- **Ideas: tags, star and status** — add `#tags` when typing an idea, star the good ones (★, shown first), and set a status: New, Exploring, Parked or Used. Parked and Used ideas move to a collapsed "Used and parked" section instead of being deleted. Filter chips for tags, ★ Starred and Exploring.
+- **Ideas: smarter → Task** — opens a small popup to pick priority and target date. By default the idea is kept and marked Used; the task gets the idea's tags and notes plus a "From idea" line.
+- **Recent Files with Tasks/Ideas open** — clicking a file in Recent Files (including the one already open) now closes the Tasks or Ideas view and shows the file.
+- **Tag suggestions in In Short** — the In Short banner now shows the file's tags and suggests 2–3 more from the same AI call, reusing tags already used in the folder. Click *+ #tag* (or *Add all*) to add it to the file's frontmatter. Adding tags doesn't trigger a new summary.
+- **Ideas are one block of text** — write an idea as several lines or paragraphs (Shift+Enter or Alt+Enter for a new line, Enter to add). The list shows the whole text cut off after 3 lines, with *Show more*, and the side panel edits it in one large box. There are no separate notes for ideas.
+- **Multi-line tasks** — in the Tasks add box, Shift+Enter (or Alt+Enter) starts a new line. The first line is the task, and the rest becomes its notes. Paragraph breaks in task notes are kept.
+- **Start in Tasks** — Settings → On Launch has a new *Start in Tasks* option that opens the folder's Tasks view when the app starts (falls back to the Scratchpad when no folder is open).
+- **Undo and delete confirmation** — deleting a task or idea asks first in an app-styled dialog (Enter to delete, Esc to cancel), then shows a toast with Undo. Completing a task also offers Undo.
+
+
+### Fixed
+- **Tasks and Ideas in sub-folders** — clicking a `_tasks.md` or `_ideas.md` in any sub-folder now opens its Tasks or Ideas page (the title shows which folder). Before, those files opened as plain text, and the pages only showed the top-level folder's list. The header buttons still show the open folder's list, and *→ Task* adds the task in the idea's own folder.
+- **macOS: opening a .md file from Finder showed an empty app** — files sent by Finder (Open With, double-click, drag onto the Dock icon) now open, both when the app is starting and when it's already running.
+- **Open file losing its Explorer highlight after saving** — the highlight was restored before the Explorer finished redrawing. Because of this, a second tag added from In Short (or a tag added during rename) could be written to disk and then overwritten by the editor's copy.
+
+---
+
+## [1.1.7] - 2026-10-20
+
+### Added
+- **Theme picker** — the theme button opens a menu of all themes with colour swatches and a ✓ on the current one, instead of cycling one theme per click. Light and dark themes are grouped.
+- **Seven new themes** — Xcode Light, GitHub Light, One Light and Paper (light); Nord, Forest and Midnight (dark).
+- **Theme-matched file icons** — Markdown, text-file and folder icons (and folder names) use colours from the current theme's palette.
+- **Rename from Content** — right-click a file to suggest a name from its frontmatter `title:`, first heading or first line. Only the first 4 KB of the file is read. The usual rename box opens pre-filled.
+- **Rename with AI** — the active AI model suggests a short name from the start of the file.
+- **Rename a whole folder from content** — the Explorer header button (or a sub-folder's right-click menu) opens a review list of current → suggested names with editable names and tags. Nothing changes until you click Rename; *Suggest with AI* fills in AI names.
+- **Tag suggestions while renaming** — existing tags plus `#hashtags` near the top, or AI tags that reuse tags already used in the folder (up to 3 per file). Saved straight to the file's frontmatter when the rename is confirmed.
+- **Tags… in the file right-click menu** — edit any file's tags as pills: × to remove, type to add, with suggestions from tags already used in the folder.
+- **Tag badge in the Explorer** — files with tags show a tag icon and count (hover to see them), in both Multi-level and Root folder only modes.
+- **Search dialog** — clicking the header search box (or `Ctrl+Shift+F`) opens a dialog with the search box and every tag in the folder as clickable chips. Pick several tags and match *Any* or *All*; combine with text search.
+- **Preview width** — Settings → Editor → Preview Width (current width or full width), plus a toolbar button next to Focus mode. Its page icon shows the current width.
+- **Resizable Explorer** — drag the divider between the Explorer and the editor. Double-click resets it; ←/→ resize from the keyboard. The width is remembered.
+- **Open File icon** beside the Recent Files header in the Explorer.
+- **Toolbar tooltips** — the editor toolbar buttons show a styled tooltip quickly on hover.
+- **"In short" banner in Preview** — a one- or two-sentence AI summary of the open file at the top of Preview, with a loading shimmer while it's written. On by default (Settings → Editor → In Short Banner) and hidden when no AI model is set up. Summaries are remembered per file until it changes; ↻ refreshes, × hides it for that file. Switching files quickly never shows a summary on the wrong file.
+- **✨ AI → Explain** — a plain-language overview of the whole document (in short, key points, what to do) in the AI Assistant. The document isn't changed.
+- **Suggest Folder (AI)…** in the file right-click menu — the AI looks at your folders and the start of the file, then offers the best existing folder and a new folder name, each with a reason, with its pick marked *Recommended*. Choose or edit either, then *Move*, *Create & Move* or *Cancel*.
+- **Clear button in search** — a small × clears the search text; selected tags stay.
+- **Folder Tasks** — a checklist button in the header shows the open-task count for the open folder (red when a task is overdue). Click it for a full-width Tasks view: quick add with priority (High/Med/Low) and an optional target date, created date added automatically. Tick to complete, click a task's text to edit it, click its priority to change it, × to delete (with confirmation). Overdue tasks come first; completed ones sit in a collapsed *Completed* section. Saved as `_tasks.md` in the folder.
+- **Folder Ideas** — a lightbulb button with the idea count opens an Ideas view for jotting down ideas (text and created date). **→ Task** moves an idea to Tasks. Saved as `_ideas.md` in the folder.
+- **Tasks/Ideas files stay editable** — `_tasks.md` and `_ideas.md` show in the Explorer; opening one shows its view, and *Edit raw* opens the Markdown. Hand edits are respected: lines the view doesn't recognise stay where they are, indented lines under an item stay with it (shown under it), and the view notes how many lines it isn't showing.
+- **Rename Folder…** in the folder right-click menu — renames the folder in place in the Explorer. An open file inside it keeps working.
+
+### Changed
+- **One "New" command** — the ☰ menu has a single *New* (`Ctrl+N`) that creates a file in the Explorer's folder; the separate untitled *New* item is gone. `Ctrl+Shift+N` still works. In Recent Only mode it starts an untitled file.
+- **Root folder only Explorer** shows the tag count badge instead of a row of `#tag` pills.
+- Removed the app icon from the header, before the folder name.
+- **New app icon** — an indigo `.md` wordmark on a rounded square, replacing the document-with-M icon. All sizes regenerated (Windows, Store, Linux, macOS source).
+- **Search matches any word** — `Claude Key` now finds files with "Claude" or "Key", with files containing more of the words (side by side, or in the file name) listed first. Use quotes (`"Claude Key"`) for an exact phrase. Every matched word is highlighted, and partial matches show which words are missing.
+- **Preview text sizes are consistent** — code (inline and blocks) and table text now follow the body text size instead of fixed sizes, and blockquote text uses the normal text colour.
+- **Preview width button** uses a page icon that shows the current width; its tooltip says what a click will do.
+- **Shorter ✨ AI menu** — removed *Summarize (TL;DR at top)* and *Suggest tags*.
+- AI background tasks (In short, Rename with AI, Suggest Folder) use their own request channel, so they never interrupt a chat reply that's streaming.
+
+### Fixed
+- **Renaming no longer overwrites an existing file** — renaming to a name already used in the folder is refused instead of silently replacing the other file. Case-only renames still work.
+- **Moving no longer overwrites an existing file** — moving a file (including drag and drop) into a folder that already has a file with the same name is refused instead of replacing it.
+- **Delete Folder only deletes empty folders** — the option is always in the folder menu, and the folder is checked on disk first. Previously a folder holding only PDFs, images or other non-Markdown files looked empty and could be sent to the Recycle Bin with its contents; now you get a "Folder is not empty" message instead.
+
+---
+
+## [1.1.6] - 2026-10-12
+
+### Fixed
+- **Numbered lists keep counting across blank lines** — items separated by blank lines stay in one list (1, 2, 3) instead of each restarting at 1. Applies to bullet, task and nested lists too.
+- **Numbered lists keep their starting number** — a list that begins at a number other than 1 (e.g. one resumed at `4.` after a paragraph) is no longer renumbered from 1.
+- **Spaced horizontal rules** — `* * *`, `- - -` and `_ _ _` now render as a rule instead of a bullet item.
+
+---
+
 ## [1.1.5] - 2026-09-24
 
 ### Added
