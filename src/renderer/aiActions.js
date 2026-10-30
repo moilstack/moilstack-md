@@ -414,8 +414,7 @@ const AIActions = (() => {
       // A plain chat reply with the chat's own Copy button.
       const { row, bubbleEl } = _job.turn;
       bubbleEl.classList.remove('bubble--waiting');
-      bubbleEl.classList.add('bubble--plain');   // keep the reply's line breaks
-      bubbleEl.textContent = result;
+      ChatPanel.renderReply(bubbleEl, result);  // formatted as Markdown
       row.dataset.aiText = result;
       row.insertAdjacentHTML('beforeend',
         '<div class="bubble-actions"><button class="bubble-action-btn copy-btn">Copy</button></div>');

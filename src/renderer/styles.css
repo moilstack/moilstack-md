@@ -2633,11 +2633,13 @@ body.platform-darwin #app-header {
 }
 
 /* ── Code block copy button ─────────────────────────────────────── */
-.preview-content .code-block {
+.preview-content .code-block,
+.bubble--md .code-block {
   position: relative;
 }
 
-.preview-content .code-copy-btn {
+.preview-content .code-copy-btn,
+.bubble--md .code-copy-btn {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -2655,11 +2657,14 @@ body.platform-darwin #app-header {
   transition: color 0.12s ease, background 0.12s ease;
 }
 .preview-content .code-block:hover .code-copy-btn,
+.bubble--md .code-block:hover .code-copy-btn,
+.bubble--md .code-copy-btn--copied,
 .preview-content .code-copy-btn:focus-visible,
 .preview-content .code-copy-btn--copied {
   display: flex;
 }
-.preview-content .code-copy-btn:hover {
+.preview-content .code-copy-btn:hover,
+.bubble--md .code-copy-btn:hover {
   color: var(--text-primary);
   background: var(--hover-bg);
 }
@@ -2925,7 +2930,7 @@ body.platform-darwin #app-header {
   top: 104px;
   bottom: 86px;
   min-height: 520px;
-  width: 380px;
+  width: var(--ai-panel-width, 380px);
   background: var(--sidebar-bg);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -3200,6 +3205,49 @@ body.platform-darwin #app-header {
   border-bottom-left-radius: 4px;
   white-space: pre-wrap;       /* preserve newlines & wrap long lines */
 }
+
+/* AI replies rendered as Markdown */
+.bubble.ai.bubble--md { white-space: normal; overflow-wrap: anywhere; }
+.bubble--md > :first-child { margin-top: 0; }
+.bubble--md > :last-child { margin-bottom: 0; }
+.bubble--md p, .bubble--md ul, .bubble--md ol, .bubble--md blockquote,
+.bubble--md pre, .bubble--md table { margin: 0 0 8px; }
+.bubble--md h1, .bubble--md h2, .bubble--md h3,
+.bubble--md h4, .bubble--md h5, .bubble--md h6 { margin: 10px 0 6px; font-size: 1em; font-weight: 650; line-height: 1.35; }
+.bubble--md h1, .bubble--md h2 { font-size: 1.08em; }
+.bubble--md ul, .bubble--md ol { padding-left: 20px; }
+.bubble--md li { margin: 2px 0; }
+.bubble--md code {
+  font-family: var(--font-mono, ui-monospace, Consolas, monospace); font-size: 0.9em;
+  padding: 1px 4px; border-radius: 4px; background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.bubble--md pre {
+  padding: 8px 10px; border-radius: 6px; overflow-x: auto; white-space: pre;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.bubble--md pre code { padding: 0; background: none; }
+.bubble--md .code-copy-btn { top: 6px; right: 6px; }
+.bubble--md blockquote { padding-left: 10px; border-left: 3px solid var(--border); color: var(--text-secondary); }
+.bubble--md table { display: block; overflow-x: auto; border-collapse: collapse; font-size: 0.92em; }
+.bubble--md th, .bubble--md td { border: 1px solid var(--border); padding: 3px 7px; text-align: left; }
+.bubble--md hr { border: 0; border-top: 1px solid var(--border); margin: 10px 0; }
+.bubble--md a { color: var(--primary); }
+.bubble--md img { max-width: 100%; }
+
+/* Drag the AI Assistant's left edge to resize it */
+.ai-panel-resizer {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 6px;
+  cursor: col-resize; z-index: 2; outline: none;
+}
+.ai-panel-resizer::after {
+  content: ''; position: absolute; top: 12px; bottom: 12px; left: 1px; width: 2px;
+  border-radius: 1px; background: transparent; transition: background 120ms ease;
+}
+.ai-panel-resizer:hover::after,
+.ai-panel-resizer:focus-visible::after,
+.is-resizing-ai-panel .ai-panel-resizer::after { background: var(--primary); transition-delay: 80ms; }
+.is-resizing-ai-panel { cursor: col-resize; user-select: none; }
+.is-resizing-ai-panel .ai-bottom-panel { transition: none; }
 
 /* ─── Compact padding while bubble only contains the waiting dots ─────── */
 /* Removed as soon as response type is known (edit or info mode).          */
@@ -6457,7 +6505,9 @@ select.form-input {
   background: none; color: var(--text-secondary); cursor: pointer;
 }
 .fl-panel__icon:hover { background: var(--hover-bg); color: var(--text-primary); }
+.fl-panel > *, .fl-panel__label > * { flex-shrink: 0; } /* never squash a text box when the panel scrolls */
 .fl-panel__title {
+  box-sizing: border-box; min-height: calc(16px * 1.35 + 10px);
   border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; margin: 0 -6px;
   background: transparent; color: var(--text-primary);
   font: inherit; font-size: 16px; font-weight: 600; line-height: 1.35;
@@ -6491,7 +6541,7 @@ select.form-input {
 .fl-tag__x { border: none; background: none; color: inherit; cursor: pointer; font-size: 13px; line-height: 1; padding: 0 3px; opacity: 0.7; }
 .fl-tag__x:hover { opacity: 1; }
 .fl-panel__notes {
-  min-height: 110px; padding: 8px; border: 1px solid var(--border); border-radius: 6px;
+  box-sizing: border-box; min-height: 110px; padding: 8px; border: 1px solid var(--border); border-radius: 6px;
   background: var(--input-bg); color: var(--text-primary);
   font: inherit; font-size: 13px; line-height: 1.5; resize: none; overflow: hidden;
 }

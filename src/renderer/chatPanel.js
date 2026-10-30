@@ -646,13 +646,25 @@ const ChatPanel = (() => {
     row.dataset.aiText = text;
     row.innerHTML      = `
       <div class="bubble-meta">AI Assistant · ${getTimeString()}</div>
-      <div class="bubble ai">${_deps.escapeHtml(text).replace(/\n/g, '<br>')}</div>
+      <div class="bubble ai bubble--md">${_mdHtml(text)}</div>
       <div class="bubble-actions">
         <button class="bubble-action-btn restore-btn"><svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 6a4 4 0 1 0 .9-2.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><polyline points="1,2 1.8,4.6 4.4,3.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg> Restore</button>
         <button class="bubble-action-btn copy-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copy</button>
       </div>
     `;
     chatMessages.appendChild(row);
+  }
+
+  /** AI reply Markdown → HTML (same renderer as Preview; it escapes raw HTML). */
+  function _mdHtml(text) {
+    if (typeof MarkdownRenderer === 'undefined') return _deps.escapeHtml(text).replace(/\n/g, '<br>');
+    return MarkdownRenderer.parseMarkdown(text) || _deps.escapeHtml(text);
+  }
+
+  /** Show `text` in an AI bubble formatted as Markdown (headings, lists, code, tables…). */
+  function renderReply(bubbleEl, text) {
+    bubbleEl.classList.add('bubble--md');
+    bubbleEl.innerHTML = _mdHtml(text);
   }
 
   /**
@@ -904,7 +916,7 @@ const ChatPanel = (() => {
 
         // 150 chars with no edit tags and no active selection → plain INFO reply.
         isEditMode = false;
-        streaming.bubbleEl.innerHTML = _deps.escapeHtml(accumulatedText).replace(/\n/g, '<br>');
+        renderReply(streaming.bubbleEl, accumulatedText);
         streaming.row.dataset.aiText = accumulatedText;
         scrollChatToBottom();
         return;
@@ -914,7 +926,7 @@ const ChatPanel = (() => {
       if (isEditMode) return;
 
       // ── INFO mode: render each token incrementally ───────────────────────
-      streaming.bubbleEl.innerHTML = _deps.escapeHtml(accumulatedText).replace(/\n/g, '<br>');
+      renderReply(streaming.bubbleEl, accumulatedText);
       streaming.row.dataset.aiText = accumulatedText;
       scrollChatToBottom();
     }
@@ -1056,7 +1068,7 @@ const ChatPanel = (() => {
           // ── CONVERSATIONAL REPLY path ────────────────────────────────
           const replyText = fullResponse.trim() || '(no response)';
           if (streaming) {
-            streaming.bubbleEl.innerHTML = _deps.escapeHtml(replyText).replace(/\n/g, '<br>');
+            renderReply(streaming.bubbleEl, replyText);
             streaming.row.dataset.aiText = replyText;
             streaming.row.insertAdjacentHTML('beforeend', `
               <div class="bubble-actions">
@@ -1200,7 +1212,7 @@ const ChatPanel = (() => {
         }
         if (acc.length < 150) return;
         streaming.bubbleEl.classList.remove('bubble--waiting');
-        streaming.bubbleEl.innerHTML = _deps.escapeHtml(acc).replace(/\n/g, '<br>');
+        renderReply(streaming.bubbleEl, acc);
         scrollChatToBottom();
       });
 
@@ -1237,7 +1249,7 @@ const ChatPanel = (() => {
         const reply = String(full).replace(/<\/?DOC_SUMMARY>/g, '').trim() || '(no response)';
         if (streaming) {
           streaming.bubbleEl.classList.remove('bubble--waiting');
-          streaming.bubbleEl.innerHTML = _deps.escapeHtml(reply).replace(/\n/g, '<br>');
+          renderReply(streaming.bubbleEl, reply);
           streaming.row.dataset.aiText = reply;
           streaming.row.insertAdjacentHTML('beforeend', `
             <div class="bubble-actions">
@@ -1253,6 +1265,71 @@ const ChatPanel = (() => {
       addAIBubble(`⚠ Error: ${err.message || 'Unknown error from AI.'}`);
     }
     done();
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     Panel width — drag the left edge; double-click to reset
+     ═══════════════════════════════════════════════════════════════════ */
+
+  const PANEL_MIN = 320, PANEL_DEFAULT = 380;
+
+  function _setPanelWidth(w, persist = true) {
+    const max = Math.max(PANEL_MIN, window.innerWidth - 120);
+    const width = Math.round(Math.min(max, Math.max(PANEL_MIN, w)));
+    document.documentElement.style.setProperty('--ai-panel-width', `${width}px`);
+    if (persist) { try { localStorage.setItem('aiPanelWidth', width); } catch { /* ignore */ } }
+  }
+
+  function _initPanelResize() {
+    const panel = document.getElementById('aiBottomPanel');
+    if (!panel || panel.querySelector('.ai-panel-resizer')) return;
+    const handle = document.createElement('div');
+    handle.className = 'ai-panel-resizer';
+    handle.setAttribute('role', 'separator');
+    handle.setAttribute('aria-orientation', 'vertical');
+    handle.setAttribute('aria-label', 'Resize AI Assistant');
+    handle.tabIndex = 0;
+    handle.title = 'Drag to resize · Double-click to reset';
+    panel.append(handle);
+
+    let saved = 0;
+    try { saved = parseInt(localStorage.getItem('aiPanelWidth') || '', 10); } catch { /* ignore */ }
+    if (saved) _setPanelWidth(saved, false);
+
+    handle.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const startX = e.clientX;
+      const startW = panel.getBoundingClientRect().width;
+      handle.setPointerCapture(e.pointerId);
+      document.body.classList.add('is-resizing-ai-panel');
+      // The panel is pinned to the right, so dragging left makes it wider
+      const onMove = ev => _setPanelWidth(startW + startX - ev.clientX, false);
+      const onUp = ev => {
+        handle.releasePointerCapture(ev.pointerId);
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        handle.removeEventListener('pointercancel', onUp);
+        document.body.classList.remove('is-resizing-ai-panel');
+        _setPanelWidth(panel.getBoundingClientRect().width, true);
+      };
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup', onUp);
+      handle.addEventListener('pointercancel', onUp);
+    });
+    handle.addEventListener('dblclick', () => _setPanelWidth(PANEL_DEFAULT));
+    handle.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const step = (e.shiftKey ? 64 : 16) * (e.key === 'ArrowLeft' ? 1 : -1);
+      _setPanelWidth(panel.getBoundingClientRect().width + step);
+    });
+    // Re-clamp a saved width that no longer fits a smaller window
+    window.addEventListener('resize', () => {
+      let w = 0;
+      try { w = parseInt(localStorage.getItem('aiPanelWidth') || '', 10); } catch { /* ignore */ }
+      if (w) _setPanelWidth(w, false);
+    });
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -1350,6 +1427,8 @@ const ChatPanel = (() => {
     // Tasks/Ideas opened or closed: the chat now works on a different document
     document.addEventListener('folderlist-change', _syncContextLabel);
 
+    _initPanelResize();
+
     // Clear chat button
     document.getElementById('btn-clear-chat')
       ?.addEventListener('click', clearChat);
@@ -1360,6 +1439,22 @@ const ChatPanel = (() => {
     // container handles all bubbles.
     document.getElementById('chatMessages')
       ?.addEventListener('click', (e) => {
+        const codeBtn = e.target.closest('.bubble--md .code-copy-btn');
+        if (codeBtn) {
+          const code = codeBtn.parentElement?.querySelector('pre code');
+          if (code) navigator.clipboard.writeText(code.textContent).then(() => {
+            codeBtn.classList.add('code-copy-btn--copied');
+            setTimeout(() => codeBtn.classList.remove('code-copy-btn--copied'), 1400);
+          }).catch(() => {});
+          return;
+        }
+        const link = e.target.closest('.bubble--md a[href]');
+        if (link) {
+          e.preventDefault();
+          const href = link.getAttribute('href');
+          if (/^https?:\/\//i.test(href)) window.electronAPI?.openExternal(href);
+          return;
+        }
         const undoBtn    = e.target.closest('.undo-btn');
         const restoreBtn = e.target.closest('.restore-btn');
         const copyBtn    = e.target.closest('.copy-btn');
@@ -1454,6 +1549,7 @@ const ChatPanel = (() => {
     updateChatCount,
     beginActionTurn,
     endActionTurn,
+    renderReply,
     prefillInput,
     scrollToBottom: scrollChatToBottom,
     isBusy,

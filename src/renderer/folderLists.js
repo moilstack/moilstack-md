@@ -913,6 +913,17 @@ function createFolderList(cfg) {
       </div>`;
     document.querySelector('.main-content').append(_view);
     _panel = _view.querySelector('.fl-panel');
+    // Text boxes re-fit when the panel's width changes (window resize, or a
+    // scrollbar appearing when there are many subtasks) — wrapping changes.
+    if (typeof ResizeObserver !== 'undefined') {
+      let lastW = 0;
+      new ResizeObserver(() => {
+        const w = _panel.clientWidth;
+        if (w === lastW) return;
+        lastW = w;
+        _panel.querySelectorAll('textarea').forEach(_autoGrow);
+      }).observe(_panel);
+    }
 
     const form = _view.querySelector('form');
     const input = form.querySelector('textarea');
@@ -960,8 +971,16 @@ function createFolderList(cfg) {
   }
 
   function _autoGrow(el) {
+    if (!el.isConnected || !el.offsetParent) return; // hidden: measure later
+    // Keep the panel's scroll position: 'auto' briefly shrinks the box
+    const scroller = el.closest('.fl-panel');
+    const keep = scroller?.scrollTop;
     el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
+    // scrollHeight leaves out the border; add it so the last line isn't cut off
+    const cs = getComputedStyle(el);
+    const border = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    el.style.height = (el.scrollHeight + border) + 'px';
+    if (scroller && keep != null) scroller.scrollTop = keep;
   }
 
   function _renderView() {

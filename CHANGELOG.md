@@ -6,9 +6,16 @@ All notable new features and critical fixes for MoilStack .md.
 
 ## [Unreleased]
 
+### Added
+- **AI Assistant works on Tasks and Ideas** — with the Tasks or Ideas view open, the AI Assistant reads and edits that list (e.g. "add a task to review the PR by Friday", "mark the API spec done") instead of the file hidden underneath. The chat's Context label shows the list, and Undo / Re-apply restore it. One-click AI actions stay off while a list is open.
+- **Resizable AI Assistant** — drag the panel's left edge to make it wider or narrower; double-click to reset, or use ←/→ when the edge has focus. The width is remembered.
+
 ### Changed
-- **AI Assistant works on Tasks and Ideas** — with the Tasks or Ideas view open, the AI Assistant reads and edits that list (e.g. "add a task to review the PR by Friday", "mark the API spec done") instead of the file hidden underneath. The chat's Context label shows the list, and Undo restores it. One-click AI actions stay off while a list is open.
-- **In Short is easier to skim** — still one or two sentences (20–35 words), with the 2–3 key phrases in bold. Older cached summaries are regenerated once in the new format.
+- **AI Assistant replies are formatted** — headings, lists, bold, code blocks, tables and links show as they would in Preview instead of raw Markdown. Code blocks have a copy button, web links open in the browser, and Copy still copies the Markdown.
+- **In Short is easier to skim** — one or two sentences (20–35 words) with the 2–3 key phrases in bold. Older cached summaries are regenerated once in the new format.
+
+### Fixed
+- **Task details text box** — the task text no longer shows as half a line or disappears when the panel scrolls (e.g. many subtasks); text boxes re-fit when the panel width changes.
 
 ---
 
