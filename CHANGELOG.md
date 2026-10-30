@@ -7,6 +7,7 @@ All notable new features and critical fixes for MoilStack .md.
 ## [Unreleased]
 
 ### Changed
+- **AI Assistant works on Tasks and Ideas** — with the Tasks or Ideas view open, the AI Assistant reads and edits that list (e.g. "add a task to review the PR by Friday", "mark the API spec done") instead of the file hidden underneath. The chat's Context label shows the list, and Undo restores it. One-click AI actions stay off while a list is open.
 - **In Short is easier to skim** — still one or two sentences (20–35 words), with the 2–3 key phrases in bold. Older cached summaries are regenerated once in the new format.
 
 ---

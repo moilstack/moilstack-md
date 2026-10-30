@@ -771,6 +771,10 @@ const ChatPanel = (() => {
     const text = input.value.trim();
     if (!text) return;
 
+    // Tasks/Ideas on screen: work on that list, not the document hidden under it
+    const list = _listTarget();
+    if (list) { _sendListMessage(text, list, input); return; }
+
     // Always read from the live editor — this includes unsaved changes,
     // which is exactly what the user is working on when they ask for help.
     const mdEditor      = _deps.getEditor();
@@ -1092,6 +1096,166 @@ const ChatPanel = (() => {
   }
 
   /* ═══════════════════════════════════════════════════════════════════
+     Tasks / Ideas — the AI works on the list on screen
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /** Tasks/Ideas list covering the editor, if any (see FolderLists.aiTarget). */
+  function _listTarget() {
+    return typeof FolderLists !== 'undefined' ? FolderLists.aiTarget() : null;
+  }
+
+  /** Point the "Context:" label at the list on screen, or back at the open file. */
+  function _syncContextLabel() {
+    const list = _listTarget();
+    const file = _deps.getCurrentFile?.();
+    StatusBar.updateChatContextFile(list ? list.label : (file?.name || 'untitled.md'));
+  }
+
+  function _buildListMessages(userText, list, content) {
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const fileSection = [
+      `=== CURRENT ${list.fileName} CONTENT ===`,
+      content.trim() ? content : `(The list is empty — there are no ${list.noun}s yet.)`,
+    ].join('\n');
+    const intro = [
+      'You are an intelligent assistant embedded in a Markdown editor called MoilStack .md.',
+      `The user is looking at their ${list.label} list, stored in the file "${list.fileName}".`,
+      `Today is ${today}.`,
+      '',
+      `=== ${list.fileName} FORMAT ===`,
+      list.format,
+      'Keep every line you are not asked to change exactly as it is, including lines that do not follow this format.',
+    ];
+    const systemContent = isAskMode ? [
+      ...intro, '',
+      '=== OUTPUT FORMAT ===',
+      `Reply in plain conversational text about the ${list.noun}s. DO NOT include <DOC_EDIT> or <DOC_SUMMARY> tags.`,
+      '', fileSection,
+    ] : [
+      ...intro, '',
+      '=== OUTPUT FORMAT — OBEY EXACTLY ===',
+      `CASE 1 — User wants to add, change, complete, reorder or remove ${list.noun}s:`,
+      '  Your ENTIRE response MUST be ONLY:',
+      '  <DOC_SUMMARY>one short sentence describing what you changed</DOC_SUMMARY>',
+      '  <DOC_EDIT>',
+      `  [the COMPLETE updated ${list.fileName}]`,
+      '  </DOC_EDIT>',
+      '  No code fences, no other text.',
+      `CASE 2 — User asks a question about the ${list.noun}s: reply in plain text, no tags.`,
+      'If you are unsure, use CASE 2.',
+      '', fileSection,
+    ];
+    return [
+      { role: 'system', content: systemContent.join('\n') },
+      ...conversationHistory.slice(-MAX_HISTORY_TURNS),
+      { role: 'user', content: userText },
+    ];
+  }
+
+  /** sendMessage() for a Tasks/Ideas list: reads and writes the list file, never the editor. */
+  async function _sendListMessage(text, list, input) {
+    addUserBubble(text);
+    input.value = '';
+    input.style.height = 'auto';
+    scrollChatToBottom();
+
+    const sendBtn = document.getElementById('btn-send');
+    if (sendBtn) sendBtn.disabled = true;
+    input.disabled = true;
+    const done = () => {
+      messageCount += 2;
+      updateChatCount();
+      scrollChatToBottom();
+      if (sendBtn) sendBtn.disabled = false;
+      input.disabled = false;
+      input.focus();
+    };
+
+    const model = AIConfigManager.getActiveModel();
+    if (!model || AIConfigManager.validateModel(model).length > 0) {
+      addSystemBubble(!model
+        ? '⚠ No AI model configured. Open Settings (⚙) to add one.'
+        : '⚠ The model you selected is not configured completely, go to settings and update the required fields.');
+      done();
+      return;
+    }
+
+    const streaming = createStreamingBubble();
+    try {
+      const before = await list.read();
+      let acc = '', editing = false;
+      const full = await aiService.getResponse(_buildListMessages(text, list, before), model, (token) => {
+        acc += token;
+        if (!streaming || editing) return;
+        if (acc.includes('<DOC_EDIT>') || acc.includes('<DOC_SUMMARY>')) {
+          editing = true;
+          streaming.bubbleEl.classList.remove('bubble--waiting');
+          streaming.bubbleEl.innerHTML = `
+            <div class="bubble-editing-indicator">
+              <div class="bubble-waiting"><span></span><span></span><span></span></div>
+              <span class="bubble-editing-label">Updating ${_deps.escapeHtml(list.label)}…</span>
+            </div>`;
+          return;
+        }
+        if (acc.length < 150) return;
+        streaming.bubbleEl.classList.remove('bubble--waiting');
+        streaming.bubbleEl.innerHTML = _deps.escapeHtml(acc).replace(/\n/g, '<br>');
+        scrollChatToBottom();
+      });
+
+      const m = isAskMode ? null : String(full).match(/<DOC_EDIT>\s*([\s\S]*?)\s*<\/DOC_EDIT>/);
+      const after = m ? m[1].replace(/^```\w*\n|\n```$/g, '').trim() : null;
+      if (after !== null) {
+        const res = await list.write(after);
+        if (!res.ok) throw new Error(res.error || `Could not save ${list.fileName}`);
+        const summary = extractDocSummary(full) || (text.length > 120 ? text.slice(0, 120) + '…' : text);
+        if (streaming) {
+          streaming.bubbleEl.classList.remove('bubble--waiting');
+          streaming.bubbleEl.innerHTML =
+            `<span class="bubble-applied-badge">✓ ${_deps.escapeHtml(list.label)} updated</span>` +
+            `<span class="bubble-applied-preview">${_deps.escapeHtml(summary)}</span>`;
+          streaming.row.dataset.aiText = after;
+          streaming.row.insertAdjacentHTML('beforeend', `
+            <div class="bubble-actions">
+              <button class="bubble-action-btn list-undo-btn"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 6a4 4 0 1 0 .9-2.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/><polyline points="1,2 1.8,4.6 4.4,3.8" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Undo</span></button>
+              <button class="bubble-action-btn copy-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copy</button>
+            </div>`);
+          // Undo / Re-apply write the list file directly (the editor isn't involved)
+          const undo = streaming.row.querySelector('.list-undo-btn');
+          let undone = false;
+          undo.addEventListener('click', async () => {
+            const r = await list.write(undone ? after : before);
+            if (!r.ok) { StatusBar.showToast(r.error || `Could not save ${list.fileName}`); return; }
+            undone = !undone;
+            undo.querySelector('span').textContent = undone ? 'Re-apply' : 'Undo';
+          });
+        }
+        conversationHistory.push({ role: 'user', content: text });
+        conversationHistory.push({ role: 'assistant', content: summary });
+      } else {
+        const reply = String(full).replace(/<\/?DOC_SUMMARY>/g, '').trim() || '(no response)';
+        if (streaming) {
+          streaming.bubbleEl.classList.remove('bubble--waiting');
+          streaming.bubbleEl.innerHTML = _deps.escapeHtml(reply).replace(/\n/g, '<br>');
+          streaming.row.dataset.aiText = reply;
+          streaming.row.insertAdjacentHTML('beforeend', `
+            <div class="bubble-actions">
+              <button class="bubble-action-btn copy-btn"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Copy</button>
+            </div>`);
+        }
+        conversationHistory.push({ role: 'user', content: text });
+        conversationHistory.push({ role: 'assistant', content: reply });
+      }
+    } catch (err) {
+      console.error('[sendMessage] list AI error:', err);
+      if (streaming) streaming.row.remove();
+      addAIBubble(`⚠ Error: ${err.message || 'Unknown error from AI.'}`);
+    }
+    done();
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
      clearChat / handleChatKey
      ═══════════════════════════════════════════════════════════════════ */
 
@@ -1182,6 +1346,9 @@ const ChatPanel = (() => {
         updateTokenEstimate(); // draft length changed — refresh badge
       });
     }
+
+    // Tasks/Ideas opened or closed: the chat now works on a different document
+    document.addEventListener('folderlist-change', _syncContextLabel);
 
     // Clear chat button
     document.getElementById('btn-clear-chat')

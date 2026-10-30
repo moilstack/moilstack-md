@@ -973,8 +973,10 @@ function createFolderList(cfg) {
 
   function _hide() {
     _flush();
+    const wasShown = _isShown();
     _view?.classList.add('hidden');
     $btn()?.classList.remove('tasks-pill--active');
+    if (wasShown) FolderLists.notifyChange();
     _backToRoot(); // the header button counts the open folder's list again
   }
 
@@ -989,6 +991,7 @@ function createFolderList(cfg) {
     _renderView();
     _view.classList.remove('hidden');
     $btn()?.classList.add('tasks-pill--active');
+    FolderLists.notifyChange();
     WelcomeScreen.hideWelcomeScreen();
     _view.querySelector('.tasks-add__input').focus();
   }
@@ -1079,7 +1082,40 @@ function createFolderList(cfg) {
   else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  const api = { loadFolder, setRoot, open, close, onFileSelected, addItem, hide: _hide };
+  /**
+   * What the AI Assistant should work on while this list is on screen:
+   * the list file's current text, plus a write() that saves an AI edit
+   * and refreshes the view. null when the list isn't shown.
+   */
+  function aiTarget() {
+    if (!_isShown() || !_folder) return null;
+    const folder = _folder;
+    const path = _filePath();
+    const name = folder.split(/[\/]/).filter(Boolean).pop() || folder;
+    return {
+      path,
+      fileName: cfg.fileName,
+      label: `${cfg.title} · ${name}`,
+      noun: cfg.noun,
+      format: cfg.aiFormat || '',
+      async read() {
+        await _flush();
+        const res = await window.electronAPI?.readFile(path);
+        return res?.content ?? '';
+      },
+      async write(content) {
+        await _flush();
+        const res = await window.electronAPI?.writeFile(path, content.endsWith('\n') ? content : content + '\n');
+        if (!res?.ok) return res || { ok: false, error: `Could not save ${cfg.fileName}` };
+        if (!_exists) FileTreeManager.refresh();
+        await loadFolder(folder);
+        if (_isShown() && _folder === folder) _renderView();
+        return { ok: true };
+      },
+    };
+  }
+
+  const api = { loadFolder, setRoot, open, close, onFileSelected, addItem, hide: _hide, aiTarget };
   return api;
 }
 
@@ -1114,6 +1150,12 @@ const Tasks = (() => {
     title: 'Tasks',
     noun: 'task',
     fileName: '_tasks.md',
+    aiFormat: [
+      'Each task is one line: "- [ ] Task text #tag  !med  📅 2026-10-31  ➕ 2026-10-20".',
+      '"- [x]" marks a done task; a done task also gets "  ✅ YYYY-MM-DD" (the day it was completed).',
+      'Priority is !high, !med or !low. 📅 is the due date (optional). ➕ is the created date; give new tasks the current date.',
+      'Subtasks are indented lines under a task: "    - [ ] Subtask text". Other indented lines are notes for that task.',
+    ].join('\n'),
     buttonId: 'btn-tasks',
     emptyText: 'No open tasks 🎉',
     hasDone: true,
@@ -1329,6 +1371,12 @@ const Ideas = (() => {
     title: 'Ideas',
     noun: 'idea',
     fileName: '_ideas.md',
+    aiFormat: [
+      'Each idea is one line: "- Idea text #tag  ⭐  🔖exploring  ➕ 2026-10-20".',
+      '⭐ means starred (optional). 🔖 is the status: exploring, parked or used; leave it out for a new idea.',
+      '➕ is the created date; give new ideas the current date. Never use "- [ ]" checkboxes for ideas.',
+      'Indented lines under an idea are its notes.',
+    ].join('\n'),
     buttonId: 'btn-ideas',
     emptyText: 'No ideas yet 💡',
     hasDone: false,
@@ -1437,6 +1485,13 @@ const FolderLists = {
   loadFolder: (folderPath) => FolderLists.all().forEach(l => l.setRoot(folderPath)),
   onFileSelected: (filePath) => FolderLists.all().forEach(l => l.onFileSelected(filePath)),
   hideAllExcept: (keep) => FolderLists.all().forEach(l => { if (l !== keep) l.hide(); }),
+  /** The Tasks/Ideas list on screen, as an AI Assistant target (or null). */
+  aiTarget: () => FolderLists.all().map(l => l.aiTarget()).find(Boolean) || null,
+  /** Tell the AI Assistant which document it's working on now. */
+  notifyChange: () => {
+    if (typeof document === 'undefined') return;
+    document.dispatchEvent(new CustomEvent('folderlist-change'));
+  },
 };
 
 if (typeof module !== 'undefined' && module.exports) {

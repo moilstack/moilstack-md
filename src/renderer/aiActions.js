@@ -645,6 +645,12 @@ const AIActions = (() => {
     const editor = _deps.getEditor && _deps.getEditor();
     if (!action || !editor || typeof ChatPanel === 'undefined') return;
     if (_job?.busy || ChatPanel.isBusy()) return;
+    // Tasks/Ideas cover the editor; don't edit the hidden document underneath
+    const list = typeof FolderLists !== 'undefined' ? FolderLists.aiTarget() : null;
+    if (list) {
+      StatusBar.showToast(`AI actions work on documents. To change your ${list.noun}s, ask the AI Assistant.`);
+      return;
+    }
     if (_job) _close('Dismissed');
 
     const text  = editor.value;
