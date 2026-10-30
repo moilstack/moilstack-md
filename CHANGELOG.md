@@ -6,6 +6,9 @@ All notable new features and critical fixes for MoilStack .md.
 
 ## [Unreleased]
 
+### Changed
+- **In Short is easier to skim** — still one or two sentences (20–35 words), with the 2–3 key phrases in bold. Older cached summaries are regenerated once in the new format.
+
 ---
 
 ## [1.1.7] - 2026-10-20

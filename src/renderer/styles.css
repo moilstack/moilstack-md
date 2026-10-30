@@ -6154,6 +6154,7 @@ select.form-input {
   line-height: 1.6;
   color: var(--text-primary);
 }
+.in-short__body strong { font-weight: 650; }
 .in-short--error .in-short__body { color: var(--text-secondary); font-size: 12.5px; }
 .in-short__tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
 .in-short__tags.hidden { display: none; }

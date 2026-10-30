@@ -2,7 +2,7 @@
  * inShort.js — "In short" banner at the top of Preview.
  *
  * When enabled (Settings → Editor → In Short Banner, on by default), opening a file shows a
- * one-or-two-sentence AI summary above the preview, with a loading shimmer
+ * one-or-two-sentence AI summary above the preview (key phrases in bold), with a loading shimmer
  * while it's generated.
  *
  * Safe with fast switching:
@@ -146,7 +146,18 @@ const InShort = (() => {
   function _showText(text, tags = []) {
     const b = _ensureBanner(); if (!b) return
     b.classList.remove('hidden', 'in-short--loading', 'in-short--error')
-    b.querySelector('.in-short__body').textContent = text
+    // Only **bold** is honoured; everything else is plain text (no HTML from the AI)
+    const body = b.querySelector('.in-short__body')
+    body.replaceChildren()
+    text.split(/(\*\*[^*]+\*\*)/).forEach(part => {
+      if (!part) return
+      const bold = /^\*\*[^*]+\*\*$/.test(part)
+      if (bold) {
+        const strong = document.createElement('strong')
+        strong.textContent = part.slice(2, -2)
+        body.append(strong)
+      } else body.append(document.createTextNode(part.replace(/\*/g, '')))
+    })
     _renderTags(tags)
   }
 
@@ -218,6 +229,13 @@ const InShort = (() => {
 
   /* ── Flow ── */
 
+  const FORMAT = 2   // bump when the summary format changes, so old cached ones are redone
+
+  /** Cached entry matches the document and is in the current format. */
+  function _fresh(hit, hash) {
+    return !!hit && hit.hash === hash && Array.isArray(hit.tags) && hit.v === FORMAT
+  }
+
   /** Called whenever the preview re-renders: react only when the open file changes. */
   function _onPreviewRendered() {
     const path = _currentPath()
@@ -231,7 +249,7 @@ const InShort = (() => {
     if (text.trim().length < MIN_CHARS) return
 
     const hit = _cache.get(path)
-    if (hit && hit.hash === _hash(_body(text)) && hit.tags) { _showText(hit.text, hit.tags); return }
+    if (_fresh(hit, _hash(_body(text)))) { _showText(hit.text, hit.tags); return }
 
     _showLoading()
     _timer = setTimeout(() => _request(false), START_DELAY)
@@ -246,7 +264,7 @@ const InShort = (() => {
 
     if (!force) {
       const hit = _cache.get(path)
-      if (hit && hit.hash === hash && hit.tags) { _showText(hit.text, hit.tags); return }
+      if (_fresh(hit, hash)) { _showText(hit.text, hit.tags); return }
     }
     if (_inflight) { _showLoading(); return }  // the running request re-checks when it finishes
 
@@ -269,8 +287,9 @@ const InShort = (() => {
         'You write the "In short" line shown above a document and suggest its topic tags. ' +
         'Reply with ONLY a JSON object, no code fence, no other text: ' +
         '{"summary": "...", "tags": ["..."]}. summary: in plain, simple language, what the ' +
-        'document is about and its main point in 1 or 2 sentences, at most 45 words, no ' +
-        'Markdown, no "In short:" label. tags: 2 to 3 short topic tags. If tags already used ' +
+        'document is about and its main point in 1 or 2 short sentences, 20 to 35 words, no ' +
+        '"In short:" label. Wrap the 2 or 3 most important phrases (1 to 4 words each) in ' +
+        '**double asterisks**; no other Markdown. tags: 2 to 3 short topic tags. If tags already used ' +
         'in this folder are listed, REUSE those exact tags whenever they fit; only invent a ' +
         'new tag (lowercase, one or two words joined by "-") when none fit.' },
       { role: 'user', content:
@@ -284,14 +303,15 @@ const InShort = (() => {
       const json = reply.match(/\{[\s\S]*\}/)
       let parsed = null
       if (json) { try { parsed = JSON.parse(json[0]) } catch { /* not JSON */ } }
-      summary = String(parsed ? parsed.summary || '' : reply).trim()
+      const clean = v => String(v).trim()
         .replace(/^in short\s*:\s*/i, '').replace(/^["'“”]+|["'“”]+$/g, '').trim()
+      summary = clean(parsed ? parsed.summary || '' : reply)
       // Use the folder's spelling of a reused tag; otherwise normalise
       tags = [...new Set((Array.isArray(parsed?.tags) ? parsed.tags : [])
         .map(t => vocab.get(String(t).trim().toLowerCase()) || vocab.get(_cleanTag(t)) || _cleanTag(t))
         .filter(Boolean))].slice(0, 3)
       if (summary) {
-        _cache.set(path, { hash, text: summary, tags, at: Date.now() })
+        _cache.set(path, { hash, text: summary, tags, v: FORMAT, at: Date.now() })
         _saveCache()
       }
     } catch (err) {
