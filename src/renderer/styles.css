@@ -2717,7 +2717,8 @@ body.platform-darwin #app-header {
 }
 /* Nested list inside a task item: break to its own line, indented to align with label text */
 .preview-content .task-list-item > ul,
-.preview-content .task-list-item > ol {
+.preview-content .task-list-item > ol,
+.preview-content .task-list-item > .list-item-note {
   flex-basis: 100%;
   padding-left: calc(14px + 7px);
   margin: .1em 0 0;
@@ -2732,6 +2733,9 @@ body.platform-darwin #app-header {
   accent-color: var(--primary);
   cursor: pointer;
   border-radius: 3px;
+}
+.preview-content .task-list-item > .list-item-note {
+  color: var(--text-secondary);
 }
 /* Dim and strike completed items — mirrors GitHub's task-list style */
 .preview-content .task-list-item--checked > .task-label {

@@ -379,3 +379,29 @@ describe('Markdown Rendering', () => {
   });
 
 });
+
+describe('table directly after a paragraph line', () => {
+  test('renders a table with no blank line before it', () => {
+    const { MarkdownRenderer } = require('../src/renderer/markdownRenderer.js');
+    const html = MarkdownRenderer.parseMarkdown(
+      '**Output locations:**\n| Platform | Output |\n|---|---|\n| macOS | `a.zip` |'
+    );
+    expect(html).toContain('<table');
+    expect(html).toContain('<th>Platform</th>');
+    expect(html).toMatch(/<p[^>]*><strong>Output locations:<\/strong><\/p>/);
+  });
+});
+
+describe('list item with a note line and sub-items', () => {
+  test('keeps indented note and nested tasks inside the parent item', () => {
+    const { MarkdownRenderer } = require('../src/renderer/markdownRenderer.js');
+    const html = MarkdownRenderer.parseMarkdown(
+      '- [ ] Parent #tag1\n    Note about the task\n    - [ ] Child one\n    - [ ] Child two'
+    );
+    expect((html.match(/<ul/g) || [])).toHaveLength(2);
+    expect(html).toContain('<div class="list-item-note">Note about the task</div>');
+    expect(html).not.toContain('<p');
+    expect(html.indexOf('Child one')).toBeLessThan(html.lastIndexOf('</li></ul>'));
+    expect((html.match(/task-checkbox/g) || [])).toHaveLength(3);
+  });
+});

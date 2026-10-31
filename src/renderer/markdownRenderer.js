@@ -156,17 +156,26 @@ const MarkdownRenderer = (() => {
       const checkedM   = content.match(/^\[[xX]\] ([\s\S]*)/);
       i++;
 
-      // If the next line is indented further and starts a list, recurse
+      // Lines indented under the item belong to it: plain text becomes a note
+      // below the item, and a nested list marker starts a sub-list (recurse).
+      // A note may come before the sub-items, as in Tasks-style notes.
       let subHtml = '';
-      if (i < lines.length) {
+      const noteLines = [];
+      while (i < lines.length) {
         const nextTrimmed = lines[i].trimStart();
         const nextIndent  = lines[i].length - nextTrimmed.length;
-        if (nextIndent > baseIndent &&
-            (/^[*\-+] /.test(nextTrimmed) || /^\d+\. /.test(nextTrimmed))) {
+        if (nextTrimmed === '' || nextIndent <= baseIndent) break;
+        if (/^[*\-+] /.test(nextTrimmed) || /^\d+\. /.test(nextTrimmed)) {
           const sub = parseListBlock(lines, i, nextIndent);
-          subHtml   = sub.html;
+          subHtml  += sub.html;
           i         = sub.nextIdx;
+        } else {
+          noteLines.push(nextTrimmed);
+          i++;
         }
+      }
+      if (noteLines.length) {
+        subHtml = `<div class="list-item-note">${noteLines.map(parseInlineMath).join('<br>')}</div>` + subHtml;
       }
 
       if (uncheckedM) {
@@ -448,7 +457,9 @@ const MarkdownRenderer = (() => {
         lines[i].trim() !== '>'     &&
         !/^[*\-+] /.test(lines[i].trimStart()) &&
         !/^\d+\. /.test(lines[i].trimStart())  &&
-        !HR_RE.test(lines[i].trimStart())
+        !HR_RE.test(lines[i].trimStart()) &&
+        // A table may start right after a paragraph line (GFM), no blank line needed
+        !(paraLines.length && lines[i].includes('|') && i + 1 < lines.length && isTableSeparator(lines[i + 1]))
       ) {
         paraLines.push(lines[i]);
         i++;
