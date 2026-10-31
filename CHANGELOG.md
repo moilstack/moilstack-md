@@ -13,6 +13,7 @@ All notable new features and critical fixes for MoilStack .md.
 ### Changed
 - **AI Assistant replies are formatted** — headings, lists, bold, code blocks, tables and links show as they would in Preview instead of raw Markdown. Code blocks have a copy button, web links open in the browser, and Copy still copies the Markdown.
 - **In Short is easier to skim** — one or two sentences (20–35 words) with the 2–3 key phrases in bold. Older cached summaries are regenerated once in the new format.
+- **Tomorrow group in Tasks** — tasks due tomorrow get their own group. Groups are now Overdue · Today · Tomorrow · This week · Next week · Later · No date. Weeks run Monday–Sunday, so "This week" ends on Sunday.
 
 ### Removed
 - **Rename a whole folder from content** — the Explorer header button, the folder right-click item and the review dialog are gone. Right-click a single file → *Rename from Content* (or *Rename with AI*) still suggests a name.

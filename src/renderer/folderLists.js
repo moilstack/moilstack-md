@@ -26,6 +26,23 @@ function _flIso(d) {
 function _flToday() { return _flIso(new Date()); }
 
 /** Today + n days, as YYYY-MM-DD. */
+/**
+ * Date group for a task: overdue, today, tomorrow, week, nextweek, later or none.
+ * Weeks run Monday–Sunday (same as the "Next week" date button), so "This week"
+ * ends on Sunday and "Next week" is the following Monday–Sunday.
+ */
+function taskGroupOf(t) {
+  if (!t.due) return 'none';
+  const today = _flToday();
+  if (t.due < today) return 'overdue';
+  if (t.due === today) return 'today';
+  if (t.due === _flAddDays(1)) return 'tomorrow';
+  const toSunday = (7 - new Date().getDay()) % 7;   // 0 when today is Sunday
+  if (t.due <= _flAddDays(toSunday)) return 'week';
+  if (t.due <= _flAddDays(toSunday + 7)) return 'nextweek';
+  return 'later';
+}
+
 function _flAddDays(n) {
   const d = new Date();
   d.setDate(d.getDate() + n);
@@ -1183,16 +1200,13 @@ const Tasks = (() => {
     groups: [
       { key: 'overdue', label: 'Overdue', alert: true },
       { key: 'today', label: 'Today' },
-      { key: 'week', label: 'Next 7 days' },
+      { key: 'tomorrow', label: 'Tomorrow' },
+      { key: 'week', label: 'This week' },
+      { key: 'nextweek', label: 'Next week' },
       { key: 'later', label: 'Later' },
       { key: 'none', label: 'No date' },
     ],
-    groupOf(t) {
-      if (!t.due) return 'none';
-      if (t.due < _flToday()) return 'overdue';
-      if (t.due === _flToday()) return 'today';
-      return t.due <= _flAddDays(7) ? 'week' : 'later';
-    },
+    groupOf: taskGroupOf,
     filters: [{ key: 'high', label: 'High priority', test: (t) => t.priority === 'high' }],
     addPlaceholder: 'Add a task… (try !high, tomorrow, #tag)',
 
@@ -1514,5 +1528,5 @@ const FolderLists = {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Tasks, Ideas, FolderLists, createFolderList, parseQuickAdd, _noteLines };
+  module.exports = { Tasks, Ideas, FolderLists, createFolderList, parseQuickAdd, taskGroupOf, _noteLines };
 }

@@ -1,4 +1,4 @@
-const { parseQuickAdd } = require('../src/renderer/folderLists.js');
+const { parseQuickAdd, taskGroupOf } = require('../src/renderer/folderLists.js');
 
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const inDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
@@ -49,5 +49,35 @@ describe('_noteLines', () => {
 
   test('empty text gives no lines', () => {
     expect(_noteLines('  \n\n')).toEqual([]);
+  });
+});
+
+describe('taskGroupOf', () => {
+  afterEach(() => jest.useRealTimers());
+  const at = (day) => jest.useFakeTimers().setSystemTime(new Date(`${day}T10:00:00`));
+
+  test('Saturday: tomorrow is Sunday, next Monday is next week', () => {
+    at('2026-10-31');   // Saturday
+    expect(taskGroupOf({ due: null })).toBe('none');
+    expect(taskGroupOf({ due: '2026-10-30' })).toBe('overdue');
+    expect(taskGroupOf({ due: '2026-10-31' })).toBe('today');
+    expect(taskGroupOf({ due: '2026-11-01' })).toBe('tomorrow');
+    expect(taskGroupOf({ due: '2026-11-02' })).toBe('nextweek');
+    expect(taskGroupOf({ due: '2026-11-08' })).toBe('nextweek');
+    expect(taskGroupOf({ due: '2026-11-09' })).toBe('later');
+  });
+
+  test('Wednesday: this week runs to Sunday', () => {
+    at('2026-10-28');   // Wednesday
+    expect(taskGroupOf({ due: '2026-10-30' })).toBe('week');
+    expect(taskGroupOf({ due: '2026-11-01' })).toBe('week');
+    expect(taskGroupOf({ due: '2026-11-02' })).toBe('nextweek');
+  });
+
+  test('Sunday: Monday is tomorrow, rest of next week is next week', () => {
+    at('2026-11-01');   // Sunday
+    expect(taskGroupOf({ due: '2026-11-02' })).toBe('tomorrow');
+    expect(taskGroupOf({ due: '2026-11-03' })).toBe('nextweek');
+    expect(taskGroupOf({ due: '2026-11-09' })).toBe('later');
   });
 });
