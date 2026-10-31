@@ -10,7 +10,6 @@
  * #hashtags near the top (or, with AI, tags the model proposes).
  *
  *  - renameFile(path)   → inline rename in the Explorer, prefilled, then tags
- *  - renameFolder(path) → review modal for every file directly in a folder
  *
  * FileOperations / FileTreeManager are loaded after this module; calls are lazy.
  */
@@ -258,11 +257,6 @@ const RenameFromContent = (() => {
     return a.length === b.length && a.every((t, i) => t === b[i])
   }
 
-  /** Tags as typed in a row (trimmed, deduped; spelling kept). */
-  function _parseTags(text) {
-    return _mergeTags(text.split(','))
-  }
-
   /** Add " (2)", " (3)"… until `name` isn't in `taken` (case-insensitive). */
   function _unique(name, taken) {
     if (!taken.has(name.toLowerCase())) return name
@@ -328,18 +322,7 @@ const RenameFromContent = (() => {
     FileOperations.startInlineRename(filePath, suggested || current, onConfirm)
   }
 
-  /* ── Folder ───────────────────────────────────────────────────────── */
-
-  const _overlay  = document.getElementById('renameContentOverlay')
-  const _list     = document.getElementById('renameContentList')
-  const _summary  = document.getElementById('renameContentSummary')
-  const _applyBtn = document.getElementById('btnApplyRenameContent')
-  const _closeBtn = document.getElementById('btnCloseRenameContent')
-  const _cancelBtn = document.getElementById('btnCancelRenameContent')
-  const _aiBtn    = document.getElementById('btnAiRenameContent')
-  let _rows = []
-  let _busy = false
-  let _aiRun = 0          // bumped to cancel an in-flight AI pass
+  /* ── Helpers ────────────────────────────────────────────────────── */
 
   function _dirOf(p) { return p.replace(/[\\/][^\\/]*$/, '') }
 
@@ -360,235 +343,11 @@ const RenameFromContent = (() => {
     return (find(tree) ?? []).filter(n => n.type === 'file')
   }
 
-  const _renames  = r => !!r.input.value.trim() && r.input.value.trim() !== r.name
-  const _retags   = r => !_sameTags(_parseTags(r.tagsInput.getTags().join(',')), r.existingTags)
-  const _pending  = () => _rows.filter(r => r.check.checked && !r.input.disabled && (_renames(r) || _retags(r)))
-
-  function _updateSummary() {
-    const todo = _pending()
-    const n = todo.filter(_renames).length, t = todo.filter(_retags).length
-    const parts = []
-    if (n) parts.push(n === 1 ? '1 file renamed' : `${n} files renamed`)
-    if (t) parts.push(t === 1 ? 'tags updated on 1 file' : `tags updated on ${t} files`)
-    _summary.textContent = parts.length ? `Will be: ${parts.join(', ')}` : 'Nothing to change'
-    _applyBtn.disabled = todo.length === 0 || _busy
-    if (_aiBtn) _aiBtn.disabled = !_rows.length || _busy
-  }
-
-  async function renameFolder(folderPath) {
-    if (!_overlay) return
-    _aiRun++
-    _busy = false
-    if (_aiBtn) _aiBtn.textContent = '✨ Suggest with AI'
-    const files = _filesIn(folderPath)
-    _list.innerHTML = ''
-    _rows = []
-    _summary.textContent = files.length ? 'Reading files…' : 'This folder has no Markdown or text files.'
-    _applyBtn.disabled = true
-    _overlay.classList.remove('hidden')
-    if (!files.length) return
-
-    // Every existing name counts as taken, so a suggestion never collides
-    // with a file in the folder (no rename chains or swaps to get wrong).
-    const taken = new Set(files.map(f => f.name.toLowerCase()))
-    const suggestions = await Promise.all(files.map(f => suggest(f.path)))
-
-    files.forEach((file, i) => {
-      const s = suggestions[i] || { name: null, tags: [], existingTags: [] }
-      let suggested = s.name
-      if (suggested && suggested.toLowerCase() === file.name.toLowerCase()) suggested = file.name
-      else if (suggested) { suggested = _unique(suggested, taken); taken.add(suggested.toLowerCase()) }
-
-      const row = document.createElement('label')
-      row.className = 'rename-content-row'
-
-      const check = document.createElement('input')
-      check.type = 'checkbox'
-      check.checked = (!!suggested && suggested !== file.name) || !_sameTags(s.tags, s.existingTags)
-
-      const from = document.createElement('span')
-      from.className = 'rename-content-row__from'
-      from.textContent = file.name
-      from.title = file.name
-
-      const arrow = document.createElement('span')
-      arrow.className = 'rename-content-row__arrow'
-      arrow.textContent = '→'
-
-      const input = document.createElement('input')
-      input.type = 'text'
-      input.className = 'form-input rename-content-row__to'
-      input.value = suggested || file.name
-      input.placeholder = 'No title found'
-      input.spellcheck = false
-      if (!suggested) row.classList.add('rename-content-row--none')
-
-      const tagsInput = TagInput.create({
-        tags: s.tags,
-        max: 5,
-        compact: true,
-        placeholder: 'No tags — type to add',
-        getSuggestions: folderTags,
-        onChange: () => { check.checked = true; row.dataset.tagsEdited = '1'; _updateSummary() },
-      })
-      tagsInput.el.classList.add('rename-content-row__tags')
-      // The row is a <label>: stop clicks on pills from toggling its checkbox
-      tagsInput.el.addEventListener('click', e => e.preventDefault())
-
-      input.addEventListener('input', () => { check.checked = true; row.dataset.edited = '1'; _updateSummary() })
-      check.addEventListener('change', _updateSummary)
-
-      row.append(check, from, arrow, input, tagsInput.el)
-      _list.appendChild(row)
-      _rows.push({ path: file.path, name: file.name, existingTags: s.existingTags, check, input, tagsInput, row })
-    })
-    _updateSummary()
-  }
-
-  /**
-   * Replace suggestions with AI ones, one file at a time (the AI service
-   * handles a single request at a time). Rows the user typed in are kept.
-   */
-  async function _suggestWithAI() {
-    if (_busy || !_rows.length) return
-    _vocabCache = null
-    try { _aiModel() } catch (err) { _summary.textContent = err.message; return }
-
-    const run = ++_aiRun
-    _busy = true
-    _updateSummary()
-    _aiBtn.textContent = 'Asking AI…'
-
-    const taken = new Set(_rows.map(r => r.name.toLowerCase()))
-    _rows.forEach(r => { if (r.row.dataset.edited) taken.add(r.input.value.trim().toLowerCase()) })
-
-    const todo = _rows.filter(r => !r.row.dataset.edited && !r.input.disabled)
-    let done = 0, failed = 0
-    for (const r of todo) {
-      if (run !== _aiRun) return            // modal closed or restarted
-      _summary.textContent = `Asking AI… ${done + 1} of ${todo.length}`
-      r.row.classList.add('rename-content-row--busy')
-      try {
-        const s = await suggest(r.path, { useAI: true })
-        if (run !== _aiRun) return
-        let name = s?.name
-        if (s && !r.row.dataset.tagsEdited) {
-          _learnTags(s.tags)   // later files in this pass can reuse these
-          r.tagsInput.setTags(s.tags)
-          if (!_sameTags(s.tags, r.existingTags)) r.check.checked = true
-        }
-        if (name && name.toLowerCase() !== r.name.toLowerCase()) {
-          name = _unique(name, taken)
-          taken.add(name.toLowerCase())
-          r.input.value = name
-          r.check.checked = true
-          r.row.classList.remove('rename-content-row--none')
-        }
-      } catch (err) {
-        failed++
-        r.input.title = err.message || 'AI request failed'
-        // A missing/broken model fails every file the same way — stop early
-        if (/not (fully )?configured/i.test(err.message)) { _summary.textContent = err.message; break }
-      } finally {
-        r.row.classList.remove('rename-content-row--busy')
-      }
-      done++
-    }
-
-    if (run !== _aiRun) return
-    _busy = false
-    _aiBtn.textContent = '✨ Suggest with AI'
-    _updateSummary()
-    if (failed) _summary.textContent += ` (AI failed for ${failed} — kept their previous names)`
-  }
-
-  async function _apply() {
-    if (_busy) return
-    const todo = _pending()
-    if (!todo.length) return
-    _busy = true
-    _applyBtn.disabled = true
-
-    const activePath = currentFile?.path || document.querySelector('#file-list .file-item.active')?.dataset.path
-    let newActivePath = null
-    let failed = 0
-
-    // One at a time so a failure is reported against the right row
-    for (const r of todo) {
-      r.row.classList.remove('rename-content-row--error')
-
-      // Tags first (by the current path), then the rename
-      if (_retags(r)) {
-        const tagged = await _writeTags(r.path, _parseTags(r.tagsInput.getTags().join(',')))
-        if (!tagged?.ok) {
-          failed++
-          r.row.classList.add('rename-content-row--error')
-          r.tagsInput.el.title = tagged?.error || 'Could not save tags'
-          continue
-        }
-      }
-      if (!_renames(r)) {
-        r.check.checked = false
-        r.check.disabled = r.input.disabled = true
-        r.tagsInput.setDisabled(true)
-        r.row.classList.add('rename-content-row--done')
-        continue
-      }
-
-      const result = await window.electronAPI?.renameFile(r.path, r.input.value.trim())
-      if (result?.ok) {
-        if (r.path === activePath) newActivePath = result.newPath
-        r.check.checked = false
-        r.check.disabled = true
-        r.input.disabled = true
-        r.tagsInput.setDisabled(true)
-        r.row.classList.add('rename-content-row--done')
-      } else {
-        failed++
-        r.row.classList.add('rename-content-row--error')
-        r.input.title = result?.error || 'Rename failed'
-      }
-    }
-
-    const folder = sessionStorage.getItem('lastFolder')
-    if (folder) await FileTreeManager.setActiveFolder(folder)
-    if (newActivePath) {
-      for (const item of document.querySelectorAll('#file-list .file-item')) {
-        if (item.dataset.path === newActivePath) { item.click(); break }
-      }
-    }
-
-    _busy = false
-    if (failed) {
-      _summary.textContent = `${todo.length - failed} updated, ${failed} failed — hover a red row for the reason`
-    } else {
-      _hide()
-    }
-  }
-
-  function _hide() {
-    _aiRun++                 // stop any AI pass still running
-    _busy = false
-    if (_aiBtn) _aiBtn.textContent = '✨ Suggest with AI'
-    _overlay?.classList.add('hidden')
-    _list.innerHTML = ''
-    _rows = []
-  }
-
-  _applyBtn?.addEventListener('click', _apply)
-  _aiBtn?.addEventListener('click', _suggestWithAI)
-  _closeBtn?.addEventListener('click', _hide)
-  _cancelBtn?.addEventListener('click', _hide)
-  _overlay?.addEventListener('click', e => { if (e.target === _overlay) _hide() })
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && !_overlay?.classList.contains('hidden')) _hide()
-  })
-
   /** Every tag used in the opened folder, most-used first (for autocomplete). */
   async function folderTags() {
     const vocab = await _folderTags()
     return [...vocab.values()].sort((a, b) => b.count - a.count).map(e => e.tag)
   }
 
-  return { suggest, suggestName, renameFile, renameFolder, folderTags }
+  return { suggest, suggestName, renameFile, folderTags }
 })()

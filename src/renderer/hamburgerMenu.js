@@ -144,14 +144,6 @@ const HamburgerMenu = (() => {
     FileTreeManager.collapseAll();
   });
 
-  /* ── Rename Files from Content button (sidebar header) ─────────────── */
-  // Acts on the files directly in the opened folder (sub-folders have
-  // their own "Rename Files from Content…" in the folder right-click menu).
-  document.getElementById('btn-rename-from-content')?.addEventListener('click', () => {
-    const folder = sessionStorage.getItem('lastFolder');
-    if (folder) RenameFromContent.renameFolder(folder);
-  });
-
     /* ── Open Folder button (sidebar header) ──────────────────────────── */
   document.getElementById('btn-open-folder')?.addEventListener('click', async () => {
     if (window.electronAPI?.openFolder) {

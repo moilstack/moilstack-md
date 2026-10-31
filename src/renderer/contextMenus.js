@@ -189,8 +189,6 @@ const ContextMenus = (() => {
         window.electronAPI?.showInExplorer(folderPath);
       } else if (action === 'new-file-here') {
         FileOperations.showNewFileInput(folderPath);
-      } else if (action === 'rename-from-content') {
-        RenameFromContent.renameFolder(folderPath);
       } else if (action === 'new-subfolder') {
         FileOperations.promptNewFolder(folderPath);
       } else if (action === 'rename-folder') {

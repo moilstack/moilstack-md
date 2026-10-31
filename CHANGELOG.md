@@ -14,7 +14,13 @@ All notable new features and critical fixes for MoilStack .md.
 - **AI Assistant replies are formatted** — headings, lists, bold, code blocks, tables and links show as they would in Preview instead of raw Markdown. Code blocks have a copy button, web links open in the browser, and Copy still copies the Markdown.
 - **In Short is easier to skim** — one or two sentences (20–35 words) with the 2–3 key phrases in bold. Older cached summaries are regenerated once in the new format.
 
+### Removed
+- **Rename a whole folder from content** — the Explorer header button, the folder right-click item and the review dialog are gone. Right-click a single file → *Rename from Content* (or *Rename with AI*) still suggests a name.
+
 ### Fixed
+- **Preview scrolling on macOS** — scrolling the Preview back up no longer stalls until you click it (the editor/preview scroll sync was pulling it back).
+- **Tables right after a line of text** — a table with no blank line above it now renders as a table instead of raw `|` text.
+- **Notes under a task** — an indented note line under a list item stays with it, and sub-tasks after the note nest under the parent in Preview.
 - **Task details text box** — the task text no longer shows as half a line or disappears when the panel scrolls (e.g. many subtasks); text boxes re-fit when the panel width changes.
 
 ---

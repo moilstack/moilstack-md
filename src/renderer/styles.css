@@ -5737,49 +5737,7 @@ select.form-input {
   transition-delay: 250ms;
 }
 
-/* ─── Rename Files from Content modal (reuses .label-modal shell) ─── */
-#renameContentOverlay .label-modal { width: min(640px, calc(100vw - 48px)); }
-
-.rename-content-list {
-  max-height: min(420px, 60vh);
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.rename-content-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1.3fr);
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  font-size: 12px;
-  border-bottom: 1px solid var(--divider);
-  cursor: pointer;
-}
-.rename-content-row:last-child { border-bottom: none; }
-.rename-content-row:hover { background: var(--hover-bg); }
-
-.rename-content-row__from {
-  color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.rename-content-row__arrow { color: var(--section-header); }
-.rename-content-row__to { height: 26px; font-size: 12px; padding: 2px 8px; }
-
-.rename-content-row--none .rename-content-row__to { color: var(--text-secondary); }
-.rename-content-row--done { opacity: 0.55; }
-.rename-content-row--error .rename-content-row__to { border-color: #e5484d; }
-
-.rename-content-actions { align-items: center; gap: 8px; }
-.rename-content-summary {
-  margin-right: auto;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-.rename-content-row--busy .rename-content-row__to { opacity: 0.5; }
+/* File being named by AI (renameFromContent.js) */
 .file-item.file-item--busy { opacity: 0.55; pointer-events: none; }
 
 /* ─── Explorer resize handle (sidebarManager.js) ────────────────── */
@@ -5816,9 +5774,6 @@ select.form-input {
   cursor: col-resize !important;
   user-select: none !important;
 }
-/* Tags line under each rename row (spans the name columns) */
-.rename-content-row__tags { grid-column: 2 / -1; }
-
 /* ─── Tag pill editor (tagInput.js) ─────────────────────────────── */
 .tag-input {
   display: flex;
