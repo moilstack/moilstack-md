@@ -6578,12 +6578,6 @@ select.form-input {
 .fl-sub__new { margin-left: 20px; color: var(--text-secondary); }
 .fl-sub__x { border: none; background: none; color: var(--text-secondary); cursor: pointer; font-size: 14px; opacity: 0; }
 .fl-sub:hover .fl-sub__x { opacity: 1; }
-.fl-keys { display: flex; flex-wrap: wrap; gap: 4px 14px; padding-top: 10px; border-top: 1px solid var(--divider); font-size: 11px; color: var(--text-secondary); }
-.fl-keys kbd {
-  font: inherit; font-size: 10px; padding: 0 4px; margin-right: 3px;
-  border: 1px solid var(--border); border-radius: 3px; background: var(--hover-bg);
-}
-
 /* Ideas: star, status, → Task popup (folderLists.js) */
 .idea-row__star {
   border: none; background: none; padding: 0 2px; cursor: pointer;

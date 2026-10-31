@@ -43,6 +43,11 @@ function taskGroupOf(t) {
   return 'later';
 }
 
+/** Sunday that ends the current Monday–Sunday week (today if it's Sunday). */
+function _flEndOfWeek() {
+  return _flAddDays((7 - new Date().getDay()) % 7);
+}
+
 function _flAddDays(n) {
   const d = new Date();
   d.setDate(d.getDate() + n);
@@ -159,7 +164,7 @@ function _flCloseMenu() {
   _flMenu = null;
 }
 
-/** A popup under `anchor` offering Today / Tomorrow / Next week / Pick date / Clear. */
+/** A popup under `anchor` offering Today / Tomorrow / This week / Next week / Pick date / Clear. */
 function _flDateMenu(anchor, current, onPick) {
   _flCloseMenu();
   const menu = _flEl('div', 'fl-menu');
@@ -171,6 +176,7 @@ function _flDateMenu(anchor, current, onPick) {
   };
   add('Today', _flToday());
   add('Tomorrow', _flAddDays(1));
+  add('This week', _flEndOfWeek());
   add('Next week', _flNextWeekday(1) === _flToday() ? _flAddDays(7) : _flNextWeekday(1));
   const pick = _flEl('label', 'fl-menu__item', 'Pick date…');
   const input = document.createElement('input');
@@ -910,7 +916,7 @@ function createFolderList(cfg) {
             <div class="fl-preview hidden"></div>
             <div class="fl-filterbar">
               <div class="fl-chips hidden"></div>
-              <input class="fl-search" type="search" placeholder="Search  ( / )" aria-label="Search ${cfg.noun}s"/>
+              <input class="fl-search" type="search" placeholder="Search" aria-label="Search ${cfg.noun}s"/>
             </div>
             <div class="fl-note hidden"><span></span>
               <button class="tasks-view__link fl-raw" type="button">Edit raw</button></div>
@@ -920,10 +926,6 @@ function createFolderList(cfg) {
               <summary class="fl-done-summary">${cfg.doneTitle || 'Completed'} (0)</summary>
               <ul class="tasks-list fl-done-list"></ul>
             </details>` : ''}
-            <div class="fl-keys">
-              <span><kbd>N</kbd> new</span><span><kbd>/</kbd> search</span><span><kbd>↑</kbd><kbd>↓</kbd> move</span>
-              <span><kbd>Enter</kbd> open</span>${cfg.hasDone ? '<span><kbd>Space</kbd> complete</span>' : ''}<span><kbd>Del</kbd> delete</span><span><kbd>Esc</kbd> close</span>
-            </div>
           </div>
           <aside class="fl-panel hidden" aria-label="${cfg.noun} details"></aside>
         </div>
@@ -1305,6 +1307,7 @@ const Tasks = (() => {
       };
       quick('Today', _flToday());
       quick('Tomorrow', _flAddDays(1));
+      quick('This week', _flEndOfWeek());
       quick('Next week', _flNextWeekday(1) === _flToday() ? _flAddDays(7) : _flNextWeekday(1));
       if (t.due) quick('Clear', null);
       if (isOverdue(t)) dueRow.append(_flEl('span', 'task-row__due task-row__due--overdue', 'Overdue'));
