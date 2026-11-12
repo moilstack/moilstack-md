@@ -475,15 +475,22 @@ document.addEventListener('keydown', async e => {
 // persisted to the draft file (see the fire-and-forget silentSave() below),
 // so there's nothing at risk worth interrupting close for.
 window.addEventListener('beforeunload', (e) => {
+  // A block still open in Preview Quick Edit hasn't reached the editor yet —
+  // commit it first so it's marked dirty and included in the save.
+  if (typeof QuickEdit !== 'undefined') QuickEdit.flush();
+  if (typeof TableBuilder !== 'undefined') TableBuilder.flush();
   const isScratchpad = !currentFile.path;
   if (SaveManager.isDirty() && !isScratchpad && !SaveManager.isBypassBeforeUnload()) {
+    // Unsaved file: the main process asks Save / Discard / Cancel. Don't save
+    // here, or "Discard changes" would already have been overwritten.
     e.preventDefault();
     e.returnValue = '';
+    return;
   }
+  // Otherwise fire-and-forget a silent save (keeps the Scratchpad draft
+  // current; Electron drains IPC before teardown).
+  SaveManager.silentSave();
 });
-
-// Fire-and-forget silent save on every close (Electron drains IPC before teardown)
-window.addEventListener('beforeunload', () => { SaveManager.silentSave(); });
 
 /* ── Editor selection → AI chat ───────────────────────────────────── */
 

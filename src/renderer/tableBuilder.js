@@ -310,6 +310,16 @@ const TableBuilder = (() => {
     if (e.key === 'Escape' && !_overlay?.classList.contains('hidden')) _hide();
   });
 
-  return { show, parseTable };
+  /**
+   * If the builder is open on an existing table, save it (used when the
+   * window closes so edits aren't lost). A new, not-yet-inserted table is
+   * left alone rather than dropped into the document unasked.
+   */
+  function flush() {
+    if (!_overlay || _overlay.classList.contains('hidden')) return;
+    if (_onSave || _selStart !== null) _save();
+  }
+
+  return { show, parseTable, flush };
 
 })();

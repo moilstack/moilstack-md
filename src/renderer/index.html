@@ -1168,12 +1168,13 @@
             <div class="settings-row">
               <div class="settings-row__label">
                 <span class="settings-row__name">Quick Edit in Preview</span>
-                <span class="settings-row__desc">Double-click a paragraph, heading, list, quote or code block in Preview to edit it in place (tables open the table builder)</span>
+                <span class="settings-row__desc">Double-click a block in Preview to edit it in place (tables open the table builder). Choose Tables only to keep text read-only, or Off for a fully read-only Preview</span>
               </div>
               <div class="settings-row__control">
                 <select id="quickEditPreview" class="form-input settings-select">
-                  <option value="on">On</option>
-                  <option value="off">Off</option>
+                  <option value="on">All blocks</option>
+                  <option value="tables">Tables only</option>
+                  <option value="off">Off (read-only)</option>
                 </select>
               </div>
             </div>
@@ -1200,8 +1201,9 @@
               </div>
               <div class="settings-row__control">
                 <select id="inShortBanner" class="form-input settings-select">
-                  <option value="on">On</option>
-                  <option value="off">Off</option>
+                  <option value="on">All blocks</option>
+                  <option value="tables">Tables only</option>
+                  <option value="off">Off (read-only)</option>
                 </select>
               </div>
             </div>

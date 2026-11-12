@@ -5674,7 +5674,8 @@ select.form-input {
 }
 
 /* ── Preview quick edit (double-click a block to edit its Markdown) ─── */
-#editorArea[data-view="preview"] .preview-content.qe-enabled > :is(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, table, .code-block, .markdown-embed):hover {
+#editorArea[data-view="preview"] .preview-content.qe-enabled > :is(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, table, .code-block, .markdown-embed):hover,
+#editorArea[data-view="preview"] .preview-content.qe-tables > table:hover {
   outline: 1px dashed color-mix(in srgb, var(--primary) 45%, transparent);
   outline-offset: 4px;
   border-radius: 3px;
