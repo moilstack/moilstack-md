@@ -526,6 +526,11 @@ function createFolderList(cfg) {
       li.append(icon);
     }
 
+    // Text on top, its details (notes, subtasks, tags, priority, date) on a line below
+    const main = _flEl('div', 'task-row__main');
+    const meta = _flEl('div', 'task-row__meta');
+    li.append(main);
+
     const notesText = _notesOf(item).trim();
     if (cfg.singleBody) {
       // The whole text, cut off after 3 lines with "Show more"
@@ -545,10 +550,10 @@ function createFolderList(cfg) {
           if (!_expanded.has(item) && text.scrollHeight <= text.clientHeight + 1) more.remove();
         });
       }
-      li.append(body);
+      main.append(body);
       li.classList.add('task-row--body');
     } else {
-      li.append(_flEl('span', 'task-row__text', item.text));
+      main.append(_flEl('span', 'task-row__text', item.text));
     }
 
     if (notesText && !cfg.singleBody) {
@@ -556,7 +561,7 @@ function createFolderList(cfg) {
       n.title = _notesOf(item);
       n.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M3 2.5h10v11H3z M5.5 6h5M5.5 8.5h5M5.5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      li.append(n);
+      meta.append(n);
     }
 
     const subs = _subsOf(item);
@@ -564,10 +569,11 @@ function createFolderList(cfg) {
       const n = subs.filter(x => x.done).length;
       const c = _flEl('span', 'task-row__subs' + (n === subs.length ? ' task-row__subs--all' : ''), `${n}/${subs.length}`);
       c.title = subs.map(x => `${x.done ? '☑' : '☐'} ${x.text}`).join('\n');
-      li.append(c);
+      meta.append(c);
     }
 
-    li.append(...cfg.rowParts(item, _api(item)));
+    meta.append(...cfg.rowParts(item, _api(item)));
+    if (meta.childElementCount) main.append(meta);
 
     const del = _flEl('button', 'task-row__del', '×');
     del.type = 'button';
@@ -897,13 +903,6 @@ function createFolderList(cfg) {
       <div class="tasks-view__inner">
         <div class="tasks-view__header">
           <h1 class="tasks-view__title"></h1>
-          <button class="tasks-view__link fl-raw" type="button"
-                  title="Open ${cfg.fileName} in the editor">Edit raw</button>
-          <button class="settings-close-btn fl-close" title="Close (Esc)">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-          </button>
         </div>
         <div class="fl-layout">
           <div class="fl-main">
@@ -958,7 +957,6 @@ function createFolderList(cfg) {
       if (e.key === 'Escape' && search.value) { e.stopPropagation(); search.value = ''; _query = ''; _renderList(); }
       if (e.key === 'ArrowDown') { e.preventDefault(); _view.querySelector('.task-row')?.focus(); }
     });
-    _view.querySelector('.fl-close').addEventListener('click', close);
     _view.querySelectorAll('.fl-raw').forEach(b => b.addEventListener('click', _openRaw));
     form.addEventListener('submit', (e) => {
       e.preventDefault();

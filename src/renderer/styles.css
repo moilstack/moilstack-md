@@ -198,41 +198,41 @@
 [data-theme="one-light"] {
   --primary:           #4078f2;
 
-  --bg:                #fafafa;
-  --surface:           #f0f0f1;
-  --sidebar-bg:        #eaeaeb;
-  --input-bg:          #fafafa;
-  --editor-bg:         #fafafa;
-  --preview-bg:        #fafafa;
+  --bg:                #fbfcfe;
+  --surface:           #f4f6fb;
+  --sidebar-bg:        #f2f5fa;
+  --input-bg:          #ffffff;
+  --editor-bg:         #fbfcfe;
+  --preview-bg:        #fbfcfe;
 
-  --text-primary:      #383a42;
-  --text-secondary:    #696c77;
-  --section-header:    #a0a1a7;
+  --text-primary:      #2b3445;
+  --text-secondary:    #5f6b80;
+  --section-header:    #97a0b0;
 
-  --border:            #dbdbdc;
-  --divider:           #e5e5e6;
-  --hover-bg:          #e5e5e6;
-  --active-file-bg:    #dfe5f5;
+  --border:            #e6eaf2;
+  --divider:           #eaeef4;
+  --hover-bg:          #e8edf5;
+  --active-file-bg:    #e2eafa;
   --active-file-text:  #2a5bd7;
 
-  --statusbar-bg:      #eaeaeb;
-  --statusbar-text:    #696c77;
+  --statusbar-bg:      #f2f5fa;
+  --statusbar-text:    #5f6b80;
 
-  --toggle-btn-bg:     #f0f0f1;
-  --toggle-btn-border: #dbdbdc;
-  --toggle-btn-text:   #383a42;
+  --toggle-btn-bg:     #f4f6fb;
+  --toggle-btn-border: #e6eaf2;
+  --toggle-btn-text:   #2b3445;
 
   --chat-user-bg:      #4078f2;
   --chat-user-text:    #ffffff;
-  --chat-ai-bg:        #ececed;
-  --chat-ai-text:      #383a42;
+  --chat-ai-bg:        #eef1f7;
+  --chat-ai-text:      #2b3445;
 
   --restore-btn-bg:    #f6ecd2;
   --restore-btn-text:  #986801;
   --restore-btn-border:#e3c98c;
 
-  --scrollbar-thumb:   #d3d3d4;
-  --scrollbar-thumb-hover: #a0a1a7;
+  --scrollbar-thumb:   #d8dee8;
+  --scrollbar-thumb-hover: #97a0b0;
   --scrollbar-track:   transparent;
 }
 
@@ -1074,7 +1074,16 @@ body.platform-darwin #app-header {
 .left-sidebar {
   width: var(--sidebar-width);
   height: 100%;
-  background: var(--sidebar-bg);
+  background-color: var(--sidebar-bg);
+  /* Soft accent glow at the top fading into the sidebar colour, with a faint
+     deepening toward the bottom. Derived from each theme's own tokens, so it
+     works for every theme; a theme can override --sidebar-gradient. */
+  background-image: var(--sidebar-gradient,
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--primary) 9%, var(--sidebar-bg)) 0%,
+      var(--sidebar-bg) 38%,
+      var(--sidebar-bg) 70%,
+      color-mix(in srgb, var(--primary) 5%, var(--sidebar-bg)) 100%));
   border-right: 1px solid var(--divider);
   display: flex;
   flex-direction: column;
@@ -6363,6 +6372,12 @@ select.form-input {
   box-shadow: inset 3px 0 0 var(--primary);
 }
 .task-row__text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.task-row { align-items: flex-start; }
+.task-row > input[type=checkbox], .task-row > .task-row__icon { margin-top: 3px; }
+.task-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.task-row__meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.task-row__meta:empty { display: none; }
+.task-row__del { margin-top: 2px; }
 .task-row__notes { display: flex; color: var(--text-secondary); opacity: 0.8; }
 .task-row__tag {
   font-size: 11px; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
@@ -6420,7 +6435,7 @@ select.form-input {
 }
 .task-row__text--body { white-space: pre-wrap; line-height: 1.5; }
 .task-row--body { align-items: flex-start; }
-.task-row--body > :not(.task-row__body) { margin-top: 2px; }
+.task-row--body > :not(.task-row__main) { margin-top: 2px; }
 .task-row__text--clamp {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
 }
@@ -6435,6 +6450,9 @@ select.form-input {
 
 /* Quick-add preview, side panel, date menu (folderLists.js) */
 .tasks-view--panel .tasks-view__inner { max-width: 1180px; }
+/* Follow the Preview Width setting: "Full" lets Tasks / Ideas fill the pane too */
+[data-preview-width="full"] .tasks-view__inner,
+[data-preview-width="full"] .tasks-view--panel .tasks-view__inner { max-width: none; }
 .fl-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
 .tasks-view--panel .fl-layout { grid-template-columns: minmax(0, 1fr) 330px; }
 .fl-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -6597,3 +6615,50 @@ select.form-input {
 .fl-totask__title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 .fl-totask__keep { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
 .fl-totask .btn { align-self: flex-end; height: 28px; }
+
+/* ─── Identify Tasks dialog (identifyTasks.js; reuses .label-modal) ─ */
+.identify-tasks .label-modal { width: min(620px, calc(100vw - 48px)); }
+.identify-tasks__hint { margin: 0 0 8px; font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); }
+.identify-tasks__bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.identify-tasks__bar .identify-tasks__hint { margin: 0; }
+.identify-tasks__all { flex: none; white-space: nowrap; }
+.identify-tasks__list { max-height: min(56vh, 480px); overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+
+/* One card per task: checkbox + plain-looking text, no inner boxes */
+.identify-tasks__item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+  transition: border-color .15s;
+}
+.identify-tasks__item:not(.is-off):is(:hover, :focus-within) { border-color: var(--primary); }
+.identify-tasks__pick { margin: 3px 0 0; accent-color: var(--primary); flex: none; }
+.identify-tasks__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+/* The task text is editable but looks like text: no border or background */
+.identify-tasks__text {
+  display: block; width: 100%; margin: 0; padding: 0; border: 0; outline: 0; background: transparent;
+  color: var(--text-primary); font: inherit; font-size: 13px; line-height: 1.45;
+  resize: none; overflow: hidden; min-height: 0;
+}
+.identify-tasks__item.is-off .identify-tasks__text { color: var(--text-secondary); }
+.identify-tasks__source { margin: 0; font-size: 11.5px; color: var(--text-secondary); font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Picked: a faint summary line; hover / keyboard focus swaps it for chips (same height, no jump) */
+.identify-tasks__summary { margin: 4px 0 0; font-size: 11.5px; line-height: 22px; color: var(--section-header); }
+.identify-tasks__meta { display: none; gap: 5px; margin-top: 4px; flex-wrap: wrap; align-items: center; }
+.identify-tasks__item.is-off :is(.identify-tasks__summary, .identify-tasks__meta) { display: none; }
+.identify-tasks__item:not(.is-off) .identify-tasks__source { display: none; }
+.identify-tasks__item:not(.is-off):is(:hover, :focus-within) .identify-tasks__summary { display: none; }
+.identify-tasks__item:not(.is-off):is(:hover, :focus-within) .identify-tasks__meta { display: flex; }
+.identify-tasks__chip {
+  height: 22px; padding: 0 9px; font: inherit; font-size: 11.5px;
+  border: 1px solid var(--border); border-radius: 11px; background: var(--input-bg);
+  color: var(--text-secondary); outline: 0;
+}
+.identify-tasks__chip:focus { border-color: var(--primary); }
+.identify-tasks__prio { padding-right: 4px; }
+.identify-tasks__prio--high { color: #dc2626; background: color-mix(in srgb, #dc2626 12%, var(--input-bg)); border-color: color-mix(in srgb, #dc2626 30%, var(--border)); }
+.identify-tasks__tags {
+  width: 130px; color: var(--active-file-text);
+  background: var(--active-file-bg); border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+}

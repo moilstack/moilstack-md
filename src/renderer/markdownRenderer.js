@@ -160,12 +160,29 @@ const MarkdownRenderer = (() => {
       // below the item, and a nested list marker starts a sub-list (recurse).
       // A note may come before the sub-items, as in Tasks-style notes.
       let subHtml = '';
-      const noteLines = [];
+      let noteLines = [];
+      const flushNote = () => {
+        if (noteLines.length) subHtml += `<div class="list-item-note">${noteLines.map(parseInlineMath).join('<br>')}</div>`;
+        noteLines = [];
+      };
       while (i < lines.length) {
         const nextTrimmed = lines[i].trimStart();
         const nextIndent  = lines[i].length - nextTrimmed.length;
         if (nextTrimmed === '' || nextIndent <= baseIndent) break;
+        if (nextTrimmed.startsWith('```')) {
+          // A fenced code block indented under the item: take it whole (blank
+          // lines included) up to its closing fence, and render it as a block.
+          const fence = [];
+          do { fence.push(lines[i].slice(Math.min(nextIndent, lines[i].length - lines[i].trimStart().length))); i++; }
+          while (i < lines.length && !/^[ \t]*```\s*$/.test(lines[i]));
+          if (i < lines.length) { fence.push('```'); i++; }
+          flushNote();
+          // Line numbers inside an item aren't mapped (same as sub-lists)
+          subHtml += parseMarkdown(fence.join('\n')).replace(/ data-line(-end)?="[^"]*"/g, '');
+          continue;
+        }
         if (/^[*\-+] /.test(nextTrimmed) || /^\d+\. /.test(nextTrimmed)) {
+          flushNote();
           const sub = parseListBlock(lines, i, nextIndent);
           subHtml  += sub.html;
           i         = sub.nextIdx;
@@ -174,9 +191,7 @@ const MarkdownRenderer = (() => {
           i++;
         }
       }
-      if (noteLines.length) {
-        subHtml = `<div class="list-item-note">${noteLines.map(parseInlineMath).join('<br>')}</div>` + subHtml;
-      }
+      flushNote();
 
       if (uncheckedM) {
         hasTaskItems = true;
@@ -282,15 +297,18 @@ const MarkdownRenderer = (() => {
       };
 
       /* ── Fenced code block ──────────────────────────────────────── */
-      // CommonMark: opening fence may have 0–3 leading spaces.
-      const fenceOpen = line.match(/^( {0,3})```(.*)$/);
+      // CommonMark allows 0–3 leading spaces, but a fence indented under a
+      // list item ("10. Run:" + blank line + "    ```bash") ends the list here
+      // (lists stop at a blank line), so accept any indentation — this
+      // renderer has no indented-code blocks for it to clash with.
+      const fenceOpen = line.match(/^([ \t]*)```(.*)$/);
       if (fenceOpen) {
         const lang      = fenceOpen[2].trim();
         const indent    = fenceOpen[1];           // leading spaces to strip from body lines
         const codeLines = [];
         i++;
-        // Closing fence: same or fewer leading spaces, nothing after ```
-        while (i < lines.length && !lines[i].match(/^ {0,3}```\s*$/)) {
+        // Closing fence: any indentation, nothing after ```
+        while (i < lines.length && !lines[i].match(/^[ \t]*```\s*$/)) {
           // Strip the same indentation level that the opening fence had
           const cl = lines[i];
           codeLines.push(indent && cl.startsWith(indent) ? cl.slice(indent.length) : cl);
@@ -452,7 +470,7 @@ const MarkdownRenderer = (() => {
         i < lines.length            &&
         lines[i].trim() !== ''      &&
         !/^#{1,6} /.test(lines[i].trimStart()) &&
-        !/^ {0,3}```/.test(lines[i]) &&
+        !/^[ \t]*```/.test(lines[i]) &&
         !lines[i].trimStart().startsWith('> ') &&
         lines[i].trim() !== '>'     &&
         !/^[*\-+] /.test(lines[i].trimStart()) &&

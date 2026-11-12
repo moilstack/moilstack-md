@@ -852,6 +852,15 @@
       </svg>
       Suggest Folder (AI)…
     </button>
+    <button class="file-ctx-item" data-file-action="identify-tasks" title="Ask AI to find pending tasks in this file and add them to Tasks">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <rect x="1.5" y="2" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M2.5 4l1 1 1.5-2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7.5 4h5M2 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M10.5 7.5l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8.8-1.7Z" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>
+      </svg>
+      Identify Tasks (AI)…
+    </button>
     <button class="file-ctx-item" data-file-action="tags" title="View and edit this file's tags">
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M1.5 2.5v4l6 6 5-5-6-6h-4a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
@@ -1183,7 +1192,7 @@
             <div class="settings-row">
               <div class="settings-row__label">
                 <span class="settings-row__name">Preview Width</span>
-                <span class="settings-row__desc">Keep the preview at a readable width or let it fill the pane</span>
+                <span class="settings-row__desc">Keep the preview, Tasks and Ideas at a readable width or let them fill the pane</span>
               </div>
               <div class="settings-row__control">
                 <select id="previewWidth" class="form-input settings-select">
@@ -1645,6 +1654,7 @@
   <script src="aiService.js"></script>
   <script src="inShort.js"></script>
   <script src="suggestFolder.js"></script>
+  <script src="identifyTasks.js"></script>
   <script src="confirmDialog.js"></script>
   <script src="folderLists.js"></script>
   <script src="../../node_modules/katex/dist/katex.min.js"></script>

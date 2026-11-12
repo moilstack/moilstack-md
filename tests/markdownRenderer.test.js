@@ -405,3 +405,19 @@ describe('list item with a note line and sub-items', () => {
     expect((html.match(/task-checkbox/g) || [])).toHaveLength(3);
   });
 });
+
+describe('Fenced code blocks indented under a list item', () => {
+  const pm = (s) => require('../src/renderer/markdownRenderer.js').MarkdownRenderer.parseMarkdown(s);
+
+  test('after a blank line, a 4-space-indented fence is a code block', () => {
+    const html = pm('10. Run:\n\n    ```bash\n    flutterfire configure\n    ```\n\nNext.');
+    expect(html).toContain('<code class="language-bash">flutterfire configure</code>');
+    expect(html).not.toContain('``');
+  });
+
+  test('directly under the item, the fence renders inside the item', () => {
+    const html = pm('10. Run:\n    ```bash\n    flutter clean\n\n    flutter pub get\n    ```\n11. Next');
+    expect(html).toMatch(/<li>Run:<div class="code-block">[\s\S]*flutter clean\n\nflutter pub get<\/code>/);
+    expect(html).toContain('<li>Next</li>');
+  });
+});
