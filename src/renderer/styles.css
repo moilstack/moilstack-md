@@ -6299,14 +6299,20 @@ select.form-input {
   border-radius: 8px;
   box-sizing: border-box;
   pointer-events: none;
-  background: var(--primary);
-  color: #fff;
+  /* Quiet badge: a soft neutral chip that sits on the header, not a bright dot */
+  background: color-mix(in srgb, var(--text-secondary) 16%, var(--sidebar-bg));
+  border: 1px solid var(--sidebar-bg);
+  color: var(--text-secondary);
   font-size: 9px;
   font-weight: 600;
-  line-height: 15px;
+  line-height: 13px;
   text-align: center;
 }
-.tasks-pill__count--overdue { background: #dc2626; }
+/* Overdue still stands out, but as a soft red tint rather than solid red */
+.tasks-pill__count--overdue {
+  background: color-mix(in srgb, #dc2626 18%, var(--sidebar-bg));
+  color: #dc2626;
+}
 
 .tasks-pill--active {
   background: color-mix(in srgb, var(--primary) 12%, transparent);

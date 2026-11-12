@@ -9,6 +9,9 @@ All notable new features and critical fixes for MoilStack .md.
 ### Added
 - **AI Assistant works on Tasks and Ideas** — with the Tasks or Ideas view open, the AI Assistant reads and edits that list (e.g. "add a task to review the PR by Friday", "mark the API spec done") instead of the file hidden underneath. The chat's Context label shows the list, and Undo / Re-apply restore it. One-click AI actions stay off while a list is open.
 - **Resizable AI Assistant** — drag the panel's left edge to make it wider or narrower; double-click to reset, or use ←/→ when the edge has focus. The width is remembered.
+- **Identify Tasks (AI)** — right-click a file → *Identify Tasks (AI)…* to find up to 5 main pending tasks in it, with related steps combined into one. Pick the ones you want, edit their text, and hover a picked task to set its priority, date and tags. *Add to Tasks* adds them to the folder's Tasks with a "From: <file>" note. Nothing is added until you click.
+- **Quick Edit modes** — Settings → Editor → Quick Edit in Preview is now *All blocks*, *Tables only* (Preview stays read-only except tables) or *Off (read-only)*.
+- **Sidebar gradient** — the Explorer has a subtle gradient tinted with the theme's accent colour, in every theme.
 
 ### Changed
 - **AI Assistant replies are formatted** — headings, lists, bold, code blocks, tables and links show as they would in Preview instead of raw Markdown. Code blocks have a copy button, web links open in the browser, and Copy still copies the Markdown.
@@ -16,6 +19,11 @@ All notable new features and critical fixes for MoilStack .md.
 - **Tomorrow group in Tasks** — tasks due tomorrow get their own group. Groups are now Overdue · Today · Tomorrow · This week · Next week · Later · No date. Weeks run Monday–Sunday, so "This week" ends on Sunday.
 - **"This week" date button** — in the task details panel and the row date menu, next to Today / Tomorrow / Next week. It sets the date to this Sunday, the end of the week.
 - **Tasks/Ideas search box** — the placeholder is just "Search".
+- **One Light theme** — a new very light, cool blue-grey palette, so it no longer looks like a slightly darker copy of Light.
+- **Tasks and Ideas rows** — tags, priority, date, notes and subtasks show on a line below the item's text instead of on the right.
+- **Tasks and Ideas header** — the *Edit raw* link and × button are removed; Esc or the header button still closes the view. (*Edit raw* still appears when the file has lines the view can't show.)
+- **Tasks and Ideas follow Preview Width** — with Preview Width set to Full, the lists fill the pane too.
+- **Quieter Tasks / Ideas count badges** — a soft grey chip instead of the bright accent colour; overdue shows a soft red tint.
 
 ### Removed
 - **Rename a whole folder from content** — the Explorer header button, the folder right-click item and the review dialog are gone. Right-click a single file → *Rename from Content* (or *Rename with AI*) still suggests a name.
@@ -26,6 +34,10 @@ All notable new features and critical fixes for MoilStack .md.
 - **Tables right after a line of text** — a table with no blank line above it now renders as a table instead of raw `|` text.
 - **Notes under a task** — an indented note line under a list item stays with it, and sub-tasks after the note nest under the parent in Preview.
 - **Task details text box** — the task text no longer shows as half a line or disappears when the panel scrolls (e.g. many subtasks); text boxes re-fit when the panel width changes.
+- **Edits lost when closing from Preview** — a block still open in Quick Edit or the Table Builder is saved before the window closes.
+- **Unsaved-changes dialog closing itself** — the dialog now waits for Save / Discard changes / Cancel instead of flashing and closing the window.
+- **Discard changes saved anyway** — closing no longer starts a background save while the dialog is shown, so Discard really discards.
+- **Code blocks under list items** — a ``` fence indented under a numbered or bulleted item now renders as a code block instead of stray backticks and inline code.
 
 ---
 
