@@ -445,6 +445,18 @@ const EditorCore = (() => {
   let _previewSyncRAF = null;
   let _editorSyncRAF  = null;
 
+  // Which pane the user is actually driving ('editor' | 'preview'). Only
+  // scroll events from that pane are synced. A time-based echo cooldown alone
+  // isn't enough: macOS smooth/momentum scrolls can outlast it, and the late
+  // echo then drags the pane the user is scrolling back the other way.
+  let _scrollDriver = 'editor';
+  ['wheel', 'pointerdown', 'touchstart', 'keydown'].forEach((type) => {
+    document.addEventListener(type, (e) => {
+      const pane = document.getElementById('previewPane');
+      _scrollDriver = pane && e.target instanceof Node && pane.contains(e.target) ? 'preview' : 'editor';
+    }, { capture: true, passive: true });
+  });
+
   function _isSplitMode() {
     const area = document.getElementById('editorArea');
     return !!area && area.getAttribute('data-view') === 'split';
@@ -452,6 +464,7 @@ const EditorCore = (() => {
 
   /** Scroll the preview pane to track the editor's current scroll position. */
   function syncPreviewScrollFromEditor() {
+    if (_scrollDriver !== 'editor') return;
     if (performance.now() < _ignoreEditorEchoUntil) return; // echo of our own preview→editor scroll
     if (!_isSplitMode() || _previewSyncRAF) return;
     _previewSyncRAF = requestAnimationFrame(() => {
@@ -475,6 +488,7 @@ const EditorCore = (() => {
 
   /** Scroll the editor to track the preview pane's current scroll position. */
   function syncEditorScrollFromPreview() {
+    if (_scrollDriver !== 'preview') return;
     if (performance.now() < _ignorePreviewEchoUntil) return; // echo of our own editor→preview scroll
     if (!_isSplitMode() || _editorSyncRAF) return;
     _editorSyncRAF = requestAnimationFrame(() => {

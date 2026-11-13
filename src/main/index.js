@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net } = require('electron')
+const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, screen } = require('electron')
 const path = require('path')
 const fs   = require('fs')
 const { registerIpcHandlers, updateJumpList, seedDefaultModels } = require('./ipc')
@@ -90,17 +90,26 @@ if (!gotLock) {
   function createWindow(args = {}) {
     // If there's an existing window, cascade the new one 40 px down-right so
     // it's immediately obvious it's a separate window and not the same one.
+    // The first window restores the saved size. Later ones (a file opened
+    // from Finder/Explorer, New Window) copy the size of the window they
+    // cascade from — its normal size if it's maximized or full screen.
     let x, y
+    let { width, height } = loadWindowState()
     const allWins = BrowserWindow.getAllWindows()
-    if (allWins.length > 0) {
-      const [cx, cy] = allWins[allWins.length - 1].getPosition()
-      x = cx + 40
-      y = cy + 40
+    const src = BrowserWindow.getFocusedWindow() || allWins[allWins.length - 1]
+    if (src) {
+      const b = src.getNormalBounds()
+      ;({ width, height } = b)
+      x = b.x + 40
+      y = b.y + 40
+      // Keep the cascaded window on the same screen: start over at its
+      // top-left when the offset would push it past the edge.
+      const area = screen.getDisplayMatching(b).workArea
+      width  = Math.min(width,  area.width)
+      height = Math.min(height, area.height)
+      if (x + width > area.x + area.width)  x = area.x
+      if (y + height > area.y + area.height) y = area.y
     }
-
-    // Only restore saved size for the very first window; subsequent windows
-    // (opened via second-instance or New Instance) use the default size.
-    const { width, height } = allWins.length === 0 ? loadWindowState() : { width: 1280, height: 800 }
 
     const win = new BrowserWindow({
       width,
@@ -169,13 +178,12 @@ if (!gotLock) {
 
     // ── Unsaved-changes guard ─────────────────────────────────────────────
     // Button indices:  0 = Save   1 = Discard   2 = Cancel
-    // event.preventDefault() on will-prevent-unload is synchronous-only in
-    // Electron — calling it after an await has no effect. Instead we send IPC
-    // messages so the renderer can set the bypass flag and call window.close().
+    // In will-prevent-unload, event.preventDefault() means "ignore the
+    // renderer's beforeunload and close anyway" — so it must only be called
+    // for Discard, and synchronously (hence showMessageBoxSync). Calling it
+    // up front closed the window while the dialog was still appearing.
     win.webContents.on('will-prevent-unload', (event) => {
-      // Prevent the default "keep window open" so we can manage close ourselves.
-      event.preventDefault()
-      dialog.showMessageBox(win, {
+      const response = dialog.showMessageBoxSync(win, {
         type:      'warning',
         buttons:   ['Save', 'Discard changes', 'Cancel'],
         defaultId: 0,
@@ -183,14 +191,14 @@ if (!gotLock) {
         title:     'Unsaved changes',
         message:   'You have unsaved changes.',
         detail:    'Save before closing, or discard and lose your work?',
-      }).then(({ response }) => {
-        if (response === 0) {
-          win.webContents.send('app:save-and-close')
-        } else if (response === 1) {
-          win.webContents.send('app:discard-and-close')
-        }
-        // response === 2 (Cancel): do nothing → window stays open
       })
+      if (response === 0) {
+        // Keep the window open; the renderer saves, then closes itself.
+        win.webContents.send('app:save-and-close')
+      } else if (response === 1) {
+        event.preventDefault() // let the close go ahead
+      }
+      // response === 2 (Cancel): do nothing → window stays open
     })
 
     // ── Send startup folder once the renderer is ready ───────────────────

@@ -262,14 +262,6 @@
             </svg>
           </button>
 
-          <!-- Rename files from content (opened folder) -->
-          <button class="icon-btn" title="Rename files from content" id="btn-rename-from-content">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M2 3.5h7M2 7h5M2 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              <path d="M10.5 6.5l2 2-3.5 3.5H7v-2l3.5-3.5Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-            </svg>
-          </button>
-
           <!-- Collapse All button -->
           <button class="icon-btn" title="Collapse All" id="btn-collapse-all">
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none"
@@ -817,9 +809,10 @@
 
         <span class="statusbar-sep">|</span>
 
-        <!-- App version -->
+        <!-- What's new (first run after an update) + app version -->
         <div class="statusbar-item">
-          <span id="sbVersion"></span>
+          <button type="button" id="sbWhatsNew" class="sb-whats-new hidden" title="See what's new in this version">What's new</button>
+          <button type="button" id="sbVersion" class="sb-version" title="Release notes"></button>
         </div>
 
       </div><!-- /statusbar -->
@@ -859,6 +852,15 @@
         <path d="M6 8h4M8.5 6.5 10 8l-1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       Suggest Folder (AI)…
+    </button>
+    <button class="file-ctx-item" data-file-action="identify-tasks" title="Ask AI to find pending tasks in this file and add them to Tasks">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <rect x="1.5" y="2" width="4" height="4" rx="1" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M2.5 4l1 1 1.5-2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7.5 4h5M2 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M10.5 7.5l.8 1.7 1.7.8-1.7.8-.8 1.7-.8-1.7-1.7-.8 1.7-.8.8-1.7Z" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/>
+      </svg>
+      Identify Tasks (AI)…
     </button>
     <button class="file-ctx-item" data-file-action="tags" title="View and edit this file's tags">
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -933,13 +935,6 @@
         <path d="M9.5 2.5l2 2-6.5 6.5H3V9l6.5-6.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
       </svg>
       Rename Folder…
-    </button>
-    <button class="file-ctx-item" data-folder-action="rename-from-content" title="Rename the files in this folder from their titles">
-      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <path d="M2 3.5h7M2 7h5M2 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <path d="M10.5 6.5l2 2-3.5 3.5H7v-2l3.5-3.5Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-      </svg>
-      Rename Files from Content…
     </button>
     <button class="file-ctx-item" data-folder-action="open-in-explorer">
       <svg width="13" height="13" viewBox="0 0 15 15" fill="none" aria-hidden="true">
@@ -1183,12 +1178,13 @@
             <div class="settings-row">
               <div class="settings-row__label">
                 <span class="settings-row__name">Quick Edit in Preview</span>
-                <span class="settings-row__desc">Double-click a paragraph, heading, list, quote or code block in Preview to edit it in place (tables open the table builder)</span>
+                <span class="settings-row__desc">Double-click a block in Preview to edit it in place (tables open the table builder). Choose Tables only to keep text read-only, or Off for a fully read-only Preview</span>
               </div>
               <div class="settings-row__control">
                 <select id="quickEditPreview" class="form-input settings-select">
-                  <option value="on">On</option>
-                  <option value="off">Off</option>
+                  <option value="on">All blocks</option>
+                  <option value="tables">Tables only</option>
+                  <option value="off">Off (read-only)</option>
                 </select>
               </div>
             </div>
@@ -1197,7 +1193,7 @@
             <div class="settings-row">
               <div class="settings-row__label">
                 <span class="settings-row__name">Preview Width</span>
-                <span class="settings-row__desc">Keep the preview at a readable width or let it fill the pane</span>
+                <span class="settings-row__desc">Keep the preview, Tasks and Ideas at a readable width or let them fill the pane</span>
               </div>
               <div class="settings-row__control">
                 <select id="previewWidth" class="form-input settings-select">
@@ -1215,8 +1211,9 @@
               </div>
               <div class="settings-row__control">
                 <select id="inShortBanner" class="form-input settings-select">
-                  <option value="on">On</option>
-                  <option value="off">Off</option>
+                  <option value="on">All blocks</option>
+                  <option value="tables">Tables only</option>
+                  <option value="off">Off (read-only)</option>
                 </select>
               </div>
             </div>
@@ -1555,38 +1552,6 @@
     </div>
   </div>
 
-  <!-- ── Rename Files from Content Modal ───────────────────────────────── -->
-  <div id="renameContentOverlay" class="label-modal-overlay hidden"
-       role="dialog" aria-modal="true" aria-label="Rename files from content">
-    <div class="label-modal">
-      <div class="label-modal__header">
-        <span class="label-modal__title">Rename Files from Content</span>
-        <button id="btnCloseRenameContent" class="settings-close-btn" title="Close">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6"
-                  stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div class="label-modal__body">
-        <p class="tag-modal__hint">
-          Names come from each file's <code>title:</code>, first heading, or first line —
-          or click <strong>Suggest with AI</strong> to have your AI model name them from
-          the start of each file. Suggested tags appear under each name. Edit names or
-          tags, untick files to skip them, then apply.
-        </p>
-        <div id="renameContentList" class="rename-content-list"></div>
-        <div class="label-modal__actions rename-content-actions">
-          <span id="renameContentSummary" class="rename-content-summary"></span>
-          <button id="btnAiRenameContent" class="btn btn-outline btn-sm"
-                  title="Ask the AI model for a name for each file (reads only the first part of each file)">✨ Suggest with AI</button>
-          <button id="btnCancelRenameContent" class="btn btn-outline btn-sm">Cancel</button>
-          <button id="btnApplyRenameContent" class="btn btn-primary btn-sm">Rename</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ── Version History Modal ────────────────────────────────────────── -->
   <div id="versionHistoryOverlay" class="settings-overlay hidden"
        role="dialog" aria-modal="true" aria-labelledby="versionHistoryTitle">
@@ -1690,6 +1655,8 @@
   <script src="aiService.js"></script>
   <script src="inShort.js"></script>
   <script src="suggestFolder.js"></script>
+  <script src="identifyTasks.js"></script>
+  <script src="whatsNew.js"></script>
   <script src="confirmDialog.js"></script>
   <script src="folderLists.js"></script>
   <script src="../../node_modules/katex/dist/katex.min.js"></script>

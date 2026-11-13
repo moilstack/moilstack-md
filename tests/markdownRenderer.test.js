@@ -379,3 +379,45 @@ describe('Markdown Rendering', () => {
   });
 
 });
+
+describe('table directly after a paragraph line', () => {
+  test('renders a table with no blank line before it', () => {
+    const { MarkdownRenderer } = require('../src/renderer/markdownRenderer.js');
+    const html = MarkdownRenderer.parseMarkdown(
+      '**Output locations:**\n| Platform | Output |\n|---|---|\n| macOS | `a.zip` |'
+    );
+    expect(html).toContain('<table');
+    expect(html).toContain('<th>Platform</th>');
+    expect(html).toMatch(/<p[^>]*><strong>Output locations:<\/strong><\/p>/);
+  });
+});
+
+describe('list item with a note line and sub-items', () => {
+  test('keeps indented note and nested tasks inside the parent item', () => {
+    const { MarkdownRenderer } = require('../src/renderer/markdownRenderer.js');
+    const html = MarkdownRenderer.parseMarkdown(
+      '- [ ] Parent #tag1\n    Note about the task\n    - [ ] Child one\n    - [ ] Child two'
+    );
+    expect((html.match(/<ul/g) || [])).toHaveLength(2);
+    expect(html).toContain('<div class="list-item-note">Note about the task</div>');
+    expect(html).not.toContain('<p');
+    expect(html.indexOf('Child one')).toBeLessThan(html.lastIndexOf('</li></ul>'));
+    expect((html.match(/task-checkbox/g) || [])).toHaveLength(3);
+  });
+});
+
+describe('Fenced code blocks indented under a list item', () => {
+  const pm = (s) => require('../src/renderer/markdownRenderer.js').MarkdownRenderer.parseMarkdown(s);
+
+  test('after a blank line, a 4-space-indented fence is a code block', () => {
+    const html = pm('10. Run:\n\n    ```bash\n    flutterfire configure\n    ```\n\nNext.');
+    expect(html).toContain('<code class="language-bash">flutterfire configure</code>');
+    expect(html).not.toContain('``');
+  });
+
+  test('directly under the item, the fence renders inside the item', () => {
+    const html = pm('10. Run:\n    ```bash\n    flutter clean\n\n    flutter pub get\n    ```\n11. Next');
+    expect(html).toMatch(/<li>Run:<div class="code-block">[\s\S]*flutter clean\n\nflutter pub get<\/code>/);
+    expect(html).toContain('<li>Next</li>');
+  });
+});

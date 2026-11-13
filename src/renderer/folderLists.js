@@ -26,6 +26,28 @@ function _flIso(d) {
 function _flToday() { return _flIso(new Date()); }
 
 /** Today + n days, as YYYY-MM-DD. */
+/**
+ * Date group for a task: overdue, today, tomorrow, week, nextweek, later or none.
+ * Weeks run Monday–Sunday (same as the "Next week" date button), so "This week"
+ * ends on Sunday and "Next week" is the following Monday–Sunday.
+ */
+function taskGroupOf(t) {
+  if (!t.due) return 'none';
+  const today = _flToday();
+  if (t.due < today) return 'overdue';
+  if (t.due === today) return 'today';
+  if (t.due === _flAddDays(1)) return 'tomorrow';
+  const toSunday = (7 - new Date().getDay()) % 7;   // 0 when today is Sunday
+  if (t.due <= _flAddDays(toSunday)) return 'week';
+  if (t.due <= _flAddDays(toSunday + 7)) return 'nextweek';
+  return 'later';
+}
+
+/** Sunday that ends the current Monday–Sunday week (today if it's Sunday). */
+function _flEndOfWeek() {
+  return _flAddDays((7 - new Date().getDay()) % 7);
+}
+
 function _flAddDays(n) {
   const d = new Date();
   d.setDate(d.getDate() + n);
@@ -142,7 +164,7 @@ function _flCloseMenu() {
   _flMenu = null;
 }
 
-/** A popup under `anchor` offering Today / Tomorrow / Next week / Pick date / Clear. */
+/** A popup under `anchor` offering Today / Tomorrow / This week / Next week / Pick date / Clear. */
 function _flDateMenu(anchor, current, onPick) {
   _flCloseMenu();
   const menu = _flEl('div', 'fl-menu');
@@ -154,6 +176,7 @@ function _flDateMenu(anchor, current, onPick) {
   };
   add('Today', _flToday());
   add('Tomorrow', _flAddDays(1));
+  add('This week', _flEndOfWeek());
   add('Next week', _flNextWeekday(1) === _flToday() ? _flAddDays(7) : _flNextWeekday(1));
   const pick = _flEl('label', 'fl-menu__item', 'Pick date…');
   const input = document.createElement('input');
@@ -503,6 +526,11 @@ function createFolderList(cfg) {
       li.append(icon);
     }
 
+    // Text on top, its details (notes, subtasks, tags, priority, date) on a line below
+    const main = _flEl('div', 'task-row__main');
+    const meta = _flEl('div', 'task-row__meta');
+    li.append(main);
+
     const notesText = _notesOf(item).trim();
     if (cfg.singleBody) {
       // The whole text, cut off after 3 lines with "Show more"
@@ -522,10 +550,10 @@ function createFolderList(cfg) {
           if (!_expanded.has(item) && text.scrollHeight <= text.clientHeight + 1) more.remove();
         });
       }
-      li.append(body);
+      main.append(body);
       li.classList.add('task-row--body');
     } else {
-      li.append(_flEl('span', 'task-row__text', item.text));
+      main.append(_flEl('span', 'task-row__text', item.text));
     }
 
     if (notesText && !cfg.singleBody) {
@@ -533,7 +561,7 @@ function createFolderList(cfg) {
       n.title = _notesOf(item);
       n.innerHTML = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M3 2.5h10v11H3z M5.5 6h5M5.5 8.5h5M5.5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      li.append(n);
+      meta.append(n);
     }
 
     const subs = _subsOf(item);
@@ -541,10 +569,11 @@ function createFolderList(cfg) {
       const n = subs.filter(x => x.done).length;
       const c = _flEl('span', 'task-row__subs' + (n === subs.length ? ' task-row__subs--all' : ''), `${n}/${subs.length}`);
       c.title = subs.map(x => `${x.done ? '☑' : '☐'} ${x.text}`).join('\n');
-      li.append(c);
+      meta.append(c);
     }
 
-    li.append(...cfg.rowParts(item, _api(item)));
+    meta.append(...cfg.rowParts(item, _api(item)));
+    if (meta.childElementCount) main.append(meta);
 
     const del = _flEl('button', 'task-row__del', '×');
     del.type = 'button';
@@ -874,13 +903,6 @@ function createFolderList(cfg) {
       <div class="tasks-view__inner">
         <div class="tasks-view__header">
           <h1 class="tasks-view__title"></h1>
-          <button class="tasks-view__link fl-raw" type="button"
-                  title="Open ${cfg.fileName} in the editor">Edit raw</button>
-          <button class="settings-close-btn fl-close" title="Close (Esc)">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-          </button>
         </div>
         <div class="fl-layout">
           <div class="fl-main">
@@ -893,7 +915,7 @@ function createFolderList(cfg) {
             <div class="fl-preview hidden"></div>
             <div class="fl-filterbar">
               <div class="fl-chips hidden"></div>
-              <input class="fl-search" type="search" placeholder="Search  ( / )" aria-label="Search ${cfg.noun}s"/>
+              <input class="fl-search" type="search" placeholder="Search" aria-label="Search ${cfg.noun}s"/>
             </div>
             <div class="fl-note hidden"><span></span>
               <button class="tasks-view__link fl-raw" type="button">Edit raw</button></div>
@@ -903,16 +925,23 @@ function createFolderList(cfg) {
               <summary class="fl-done-summary">${cfg.doneTitle || 'Completed'} (0)</summary>
               <ul class="tasks-list fl-done-list"></ul>
             </details>` : ''}
-            <div class="fl-keys">
-              <span><kbd>N</kbd> new</span><span><kbd>/</kbd> search</span><span><kbd>↑</kbd><kbd>↓</kbd> move</span>
-              <span><kbd>Enter</kbd> open</span>${cfg.hasDone ? '<span><kbd>Space</kbd> complete</span>' : ''}<span><kbd>Del</kbd> delete</span><span><kbd>Esc</kbd> close</span>
-            </div>
           </div>
           <aside class="fl-panel hidden" aria-label="${cfg.noun} details"></aside>
         </div>
       </div>`;
     document.querySelector('.main-content').append(_view);
     _panel = _view.querySelector('.fl-panel');
+    // Text boxes re-fit when the panel's width changes (window resize, or a
+    // scrollbar appearing when there are many subtasks) — wrapping changes.
+    if (typeof ResizeObserver !== 'undefined') {
+      let lastW = 0;
+      new ResizeObserver(() => {
+        const w = _panel.clientWidth;
+        if (w === lastW) return;
+        lastW = w;
+        _panel.querySelectorAll('textarea').forEach(_autoGrow);
+      }).observe(_panel);
+    }
 
     const form = _view.querySelector('form');
     const input = form.querySelector('textarea');
@@ -928,7 +957,6 @@ function createFolderList(cfg) {
       if (e.key === 'Escape' && search.value) { e.stopPropagation(); search.value = ''; _query = ''; _renderList(); }
       if (e.key === 'ArrowDown') { e.preventDefault(); _view.querySelector('.task-row')?.focus(); }
     });
-    _view.querySelector('.fl-close').addEventListener('click', close);
     _view.querySelectorAll('.fl-raw').forEach(b => b.addEventListener('click', _openRaw));
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -960,8 +988,16 @@ function createFolderList(cfg) {
   }
 
   function _autoGrow(el) {
+    if (!el.isConnected || !el.offsetParent) return; // hidden: measure later
+    // Keep the panel's scroll position: 'auto' briefly shrinks the box
+    const scroller = el.closest('.fl-panel');
+    const keep = scroller?.scrollTop;
     el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
+    // scrollHeight leaves out the border; add it so the last line isn't cut off
+    const cs = getComputedStyle(el);
+    const border = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    el.style.height = (el.scrollHeight + border) + 'px';
+    if (scroller && keep != null) scroller.scrollTop = keep;
   }
 
   function _renderView() {
@@ -973,8 +1009,10 @@ function createFolderList(cfg) {
 
   function _hide() {
     _flush();
+    const wasShown = _isShown();
     _view?.classList.add('hidden');
     $btn()?.classList.remove('tasks-pill--active');
+    if (wasShown) FolderLists.notifyChange();
     _backToRoot(); // the header button counts the open folder's list again
   }
 
@@ -989,6 +1027,7 @@ function createFolderList(cfg) {
     _renderView();
     _view.classList.remove('hidden');
     $btn()?.classList.add('tasks-pill--active');
+    FolderLists.notifyChange();
     WelcomeScreen.hideWelcomeScreen();
     _view.querySelector('.tasks-add__input').focus();
   }
@@ -1079,7 +1118,40 @@ function createFolderList(cfg) {
   else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  const api = { loadFolder, setRoot, open, close, onFileSelected, addItem, hide: _hide };
+  /**
+   * What the AI Assistant should work on while this list is on screen:
+   * the list file's current text, plus a write() that saves an AI edit
+   * and refreshes the view. null when the list isn't shown.
+   */
+  function aiTarget() {
+    if (!_isShown() || !_folder) return null;
+    const folder = _folder;
+    const path = _filePath();
+    const name = folder.split(/[\/]/).filter(Boolean).pop() || folder;
+    return {
+      path,
+      fileName: cfg.fileName,
+      label: `${cfg.title} · ${name}`,
+      noun: cfg.noun,
+      format: cfg.aiFormat || '',
+      async read() {
+        await _flush();
+        const res = await window.electronAPI?.readFile(path);
+        return res?.content ?? '';
+      },
+      async write(content) {
+        await _flush();
+        const res = await window.electronAPI?.writeFile(path, content.endsWith('\n') ? content : content + '\n');
+        if (!res?.ok) return res || { ok: false, error: `Could not save ${cfg.fileName}` };
+        if (!_exists) FileTreeManager.refresh();
+        await loadFolder(folder);
+        if (_isShown() && _folder === folder) _renderView();
+        return { ok: true };
+      },
+    };
+  }
+
+  const api = { loadFolder, setRoot, open, close, onFileSelected, addItem, hide: _hide, aiTarget };
   return api;
 }
 
@@ -1114,6 +1186,12 @@ const Tasks = (() => {
     title: 'Tasks',
     noun: 'task',
     fileName: '_tasks.md',
+    aiFormat: [
+      'Each task is one line: "- [ ] Task text #tag  !med  📅 2026-10-31  ➕ 2026-10-20".',
+      '"- [x]" marks a done task; a done task also gets "  ✅ YYYY-MM-DD" (the day it was completed).',
+      'Priority is !high, !med or !low. 📅 is the due date (optional). ➕ is the created date; give new tasks the current date.',
+      'Subtasks are indented lines under a task: "    - [ ] Subtask text". Other indented lines are notes for that task.',
+    ].join('\n'),
     buttonId: 'btn-tasks',
     emptyText: 'No open tasks 🎉',
     hasDone: true,
@@ -1122,16 +1200,13 @@ const Tasks = (() => {
     groups: [
       { key: 'overdue', label: 'Overdue', alert: true },
       { key: 'today', label: 'Today' },
-      { key: 'week', label: 'Next 7 days' },
+      { key: 'tomorrow', label: 'Tomorrow' },
+      { key: 'week', label: 'This week' },
+      { key: 'nextweek', label: 'Next week' },
       { key: 'later', label: 'Later' },
       { key: 'none', label: 'No date' },
     ],
-    groupOf(t) {
-      if (!t.due) return 'none';
-      if (t.due < _flToday()) return 'overdue';
-      if (t.due === _flToday()) return 'today';
-      return t.due <= _flAddDays(7) ? 'week' : 'later';
-    },
+    groupOf: taskGroupOf,
     filters: [{ key: 'high', label: 'High priority', test: (t) => t.priority === 'high' }],
     addPlaceholder: 'Add a task… (try !high, tomorrow, #tag)',
 
@@ -1230,6 +1305,7 @@ const Tasks = (() => {
       };
       quick('Today', _flToday());
       quick('Tomorrow', _flAddDays(1));
+      quick('This week', _flEndOfWeek());
       quick('Next week', _flNextWeekday(1) === _flToday() ? _flAddDays(7) : _flNextWeekday(1));
       if (t.due) quick('Clear', null);
       if (isOverdue(t)) dueRow.append(_flEl('span', 'task-row__due task-row__due--overdue', 'Overdue'));
@@ -1329,6 +1405,12 @@ const Ideas = (() => {
     title: 'Ideas',
     noun: 'idea',
     fileName: '_ideas.md',
+    aiFormat: [
+      'Each idea is one line: "- Idea text #tag  ⭐  🔖exploring  ➕ 2026-10-20".',
+      '⭐ means starred (optional). 🔖 is the status: exploring, parked or used; leave it out for a new idea.',
+      '➕ is the created date; give new ideas the current date. Never use "- [ ]" checkboxes for ideas.',
+      'Indented lines under an idea are its notes.',
+    ].join('\n'),
     buttonId: 'btn-ideas',
     emptyText: 'No ideas yet 💡',
     hasDone: false,
@@ -1437,8 +1519,15 @@ const FolderLists = {
   loadFolder: (folderPath) => FolderLists.all().forEach(l => l.setRoot(folderPath)),
   onFileSelected: (filePath) => FolderLists.all().forEach(l => l.onFileSelected(filePath)),
   hideAllExcept: (keep) => FolderLists.all().forEach(l => { if (l !== keep) l.hide(); }),
+  /** The Tasks/Ideas list on screen, as an AI Assistant target (or null). */
+  aiTarget: () => FolderLists.all().map(l => l.aiTarget()).find(Boolean) || null,
+  /** Tell the AI Assistant which document it's working on now. */
+  notifyChange: () => {
+    if (typeof document === 'undefined') return;
+    document.dispatchEvent(new CustomEvent('folderlist-change'));
+  },
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Tasks, Ideas, FolderLists, createFolderList, parseQuickAdd, _noteLines };
+  module.exports = { Tasks, Ideas, FolderLists, createFolderList, parseQuickAdd, taskGroupOf, _noteLines };
 }

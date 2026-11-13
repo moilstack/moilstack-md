@@ -138,6 +138,8 @@ const ContextMenus = (() => {
         RenameFromContent.renameFile(filePath, { useAI: true });
       } else if (action === 'suggest-folder') {
         SuggestFolder.show(filePath);
+      } else if (action === 'identify-tasks') {
+        IdentifyTasks.show(filePath);
       } else if (action === 'tags') {
         TagModal.show([], filePath);
       } else if (action === 'delete') {
@@ -189,8 +191,6 @@ const ContextMenus = (() => {
         window.electronAPI?.showInExplorer(folderPath);
       } else if (action === 'new-file-here') {
         FileOperations.showNewFileInput(folderPath);
-      } else if (action === 'rename-from-content') {
-        RenameFromContent.renameFolder(folderPath);
       } else if (action === 'new-subfolder') {
         FileOperations.promptNewFolder(folderPath);
       } else if (action === 'rename-folder') {

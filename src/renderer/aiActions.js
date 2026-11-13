@@ -414,8 +414,7 @@ const AIActions = (() => {
       // A plain chat reply with the chat's own Copy button.
       const { row, bubbleEl } = _job.turn;
       bubbleEl.classList.remove('bubble--waiting');
-      bubbleEl.classList.add('bubble--plain');   // keep the reply's line breaks
-      bubbleEl.textContent = result;
+      ChatPanel.renderReply(bubbleEl, result);  // formatted as Markdown
       row.dataset.aiText = result;
       row.insertAdjacentHTML('beforeend',
         '<div class="bubble-actions"><button class="bubble-action-btn copy-btn">Copy</button></div>');
@@ -645,6 +644,12 @@ const AIActions = (() => {
     const editor = _deps.getEditor && _deps.getEditor();
     if (!action || !editor || typeof ChatPanel === 'undefined') return;
     if (_job?.busy || ChatPanel.isBusy()) return;
+    // Tasks/Ideas cover the editor; don't edit the hidden document underneath
+    const list = typeof FolderLists !== 'undefined' ? FolderLists.aiTarget() : null;
+    if (list) {
+      StatusBar.showToast(`AI actions work on documents. To change your ${list.noun}s, ask the AI Assistant.`);
+      return;
+    }
     if (_job) _close('Dismissed');
 
     const text  = editor.value;

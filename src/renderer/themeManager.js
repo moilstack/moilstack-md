@@ -42,7 +42,7 @@ const ThemeManager = (() => {
     'xcode-light': ['#ffffff', '#f5f5f7', '#0b57d0'],
     dim:           ['#3b414c', '#3b414c', '#61afef'],
     'github-light':['#ffffff', '#f6f8fa', '#0969da'],
-    'one-light':   ['#fafafa', '#eaeaeb', '#4078f2'],
+    'one-light':   ['#fbfcfe', '#f2f5fa', '#4078f2'],
     paper:         ['#ffffff', '#f7f7f5', '#2383e2'],
     nord:          ['#2e3440', '#292e39', '#88c0d0'],
     forest:        ['#1f2622', '#1a201c', '#7fb685'],

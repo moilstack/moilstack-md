@@ -4,6 +4,7 @@
  * Double-click a rendered block (paragraph, heading, list, quote, code block)
  * to swap it for a small textarea holding that block's Markdown. Ctrl+Enter or
  * clicking away saves, Esc cancels. Tables open the visual Table Builder.
+ * Setting 'quickEditPreview': 'on' (all blocks), 'tables' (tables only), 'off'.
  *
  * Block → source mapping comes from the data-line / data-line-end attributes
  * that markdownRenderer.js stamps on each top-level block.
@@ -65,14 +66,21 @@ const QuickEdit = (() => {
      Settings / mode gating
      ═══════════════════════════════════════════════════════════════════ */
 
-  function isEnabled() {
-    try { return (localStorage.getItem(SETTING_KEY) || 'on') !== 'off'; }
-    catch (_) { return true; }
+  /** 'on' (all blocks), 'tables' (tables only) or 'off' (read-only Preview). */
+  function getMode() {
+    let v = 'on';
+    try { v = localStorage.getItem(SETTING_KEY) || 'on'; } catch (_) {}
+    return v === 'off' || v === 'tables' ? v : 'on';
   }
+
+  function isEnabled() { return getMode() !== 'off'; }
 
   function applySetting() {
     const preview = _deps.getPreviewContent && _deps.getPreviewContent();
-    if (preview) preview.classList.toggle('qe-enabled', isEnabled());
+    if (!preview) return;
+    const mode = getMode();
+    preview.classList.toggle('qe-enabled', mode === 'on');
+    preview.classList.toggle('qe-tables', mode === 'tables');
   }
 
   function inPreviewMode() {
@@ -243,10 +251,13 @@ const QuickEdit = (() => {
     if (!range) return;
     const source = editor.value.slice(range.start, range.end);
 
+    const isTable = lineEl.tagName === 'TABLE';
+    if (!isTable && getMode() === 'tables') return;
+
     e.preventDefault();
     window.getSelection()?.removeAllRanges(); // dblclick selects a word — don't leave it highlighted
 
-    if (lineEl.tagName === 'TABLE' && startTableEdit(startLine, endLine, source, range)) return;
+    if (isTable && startTableEdit(startLine, endLine, source, range)) return;
     startTextEdit(el, startLine, endLine, source);
   }
 
@@ -289,7 +300,10 @@ const QuickEdit = (() => {
     return r ? { start: r.start + a, end: r.start + b } : null;
   }
 
-  return { init, applySetting, lineRange, blockPatch, activeInput, commitForAction };
+  /** Commit any open Quick Edit block (e.g. before the window closes). */
+  function flush() { endSession(true); }
+
+  return { init, applySetting, getMode, flush, lineRange, blockPatch, activeInput, commitForAction };
 
 })();
 
