@@ -55,8 +55,8 @@ Windows SmartScreen warning or Linux launch issues? See the [Install Guide](INST
 ### Tasks for a folder
 ![Tasks grouped by date](assets/07_moilstack-md_Tasks.png)
 
-### Identify Tasks from any note
-![Identify Tasks dialog listing pending tasks found in a file](assets/09_moilstack-md_Identify-Tasks.png)
+### AI helpers on right-click
+![File right-click menu with Rename with AI, Suggest Folder and Identify Tasks](assets/06_moilstack-md_File-Menu.png)
 
 ## Documentation
 
