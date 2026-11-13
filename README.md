@@ -6,7 +6,7 @@
 
 An open-source desktop **Markdown AI editor** and standalone markdown viewer built with Electron. Write, edit, and view Markdown files with syntax highlighting, a live preview pane, and an integrated AI assistant — with the option to run everything privately on your machine.
 
-![MoilStack .md](assets/01_moilstack-md_Split.png)
+![MoilStack .md](assets/04_moilstack-md_Preview-InShort.png)
 
 ## Download
 
@@ -18,14 +18,16 @@ Windows SmartScreen warning or Linux launch issues? See the [Install Guide](INST
 
 **Writing**
 - **Edit, Preview and Split modes** — syntax-highlighted editor with live preview
-- **Quick edit in Preview** — double-click a block to edit it in place
+- **Quick edit in Preview** — double-click a block to edit it in place (or keep Preview read-only, or tables-only)
 - **Visual table builder** — create Markdown tables with a point-and-click grid
-- **Export to PDF**, dark / light themes, and configurable editor fonts
+- **Export to PDF**, 11 light and dark themes, and configurable editor fonts
 
 **AI**
 - **✨ AI actions** — right-click selected text to fix grammar, improve, shorten, translate and more; use the toolbar ✨ AI button to summarize, add a table of contents, proofread, or suggest tags
 - **Review before applying** — see changes highlighted, then Accept, Reject or Retry
-- **AI Assistant chat** — ask questions about your document or request any other change
+- **AI Assistant chat** — ask questions about your document, get a plain-language Explain, or request any other change
+- **In Short** — a one- or two-sentence AI summary at the top of Preview, with suggested tags
+- **AI file helpers** — right-click a file to Rename with AI, Suggest Folder, or Identify Tasks
 - **Any model** — OpenAI-compatible APIs (Groq, Gemini, OpenAI, Mistral…), Anthropic, Ollama (fully offline), or CLI tools like Claude Code
 
 **Files**
@@ -33,9 +35,28 @@ Windows SmartScreen warning or Linux launch issues? See the [Install Guide](INST
 - **Search** — across file names and content, with `#tag` search
 - **Labels & tags** — colour-label files and add searchable frontmatter tags
 - **Version History** — every save is backed up; browse and restore old versions
+- **Pinned files** — keep your most-used files at the top of the Explorer
 - **Safe by default** — every AI change can be undone with `Ctrl+Z`
 
+**Tasks & Ideas**
+- **Per-folder Tasks and Ideas** — stored as plain Markdown (`_tasks.md`, `_ideas.md`) in the folder
+- **Grouped by date** — Overdue, Today, Tomorrow, This week, Next week, with priorities and `#tags`
+- **Quick add** — type `!high`, `tomorrow` or `#tag` right in the task text
+- **Identify Tasks (AI)** — pull the main pending tasks out of any note and add them in one go
+
 ## Screens
+
+### AI Assistant — Explain a document
+![AI Assistant explaining a document](assets/05_moilstack-md_AI-Assistant.png)
+
+### Tasks for a folder
+![Tasks grouped by date](assets/07_moilstack-md_Tasks.png)
+
+### AI helpers in the file menu
+![File right-click menu with Rename with AI, Suggest Folder and Identify Tasks](assets/06_moilstack-md_File-Menu.png)
+
+### Edit, Preview and Split
+![Split view](assets/01_moilstack-md_Split.png)
 
 ### ✨ AI actions on selected text
 ![AI actions menu](assets/02_moilstack-md_AI-Menu.png)
