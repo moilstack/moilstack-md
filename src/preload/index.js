@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   platform: process.platform,
   appVersion: require('electron').ipcRenderer.sendSync('app:get-version'),
 
+  // This (or another) version's section of CHANGELOG.md → { ok, version, notes } | { ok: false, error }
+  getReleaseNotes: (version) => ipcRenderer.invoke('app:get-release-notes', version),
+
   // Open a native folder-picker dialog
   openFolder: () => ipcRenderer.invoke('folder:open'),
 

@@ -294,6 +294,22 @@ function registerIpcHandlers() {
   // Sync IPC: renderer reads app version during preload initialisation
   ipcMain.on('app:get-version', (event) => { event.returnValue = app.getVersion() })
 
+  // Release notes for one version, from the bundled CHANGELOG.md:
+  // the text under "## [x.y.z]" up to the next "---" or version heading.
+  ipcMain.handle('app:get-release-notes', async (_e, version) => {
+    try {
+      const md = await fs.readFile(path.join(app.getAppPath(), 'CHANGELOG.md'), 'utf8')
+      const v = String(version || app.getVersion()).replace(/[^0-9A-Za-z.-]/g, '')
+      const start = md.search(new RegExp(`^## \\[${v.replace(/\./g, '\\.')}\\]`, 'm'))
+      if (start < 0) return { ok: false, error: 'No release notes for this version.' }
+      const body = md.slice(md.indexOf('\n', start) + 1)
+      const end = body.search(/^(---\s*$|## \[)/m)
+      return { ok: true, version: v, notes: (end < 0 ? body : body.slice(0, end)).trim() }
+    } catch (err) {
+      return { ok: false, error: 'Release notes are not available.' }
+    }
+  })
+
   // ── Custom title-bar window controls ──────────────────────────────────────
   ipcMain.on('window:minimize',  (e) => { BrowserWindow.fromWebContents(e.sender)?.minimize() })
   ipcMain.on('window:maximize',  (e) => { const w = BrowserWindow.fromWebContents(e.sender); w?.isMaximized() ? w.restore() : w.maximize() })

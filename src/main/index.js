@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net } = require('electron')
+const { app, BrowserWindow, Menu, dialog, ipcMain, protocol, net, screen } = require('electron')
 const path = require('path')
 const fs   = require('fs')
 const { registerIpcHandlers, updateJumpList, seedDefaultModels } = require('./ipc')
@@ -90,17 +90,26 @@ if (!gotLock) {
   function createWindow(args = {}) {
     // If there's an existing window, cascade the new one 40 px down-right so
     // it's immediately obvious it's a separate window and not the same one.
+    // The first window restores the saved size. Later ones (a file opened
+    // from Finder/Explorer, New Window) copy the size of the window they
+    // cascade from — its normal size if it's maximized or full screen.
     let x, y
+    let { width, height } = loadWindowState()
     const allWins = BrowserWindow.getAllWindows()
-    if (allWins.length > 0) {
-      const [cx, cy] = allWins[allWins.length - 1].getPosition()
-      x = cx + 40
-      y = cy + 40
+    const src = BrowserWindow.getFocusedWindow() || allWins[allWins.length - 1]
+    if (src) {
+      const b = src.getNormalBounds()
+      ;({ width, height } = b)
+      x = b.x + 40
+      y = b.y + 40
+      // Keep the cascaded window on the same screen: start over at its
+      // top-left when the offset would push it past the edge.
+      const area = screen.getDisplayMatching(b).workArea
+      width  = Math.min(width,  area.width)
+      height = Math.min(height, area.height)
+      if (x + width > area.x + area.width)  x = area.x
+      if (y + height > area.y + area.height) y = area.y
     }
-
-    // Only restore saved size for the very first window; subsequent windows
-    // (opened via second-instance or New Instance) use the default size.
-    const { width, height } = allWins.length === 0 ? loadWindowState() : { width: 1280, height: 800 }
 
     const win = new BrowserWindow({
       width,

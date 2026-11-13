@@ -6668,3 +6668,24 @@ select.form-input {
   width: 130px; color: var(--active-file-text);
   background: var(--active-file-bg); border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
 }
+
+/* ─── What's new (status bar link + release-notes dialog; whatsNew.js) ─ */
+.sb-version, .sb-whats-new {
+  border: 0; background: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer;
+}
+.sb-version:hover { color: var(--text-primary); text-decoration: underline; }
+.sb-whats-new {
+  margin-right: 6px; padding: 0 7px; border-radius: 8px; line-height: 16px;
+  color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.sb-whats-new:hover { background: color-mix(in srgb, var(--primary) 20%, transparent); }
+.sb-whats-new.hidden { display: none; }
+.whats-new .label-modal { width: min(640px, calc(100vw - 48px)); }
+.whats-new__body {
+  max-height: min(60vh, 520px); overflow-y: auto; padding: 0 4px 0 0; margin: 0 0 4px;
+  font-size: 13px; max-width: none;
+}
+.whats-new__body h3 { font-size: 13px; margin: 14px 0 6px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+.whats-new__body h3:first-child { margin-top: 0; }
+.whats-new__body li { margin-bottom: 6px; line-height: 1.5; }
+.whats-new__msg { color: var(--text-secondary); margin: 0; }

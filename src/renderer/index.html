@@ -809,9 +809,10 @@
 
         <span class="statusbar-sep">|</span>
 
-        <!-- App version -->
+        <!-- What's new (first run after an update) + app version -->
         <div class="statusbar-item">
-          <span id="sbVersion"></span>
+          <button type="button" id="sbWhatsNew" class="sb-whats-new hidden" title="See what's new in this version">What's new</button>
+          <button type="button" id="sbVersion" class="sb-version" title="Release notes"></button>
         </div>
 
       </div><!-- /statusbar -->
@@ -1655,6 +1656,7 @@
   <script src="inShort.js"></script>
   <script src="suggestFolder.js"></script>
   <script src="identifyTasks.js"></script>
+  <script src="whatsNew.js"></script>
   <script src="confirmDialog.js"></script>
   <script src="folderLists.js"></script>
   <script src="../../node_modules/katex/dist/katex.min.js"></script>

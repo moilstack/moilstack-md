@@ -4,9 +4,10 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
-## [Unreleased]
+## [1.1.8] - 2026-11-13
 
 ### Added
+- **What's new** — after an update, a *What's new* link appears next to the version in the status bar for that first run. Click it (or the version number, any time) to see the release notes.
 - **AI Assistant works on Tasks and Ideas** — with the Tasks or Ideas view open, the AI Assistant reads and edits that list (e.g. "add a task to review the PR by Friday", "mark the API spec done") instead of the file hidden underneath. The chat's Context label shows the list, and Undo / Re-apply restore it. One-click AI actions stay off while a list is open.
 - **Resizable AI Assistant** — drag the panel's left edge to make it wider or narrower; double-click to reset, or use ←/→ when the edge has focus. The width is remembered.
 - **Identify Tasks (AI)** — right-click a file → *Identify Tasks (AI)…* to find up to 5 main pending tasks in it, with related steps combined into one. Pick the ones you want, edit their text, and hover a picked task to set its priority, date and tags. *Add to Tasks* adds them to the folder's Tasks with a "From: <file>" note. Nothing is added until you click.
@@ -38,6 +39,7 @@ All notable new features and critical fixes for MoilStack .md.
 - **Unsaved-changes dialog closing itself** — the dialog now waits for Save / Discard changes / Cancel instead of flashing and closing the window.
 - **Discard changes saved anyway** — closing no longer starts a background save while the dialog is shown, so Discard really discards.
 - **Code blocks under list items** — a ``` fence indented under a numbered or bulleted item now renders as a code block instead of stray backticks and inline code.
+- **Window size for files opened from Finder / Explorer** — a file opened while the app is running gets a new window the same size as the current one (cascaded, kept on screen) instead of the default 1280×800.
 
 ---
 
