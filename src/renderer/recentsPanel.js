@@ -140,7 +140,7 @@ const RecentsPanel = (() => {
       html += _rowHTML({
         iconSvg: DRAFT_ICON_SVG,
         name: 'Scratchpad',
-        dataAttrs: `data-role="draft" title="Scratchpad — autosaved"`,
+        dataAttrs: `data-role="draft" title="Scratchpad — quick notes, kept automatically"`,
         extraClass: isLive ? ' active' : '',
         closeRole: 'draft-close',
         closeTitle: 'Discard or save Scratchpad',
@@ -250,6 +250,12 @@ const RecentsPanel = (() => {
 
     const row = e.target.closest('.recents-item');
     if (!row) return;
+
+    // The Scratchpad row opens the note cards; each card's Edit opens it in the editor
+    if (row.dataset.role === 'draft' && typeof ScratchNotes !== 'undefined') {
+      ScratchNotes.open();
+      return;
+    }
 
     // Clicking the active draft row while the welcome screen is up should
     // dismiss it and switch to edit mode — the row is "active" because the

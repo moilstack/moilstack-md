@@ -1034,6 +1034,7 @@ function createFolderList(cfg) {
 
   function close() {
     _hide();
+    FolderLists.returnToScratch();
     // If this file itself is the document underneath, its editor copy is stale — reload it
     if (_isOwnFile(currentFile?.path)) _openRaw();
   }
@@ -1517,8 +1518,26 @@ const Ideas = (() => {
 const FolderLists = {
   all: () => [Tasks, Ideas],
   loadFolder: (folderPath) => FolderLists.all().forEach(l => l.setRoot(folderPath)),
-  onFileSelected: (filePath) => FolderLists.all().forEach(l => l.onFileSelected(filePath)),
-  hideAllExcept: (keep) => FolderLists.all().forEach(l => { if (l !== keep) l.hide(); }),
+  onFileSelected: (filePath) => {
+    // A file opened while a list was up: closing the list goes to that file, not the cards
+    if (filePath) FolderLists.scratchUnder = false;
+    FolderLists.all().forEach(l => l.onFileSelected(filePath));
+  },
+  hideAllExcept: (keep) => {
+    FolderLists.all().forEach(l => { if (l !== keep) l.hide(); });
+    if (keep && typeof ScratchNotes !== 'undefined') {
+      // Remember the note cards were on screen so closing the list returns to them
+      if (ScratchNotes.isShown()) FolderLists.scratchUnder = true;
+      ScratchNotes.close();
+    }
+  },
+  scratchUnder: false,
+  /** A list was closed: go back to the note cards if they were underneath it. */
+  returnToScratch: () => {
+    const back = FolderLists.scratchUnder;
+    FolderLists.scratchUnder = false;
+    if (back && typeof ScratchNotes !== 'undefined') ScratchNotes.open();
+  },
   /** The Tasks/Ideas list on screen, as an AI Assistant target (or null). */
   aiTarget: () => FolderLists.all().map(l => l.aiTarget()).find(Boolean) || null,
   /** Tell the AI Assistant which document it's working on now. */

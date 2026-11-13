@@ -85,6 +85,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── Untitled-buffer draft ──────────────────────────────────────────
   // Single file at <userData>/backups/untitled-draft.md — not localStorage.
+  // ── Scratchpad notes: <userData>/backups/scratch-notes.json ─────────
+  notes: {
+    read:  ()      => ipcRenderer.invoke('notes:read'),
+    write: (notes) => ipcRenderer.invoke('notes:write', notes),
+  },
+
   draft: {
     read:  ()        => ipcRenderer.invoke('draft:read'),
     write: (content) => ipcRenderer.invoke('draft:write', { content }),

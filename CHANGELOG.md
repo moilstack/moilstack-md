@@ -4,6 +4,16 @@ All notable new features and critical fixes for MoilStack .md.
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Scratchpad note cards** — click *Scratchpad* in Recent Files to see your quick notes as cards, each with a title (its first line) and a few rendered lines. Click a card to expand it with **Copy**, **Copy as Markdown**, **Edit**, **Save as file…**, **Pin** and **Delete** (with Undo). *Edit* (or double-click) opens the note in the normal editor with every feature; typing there keeps the card up to date. While a note is open, a bar above the editor shows **← Scratchpad / note title** with **Copy**, **Save as file…** and **Done** (or press Esc) to go back. **+ New note** and **Paste as note** add notes in one click. Notes are kept automatically in the app's own data, never in your folders; the existing Scratchpad text becomes the first card.
+
+### Fixed
+- **Saving the Scratchpad from Recent Files** — choosing *Save* on the Scratchpad's × no longer fails after the file is written.
+
+---
+
 ## [1.1.8] - 2026-11-13
 
 ### Added

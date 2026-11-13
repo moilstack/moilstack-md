@@ -1288,6 +1288,36 @@ function registerIpcHandlers() {
     }
   })
 
+  /* ── Scratchpad notes ────────────────────────────────────────────────
+     All Scratchpad note cards in one JSON file next to the untitled draft:
+     <userData>/backups/scratch-notes.json → [{ id, text, updated, pinned }].
+     Written via a temp file + rename so a crash never leaves it half-written.
+     ──────────────────────────────────────────────────────────────── */
+  const NOTES_PATH = path.join(app.getPath('userData'), 'backups', 'scratch-notes.json')
+
+  ipcMain.handle('notes:read', async () => {
+    try {
+      const notes = JSON.parse(await fs.readFile(NOTES_PATH, 'utf8'))
+      return { ok: true, exists: true, notes: Array.isArray(notes) ? notes : [] }
+    } catch (err) {
+      if (err.code === 'ENOENT') return { ok: true, exists: false, notes: [] }
+      return { ok: false, exists: false, notes: [], error: err.message }
+    }
+  })
+
+  ipcMain.handle('notes:write', async (_e, notes) => {
+    try {
+      if (!Array.isArray(notes)) throw new Error('notes must be an array')
+      await fs.mkdir(path.dirname(NOTES_PATH), { recursive: true })
+      const tmp = NOTES_PATH + '.tmp'
+      await fs.writeFile(tmp, JSON.stringify(notes), 'utf8')
+      await fs.rename(tmp, NOTES_PATH)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
   /* ── Ollama ──────────────────────────────────────────────────────────
      ollama:list-models — fetch the list of models from a running Ollama server.
      ──────────────────────────────────────────────────────────────── */

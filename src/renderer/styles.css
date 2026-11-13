@@ -6689,3 +6689,84 @@ select.form-input {
 .whats-new__body h3:first-child { margin-top: 0; }
 .whats-new__body li { margin-bottom: 6px; line-height: 1.5; }
 .whats-new__msg { color: var(--text-secondary); margin: 0; }
+
+/* ─── Scratchpad note cards (scratchNotes.js) ─────────────────────── */
+.scratch-view { position: absolute; inset: 0; z-index: 9; background: var(--bg); overflow-y: auto; }
+.scratch-view.hidden { display: none; }
+.scratch-view__inner { max-width: 1100px; margin: 0 auto; padding: 28px 24px 48px; }
+[data-preview-width="full"] .scratch-view__inner { max-width: none; }
+.scratch-view__header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.scratch-view__title { margin: 0; font-size: 20px; font-weight: 600; color: var(--text-primary); }
+.scratch-view__hint { font-size: 12px; color: var(--text-secondary); }
+.scratch-view__spacer { flex: 1; }
+
+.scratch-grid {
+  display: grid; gap: 12px; align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.scratch-card {
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--editor-bg); cursor: pointer; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.scratch-card:hover, .scratch-card:focus-visible { border-color: color-mix(in srgb, var(--primary) 55%, var(--border)); }
+.scratch-card--open {
+  grid-column: 1 / -1; cursor: default;
+  border-color: var(--primary); box-shadow: 0 2px 12px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.scratch-card__head { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+.scratch-card__title {
+  margin: 0; font-size: 13.5px; font-weight: 600; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.scratch-card:not(.scratch-card--open) .scratch-card__title { flex: 1; }
+.scratch-card__pin { display: flex; color: var(--primary); }
+.scratch-card__badge {
+  font-size: 10.5px; padding: 1px 7px; border-radius: 8px;
+  color: var(--active-file-text); background: var(--active-file-bg);
+}
+.scratch-card__foot { font-size: 11px; color: var(--section-header); }
+
+/* Rendered Markdown, compact: ~3 lines in a closed card, everything when open */
+.scratch-card .preview-content { padding: 0; margin: 0; max-width: none; font-size: 12.5px; line-height: 1.55; color: var(--text-secondary); }
+.scratch-card .preview-content > :first-child { margin-top: 0; }
+.scratch-card .preview-content > :last-child { margin-bottom: 0; }
+.scratch-card__preview { max-height: calc(1.55em * 3.4); overflow: hidden; position: relative; pointer-events: none; }
+.scratch-card__preview :is(h1, h2, h3, h4, h5, h6) { font-size: 12.5px; margin: 0; border: 0; padding: 0; }
+.scratch-card__preview :is(p, ul, ol, pre, blockquote, table, .code-block) { margin: 0 0 2px; }
+.scratch-card__preview .code-copy-btn { display: none; }
+.scratch-card__preview pre { padding: 2px 6px; }
+.scratch-card__full { font-size: 13.5px; color: var(--text-primary); max-height: 60vh; overflow-y: auto; }
+.scratch-card__empty { font-style: italic; color: var(--section-header); margin: 0; }
+
+.scratch-card__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.scratch-btn {
+  height: 26px; padding: 0 10px; font: inherit; font-size: 12px; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-primary);
+}
+.scratch-btn:hover { background: var(--hover-bg); }
+.scratch-btn--primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.scratch-btn--primary:hover { background: color-mix(in srgb, var(--primary) 88%, #000); }
+.scratch-btn--danger { color: #dc2626; }
+.scratch-btn--icon { padding: 0 8px; color: var(--text-secondary); }
+
+.scratch-empty { grid-column: 1 / -1; padding: 40px 0; text-align: center; color: var(--text-secondary); font-size: 13px; }
+.scratch-empty p { margin: 4px 0; }
+
+/* Bar above the editor while a Scratchpad note is open */
+.scratch-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 6px 14px; border-bottom: 1px solid var(--divider);
+  background: color-mix(in srgb, var(--primary) 6%, var(--editor-bg)); font-size: 12.5px;
+}
+.scratch-bar.hidden { display: none; }
+.scratch-bar__back {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 6px;
+  border: 0; border-radius: 6px; background: none; font: inherit; font-weight: 600;
+  color: var(--primary); cursor: pointer;
+}
+.scratch-bar__back:hover { background: color-mix(in srgb, var(--primary) 12%, transparent); }
+.scratch-bar__sep { color: var(--section-header); }
+.scratch-bar__title { color: var(--text-primary); font-weight: 500; max-width: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scratch-bar__status { color: var(--section-header); font-size: 11.5px; }

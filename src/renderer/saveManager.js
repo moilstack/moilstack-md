@@ -68,6 +68,8 @@ const SaveManager = (() => {
   function clearDraft() {
     _draftCache = { content: '', exists: false };
     window.electronAPI?.draft?.clear?.();
+    // The untitled buffer no longer belongs to a Scratchpad note
+    if (typeof ScratchNotes !== 'undefined') ScratchNotes.detach();
   }
 
   /**
@@ -90,7 +92,7 @@ const SaveManager = (() => {
 
     clearDraft();
     const name = result.filePath.split(/[\\/]/).pop();
-    StorageManager.addRecentItem('file', result.filePath, name, raw);
+    StorageManager.addRecentItem('file', result.filePath, name, _extractFirstLine(content));
     return true;
   }
 
@@ -480,6 +482,7 @@ const SaveManager = (() => {
     getDraft,
     suggestFilename,
     hasDraft,
+    setDraft: _setDraft,
     clearDraft,
     saveDraftAs,
   };

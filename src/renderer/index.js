@@ -101,6 +101,8 @@ function selectFile(el, filePath, lines, chars) {
 
   const name = filePath.split(/[\\/]/).pop() || filePath;
   currentFile = { name, path: filePath };
+  // After currentFile changes, so the Scratchpad note bar sees a real file and hides
+  if (typeof ScratchNotes !== 'undefined') ScratchNotes.close();
 
   StatusBar.updateFilename(name);
   StatusBar.updateStats(lines, chars);
@@ -229,6 +231,7 @@ async function openRecentFile(filePath) {
 
   const name = filePath.split(/[\\/]/).pop() || filePath;
   currentFile = { name, path: filePath };
+  if (typeof ScratchNotes !== 'undefined') ScratchNotes.close();   // hide the note bar / card view
   StatusBar.updateFilename(name);
   StatusBar.updateChatContextFile(name);
   StorageManager.addRecentItem('file', filePath, name, SaveManager.extractFirstLine(content));
@@ -253,7 +256,7 @@ window.SCRATCHPAD_TEMPLATE = SCRATCHPAD_TEMPLATE;
  * Restore the persisted untitled draft into the editor (from the "Recent
  * Files" section's draft row) after having switched away to another file.
  */
-async function restoreDraftFile() {
+async function restoreDraftFile(content) {
   if (currentFile.path) {
     const saved = await SaveManager.silentSave();
     if (!saved) {
@@ -262,7 +265,8 @@ async function restoreDraftFile() {
     }
   }
 
-  const draft = SaveManager.getDraft() || SCRATCHPAD_TEMPLATE;
+  // `content` is given when a Scratchpad note is opened for editing
+  const draft = typeof content === 'string' ? content : (SaveManager.getDraft() || '');
 
   if (mdEditor) {
     mdEditor.value     = draft;
@@ -343,7 +347,7 @@ async function openSingleFile(filePath) {
  */
 function _resetToBlankUntitled() {
   if (mdEditor) {
-    mdEditor.value     = SCRATCHPAD_TEMPLATE;
+    mdEditor.value     = '';   // a new page starts empty
     mdEditor.scrollTop = 0;
     mdEditor.setSelectionRange(0, 0);
     const gutter = document.getElementById('line-numbers');
@@ -360,7 +364,7 @@ function _resetToBlankUntitled() {
   StatusBar.updateFilename('untitled.md');
   StatusBar.updateChatContextFile('untitled.md');
   SaveManager.markClean();
-  SaveManager.clearDraft();
+  SaveManager.clearDraft();   // also detaches it from its Scratchpad note
 }
 
 /**
@@ -613,6 +617,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Draft cache lives in memory (see saveManager.js) — load it from disk once
   // before anything reads getDraft()/hasDraft().
   await SaveManager.initDraft();
+  // Scratchpad note cards (moves an existing draft into the first card once)
+  await ScratchNotes.init();
   // An unsaved draft from a previous session outranks both the Recents screen
   // and the "start blank" preference — there's real work to hand back.
   const _pendingDraft  = _openFileParam ? '' : SaveManager.getDraft();
@@ -693,6 +699,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     SaveManager.markDirty();
   } else if (launchBehavior === 'untitled') {
     await newUntitledFile();
+    // "Start in Scratchpad" shows the note cards
+    ScratchNotes.open();
   } else if (launchBehavior === 'tasks') {
     // "Start in Tasks" — the Scratchpad sits underneath; with no folder open
     // there are no tasks to show, so the Scratchpad is all you get.
