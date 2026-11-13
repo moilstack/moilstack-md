@@ -46,23 +46,17 @@ Windows SmartScreen warning or Linux launch issues? See the [Install Guide](INST
 
 ## Screens
 
+### Review AI changes before applying
+![AI change shown as a diff with Accept, Reject and Retry](assets/08_moilstack-md_AI-Review.png)
+
 ### AI Assistant — Explain a document
 ![AI Assistant explaining a document](assets/05_moilstack-md_AI-Assistant.png)
 
 ### Tasks for a folder
 ![Tasks grouped by date](assets/07_moilstack-md_Tasks.png)
 
-### AI helpers in the file menu
-![File right-click menu with Rename with AI, Suggest Folder and Identify Tasks](assets/06_moilstack-md_File-Menu.png)
-
-### Edit, Preview and Split
-![Split view](assets/01_moilstack-md_Split.png)
-
-### ✨ AI actions on selected text
-![AI actions menu](assets/02_moilstack-md_AI-Menu.png)
-
-### Review AI changes before applying
-![AI review in the assistant](assets/03_moilstack-md_AI-Review.png)
+### Identify Tasks from any note
+![Identify Tasks dialog listing pending tasks found in a file](assets/09_moilstack-md_Identify-Tasks.png)
 
 ## Documentation
 
