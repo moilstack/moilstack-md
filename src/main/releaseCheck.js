@@ -59,6 +59,9 @@ async function checkForNewRelease() {
 
 /** Check once, a few seconds after launch (gives the window time to load first). */
 function startReleaseCheck() {
+  // Microsoft Store (APPX/MSIX) builds are updated by the Store itself, so
+  // don't point those users at GitHub releases.
+  if (process.windowsStore) return
   setTimeout(checkForNewRelease, CHECK_DELAY_MS)
 }
 
